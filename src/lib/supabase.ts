@@ -33,37 +33,3 @@ export async function getCurrentUser() {
   const storedEmail = localStorage.getItem('userEmail');
   return storedEmail ? mockUsers[storedEmail as keyof typeof mockUsers] : null;
 }
-
-interface SendEmailParams {
-  to: string;
-  subject: string;
-  html?: string;
-  text?: string;
-}
-
-export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
-  try {
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to,
-        subject,
-        html,
-        text
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to send email');
-    }
-
-    return await response.json();
-  } catch (error) {
-    throw error;
-  }
-}
