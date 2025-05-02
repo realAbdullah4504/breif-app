@@ -60,18 +60,34 @@ export class AuthService {
   }
 
   async getCurrentUser(): Promise<User | null> {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const { data, error } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user?.id)
-      .single();
-    const role = data?.role;
-    return { ...user, role } as User;
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        return null;
+      }
+  
+      const { data, error: roleError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+  
+      if (roleError || !data) {
+        console.error('Error fetching user role:', roleError);
+        return user;
+      }
+  
+      return {
+        ...user,
+        role: data.role
+      } as User;
+  
+    } catch (error) {
+      console.error('Error in getCurrentUser:', error);
+      return null;
+    }
   }
-
   async updatePassword(
     newPassword: string
   ): Promise<{ error: AuthError | null }> {

@@ -41,6 +41,14 @@ const ProtectedRoute: React.FC<{
   return element;
 };
 
+const AutoRedirect = () => {
+  const { isAuthenticated, currentUser } = useAuth();
+  console.log("isAuthenticated",isAuthenticated,currentUser)
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  
+  return <Navigate to={currentUser?.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+};
+
 const App: React.FC = () => {
   return (
     <ThemeProvider>
@@ -86,7 +94,7 @@ const App: React.FC = () => {
             />
             
             {/* Redirect root to login */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<AutoRedirect/>} />
             
             {/* 404 Route */}
             <Route path="*" element={<ErrorPage />} />
