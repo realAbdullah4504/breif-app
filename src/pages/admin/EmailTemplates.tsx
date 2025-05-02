@@ -7,6 +7,7 @@ import Input from '../../components/UI/Input';
 import TextArea from '../../components/UI/TextArea';
 import Modal from '../../components/UI/Modal';
 import { supabase } from '../../lib/supabase';
+import { sendEmail } from '../../services/sendEmail';
 
 const EmailTemplates: React.FC = () => {
   const [subject, setSubject] = useState('Reminder: Submit your daily brief');

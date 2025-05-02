@@ -19,6 +19,7 @@ import BriefHistory from './pages/member/BriefHistory';
 import Settings from './pages/settings/Settings';
 import FAQ from './pages/FAQ';
 import ErrorPage from './pages/ErrorPage';
+import Signup from './pages/auth/Signup';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
@@ -48,6 +49,7 @@ const App: React.FC = () => {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Signup />} />
             
             {/* Admin Routes */}
             <Route 

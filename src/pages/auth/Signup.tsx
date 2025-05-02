@@ -29,7 +29,7 @@ const Signup: React.FC = () => {
   const [passwordFeedback, setPasswordFeedback] = useState('');
   
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signUp } = useAuth();
 
   // If there's an invite token, the user is signing up as a team member
   const role: UserRole = inviteToken ? 'member' : 'admin';
@@ -96,12 +96,8 @@ const Signup: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const user = await signup(name, email, password, role);
-      if (user.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+      await signUp(name,email, password,role);
+      navigate('/login');
     } catch (err) {
       setError('Failed to create account. Please try again.');
     } finally {
