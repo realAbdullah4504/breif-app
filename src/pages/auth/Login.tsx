@@ -37,7 +37,11 @@ const Login: React.FC = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Invalid email or password. Please try again.');
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +156,7 @@ const Login: React.FC = () => {
                 Don't have an account?{' '}
                 <motion.button
                   whileHover={{ scale: 1.02 }}
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/auth/register')}
                   className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline transition ease-in-out duration-150"
                 >
                   Sign up here

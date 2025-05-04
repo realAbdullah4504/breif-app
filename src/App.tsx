@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -20,6 +21,8 @@ import Settings from './pages/settings/Settings';
 import FAQ from './pages/FAQ';
 import ErrorPage from './pages/ErrorPage';
 import Signup from './pages/auth/Signup';
+import { queryClient } from './lib/queryClient';
+import { SetPassword } from './pages/auth/SetPassword';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
@@ -51,13 +54,15 @@ const AutoRedirect = () => {
 
 const App: React.FC = () => {
   return (
+    <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
         <Router>
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Signup />} />
+            <Route path="/auth/register" element={<Signup />} />
+            <Route path="/auth/set-password" element={<SetPassword />} />
             
             {/* Admin Routes */}
             <Route 
@@ -102,6 +107,7 @@ const App: React.FC = () => {
         </Router>
       </AuthProvider>
     </ThemeProvider>
+    </QueryClientProvider>
   );
 };
 

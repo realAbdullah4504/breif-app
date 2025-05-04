@@ -8,11 +8,12 @@ import Input from '../../components/UI/Input';
 import Badge from '../../components/UI/Badge';
 import { mockInvitations, mockUsers } from '../../data/mockData';
 import { Invitation } from '../../types';
+import { useTeamInvitations } from '../../hooks/useTeamInvitations';
 
 const TeamManagement: React.FC = () => {
+  const {sendInvite,isInviting}=useTeamInvitations();
   const [email, setEmail] = useState('');
   const [invitations, setInvitations] = useState<Invitation[]>(mockInvitations);
-  const [isInviting, setIsInviting] = useState(false);
   const [error, setError] = useState('');
 
   const handleInvite = (e: React.FormEvent) => {
@@ -31,21 +32,8 @@ const TeamManagement: React.FC = () => {
       return;
     }
     
-    setIsInviting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      const newInvitation: Invitation = {
-        id: `inv-${Date.now()}`,
-        email,
-        status: 'pending',
-        date: format(new Date(), 'yyyy-MM-dd')
-      };
-      
-      setInvitations([newInvitation, ...invitations]);
-      setEmail('');
-      setIsInviting(false);
-    }, 1000);
+    sendInvite(email);
   };
 
   const handleDeleteInvitation = (id: string) => {
