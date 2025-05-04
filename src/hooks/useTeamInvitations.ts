@@ -10,6 +10,13 @@ export const useTeamInvitations = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
+  const invitationsQuery = useQuery({
+    queryKey: ["invitations"],
+    queryFn: () => inviteService.getInvitations(),
+    refetchOnWindowFocus: false,
+  });
+
+
   const sendInviteMutation = useMutation({
     mutationFn: (email: string) =>
       currentUser?.id
@@ -17,6 +24,9 @@ export const useTeamInvitations = () => {
         : Promise.reject(new Error("User ID is undefined")),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
+    onError: (error) => {
+      console.error("Error sending invite:", error);
     },
   });
 
@@ -29,13 +39,29 @@ export const useTeamInvitations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
-      navigate("/login?setup=success");
+      navigate("/");
     },
   });
+
+  const deleteInvite = useMutation({
+    mutationFn:(id: string) => {
+      return inviteService.deleteInvitation(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+    },
+    onError: (error) => {
+      console.error("Error deleting invite:", error);
+    }
+  });
   return {
+    invitations: invitationsQuery?.data?.data || [],
+    isLoading: invitationsQuery.isFetching,
+    isError: invitationsQuery.isError,
     sendInvite: (email: string) => sendInviteMutation.mutate(email),
-    setPassword: (password: string) => setPasswordMutation.mutate(password),
     isInviting: sendInviteMutation.isPending,
+    setPassword: (password: string) => setPasswordMutation.mutate(password),
     isSettingPassword: setPasswordMutation.isPending,
+    deleteInvite: (id: string) => deleteInvite.mutate(id),
   };
 };

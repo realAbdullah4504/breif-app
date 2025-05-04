@@ -1,6 +1,5 @@
 import { supabase } from "../lib/supabase";
 
-
 export class InviteService {
   async createInvite(
     email: string,
@@ -15,7 +14,6 @@ export class InviteService {
         }
       );
 
-      console.log("data", data);
       if (error) throw error;
 
       return { error: null };
@@ -24,11 +22,33 @@ export class InviteService {
       return { error: error as Error };
     }
   }
+  async getInvitations(): Promise<{ data: any[]; error: Error | null }> {
+    try {
+      const { data, error } = await supabase
+        .from("invitations")
+        .select("*")
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error fetching invitations:", error);
+      return { data: [], error: error as Error };
+    }
+  }
+
+  async deleteInvitation(id: string): Promise<{ error: Error | null }> {
+    const { error } = await supabase.from("invitations").delete().eq("id", id);
+    console.log("error", error);
+    if (error) throw error;
+    return { error: null };
+  }
+
   async setPassword(
-    id:string,
+    id: string,
     email: string,
     password: string,
-    role:string="member"
+    role: string = "member"
   ): Promise<{ error: Error | null }> {
     try {
       // Update password
@@ -38,11 +58,11 @@ export class InviteService {
 
       if (passwordError) throw passwordError;
 
-      const { error:updateError} = await supabase
-      .from("invitations")
-      .update({ status: "accepted" })
-      .eq("email", email)
-      .single();
+      const { error: updateError } = await supabase
+        .from("invitations")
+        .update({ status: "accepted" })
+        .eq("email", email)
+        .single();
 
       await supabase.from("users").upsert({
         id,

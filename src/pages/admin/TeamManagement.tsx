@@ -7,14 +7,14 @@ import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Badge from '../../components/UI/Badge';
 import { mockInvitations, mockUsers } from '../../data/mockData';
-import { Invitation } from '../../types';
 import { useTeamInvitations } from '../../hooks/useTeamInvitations';
 
 const TeamManagement: React.FC = () => {
-  const {sendInvite,isInviting}=useTeamInvitations();
+  const {invitations,sendInvite,isInviting,deleteInvite}=useTeamInvitations();
   const [email, setEmail] = useState('');
-  const [invitations, setInvitations] = useState<Invitation[]>(mockInvitations);
   const [error, setError] = useState('');
+
+  const acceptedInvitations=invitations.filter((invite) => invite.status === 'accepted');
 
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +37,7 @@ const TeamManagement: React.FC = () => {
   };
 
   const handleDeleteInvitation = (id: string) => {
-    setInvitations(invitations.filter(invite => invite.id !== id));
+    deleteInvite(id);
   };
 
   const handleResendInvitation = (id: string) => {
@@ -82,7 +82,7 @@ const TeamManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {mockUsers.map((user) => (
+                    {acceptedInvitations.map((user) => (
                       <tr key={user.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -171,7 +171,7 @@ const TeamManagement: React.FC = () => {
                           <div>
                             <p className="text-sm font-medium text-gray-900">{invitation.email}</p>
                             <p className="mt-1 text-xs text-gray-500">
-                              Invited on {format(new Date(invitation.date), 'MMM d, yyyy')}
+                              Invited on {format(new Date(invitation.created_at), 'MMM d, yyyy')}
                             </p>
                           </div>
                           <div className="flex">
