@@ -39,7 +39,7 @@ export const useTeamInvitations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
-      navigate("/");
+      navigate("/login");
     },
   });
 
