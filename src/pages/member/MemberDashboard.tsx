@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { CheckCircle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -11,15 +11,20 @@ import Card, {
 import Button from "../../components/UI/Button";
 import TextArea from "../../components/UI/TextArea";
 import Badge from "../../components/UI/Badge";
-import { mockUserBriefs, mockSettings } from "../../data/mockData";
 import { useAuth } from "../../context/AuthContext";
 import { useSettings } from "../../hooks/useSettings";
 import { useBrief } from "../../hooks/useBrief";
+import toast from "react-hot-toast";
+import { checkBriefSubmissionEligibility } from "../../utils/checkBriefSubmissionEligibility";
 
 const MemberDashboard: React.FC = () => {
   const { currentUser } = useAuth();
   const { settings, isLoading: isLoadingSettings } = useSettings();
   const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief();
+  const [submissionStatus, setSubmissionStatus] = useState<{
+    canSubmit: boolean;
+    message: string;
+  }>({ canSubmit: true, message: "" });
 
   const [formData, setFormData] = useState({
     accomplishments: "",
@@ -30,7 +35,20 @@ const MemberDashboard: React.FC = () => {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  useEffect(() => {
+    if (settings?.submission_deadline && briefs) {
+      const status = checkBriefSubmissionEligibility(
+        briefs,
+        settings.submission_deadline
+      );
+      setSubmissionStatus(status);
 
+      // If user already submitted, show success state
+      if (!status.canSubmit && status.message.includes("already submitted")) {
+        setIsSubmitted(true);
+      }
+    }
+  }, [briefs, settings?.submission_deadline]);
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -40,28 +58,31 @@ const MemberDashboard: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!submissionStatus.canSubmit) {
+      toast.error(submissionStatus.message);
+      return;
+    }
     try {
-      await submitBrief({
+      submitBrief({
         accomplishments: formData.accomplishments,
         blockers: formData.blockers,
         priorities: formData.priorities,
         question4_response: formData.question4 || undefined,
-        question5_response: formData.question5 || undefined
+        question5_response: formData.question5 || undefined,
       });
 
       setIsSubmitted(true);
       setFormData({
-        accomplishments: '',
-        blockers: '',
-        priorities: '',
-        question4: '',
-        question5: ''
+        accomplishments: "",
+        blockers: "",
+        priorities: "",
+        question4: "",
+        question5: "",
       });
 
-      toast.success('Brief submitted successfully');
+      toast.success("Brief submitted successfully");
     } catch (error) {
-      toast.error('Failed to submit brief');
+      toast.error("Failed to submit brief");
     }
   };
 
@@ -118,20 +139,23 @@ const MemberDashboard: React.FC = () => {
                     <CheckCircle className="h-6 w-6 text-green-600" />
                   </div>
                   <h3 className="mt-3 text-lg font-medium text-gray-900 dark:text-white">
-                    Brief submitted successfully!
+                    Brief submitted for today!
                   </h3>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Thank you for submitting your daily brief. Your team will be
-                    notified.
+                    You can submit your next brief tomorrow.
                   </p>
-                  <div className="mt-6">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsSubmitted(false)}
-                    >
-                      Submit another brief
-                    </Button>
+                </div>
+              ) : !submissionStatus.canSubmit ? (
+                <div className="text-center py-6">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                    <Clock className="h-6 w-6 text-yellow-600" />
                   </div>
+                  <h3 className="mt-3 text-lg font-medium text-gray-900 dark:text-white">
+                    Submission Not Available
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    {submissionStatus.message}
+                  </p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
@@ -266,14 +290,22 @@ const MemberDashboard: React.FC = () => {
               <CardBody>
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <Clock className="h-5 w-5 text-gray-400" />
+                    <Clock className={`h-5 w-5 ${
+                      !submissionStatus.canSubmit && !isSubmitted
+                        ? 'text-red-500' 
+                        : 'text-gray-400'
+                    }`} />
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       Today at {formatDeadlineTime()}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Don't forget to submit your brief before the deadline
+                    <p className={`text-xs ${
+                      !submissionStatus.canSubmit && !isSubmitted
+                        ? 'text-red-500 font-medium' 
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {submissionStatus.message || "Don't forget to submit your brief before the deadline"}
                     </p>
                   </div>
                 </div>
