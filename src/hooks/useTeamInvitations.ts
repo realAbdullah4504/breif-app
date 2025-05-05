@@ -12,7 +12,7 @@ export const useTeamInvitations = () => {
 
   const invitationsQuery = useQuery({
     queryKey: ["invitations"],
-    queryFn: () => inviteService.getInvitations(),
+    queryFn: () => currentUser ? inviteService.getInvitations(currentUser.id) : Promise.reject(new Error("User is not authenticated")),
     refetchOnWindowFocus: false,
   });
 

@@ -22,11 +22,12 @@ export class InviteService {
       return { error: error as Error };
     }
   }
-  async getInvitations(): Promise<{ data: any[]; error: Error | null }> {
+  async getInvitations(id:string): Promise<{ data: any[]; error: Error | null }> {
     try {
       const { data, error } = await supabase
         .from("invitations")
         .select("*")
+        .eq("invited_by", id)
 
       if (error) throw error;
 
