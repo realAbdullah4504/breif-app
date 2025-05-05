@@ -120,6 +120,16 @@ const AdminDashboard: React.FC = () => {
 
   const today = format(new Date(), 'EEEE, MMMM d, yyyy');
 
+
+  // if (isLoadingSettings || isLoadingBriefs) {
+  //   return (
+  //     <DashboardLayout>
+  //       <div className="flex items-center justify-center h-screen">
+  //         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  //       </div>
+  //     </DashboardLayout>
+  //   );
+  // }
   return (
     <DashboardLayout>
       <div className={`transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>

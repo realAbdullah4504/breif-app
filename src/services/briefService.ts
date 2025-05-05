@@ -65,5 +65,81 @@ export class BriefService {
       return { data: [], error: error as Error };
     }
   }
-  
+  async getAllBriefs() {
+    try {
+      const { data, error } = await supabase
+        .from('briefs')
+        .select(`
+          *,
+          users:user_id (
+            id,
+            name,
+            email,
+            avatar_url
+          )
+        `)
+        .order('submitted_at', { ascending: false });
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error fetching briefs:', error);
+      return { data: null, error };
+    }
+  }
+  async reviewBrief(briefId: string, adminNotes: string) {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const { data, error } = await supabase
+        .from('briefs')
+        .update({
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: userData.user.id,
+          admin_notes: adminNotes
+        })
+        .eq('id', briefId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error reviewing brief:', error);
+      return { data: null, error };
+    }
+  }
+  async getBriefStats() {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data: members, error: membersError } = await supabase
+        .from('users')
+        .select('count')
+        .eq('role', 'member');
+
+      if (membersError) throw membersError;
+
+      const { data: submitted, error: submittedError } = await supabase
+        .from('briefs')
+        .select('count')
+        .gte('submitted_at', today.toISOString());
+
+      if (submittedError) throw submittedError;
+
+      return {
+        data: {
+          totalMembers: members[0].count,
+          submittedCount: submitted[0].count,
+          pendingCount: members[0].count - submitted[0].count
+        },
+        error: null
+      };
+    } catch (error) {
+      console.error('Error getting brief stats:', error);
+      return { data: null, error };
+    }
+  }
 }
