@@ -38,11 +38,28 @@ export class InviteService {
     }
   }
 
-  async deleteInvitation(id: string): Promise<{ error: Error | null }> {
-    const { error } = await supabase.from("invitations").delete().eq("id", id);
-    console.log("error", error);
-    if (error) throw error;
-    return { error: null };
+  async deleteInvitation(invitationId: string, adminId: string): Promise<{ error: Error | null }> {
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'delete-invitation',
+        {
+          body: { invitationId, adminId }
+        }
+      );
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      if (error) throw error;
+
+      return { error: null };
+    } catch (error) {
+      console.error('Error deleting invitation:', error);
+      return { 
+        error: error instanceof Error ? error : new Error('Failed to delete invitation')
+      };
+    }
   }
 
   async setPassword(

@@ -12,10 +12,12 @@ export const useTeamInvitations = () => {
 
   const invitationsQuery = useQuery({
     queryKey: ["invitations"],
-    queryFn: () => currentUser ? inviteService.getInvitations(currentUser.id) : Promise.reject(new Error("User is not authenticated")),
+    queryFn: () =>
+      currentUser
+        ? inviteService.getInvitations(currentUser.id)
+        : Promise.reject(new Error("User is not authenticated")),
     refetchOnWindowFocus: false,
   });
-
 
   const sendInviteMutation = useMutation({
     mutationFn: (email: string) =>
@@ -35,7 +37,11 @@ export const useTeamInvitations = () => {
       if (!currentUser?.email) {
         return Promise.reject(new Error("No user email found"));
       }
-      return inviteService.setPassword(currentUser.id,currentUser.email, password);
+      return inviteService.setPassword(
+        currentUser.id,
+        currentUser.email,
+        password
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
@@ -44,15 +50,18 @@ export const useTeamInvitations = () => {
   });
 
   const deleteInvite = useMutation({
-    mutationFn:(id: string) => {
-      return inviteService.deleteInvitation(id);
+    mutationFn: (id: string) => {
+      if (!currentUser?.id) {
+        return Promise.reject(new Error("User ID is undefined"));
+      }
+      return inviteService.deleteInvitation(id, currentUser?.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitations"] });
     },
     onError: (error) => {
       console.error("Error deleting invite:", error);
-    }
+    },
   });
   return {
     invitations: invitationsQuery?.data?.data || [],
