@@ -1,70 +1,119 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/Layout/DashboardLayout';
 import Card, { CardHeader, CardBody, CardFooter } from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import TextArea from '../../components/UI/TextArea';
-import { mockSettings } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../hooks/useSettings';
 import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { generateTimeOptions } from '../../utils/timeUtils';
 
 const Settings: React.FC = () => {
   const { currentUser } = useAuth();
+  const { 
+    settings, 
+    isLoading, 
+    error,
+    updateSettings,
+    isUpdating 
+  } = useSettings();
+
   const isAdmin = currentUser?.role === 'admin';
-  
-  const [settings, setSettings] = useState(mockSettings);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const timeOptions = generateTimeOptions();
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
-      setIsSaved(true);
-      
-      // Reset saved state after 3 seconds
-      setTimeout(() => {
-        setIsSaved(false);
-      }, 3000);
-    }, 1000);
-  };
+  const [formData, setFormData] = useState(() => settings || {
+    questions: {
+      accomplishments: '',
+      blockers: '',
+      priorities: ''
+    },
+    submission_deadline: '17:00:00',
+    email_reminders: true
+  });
 
-  const handleQuestionChange = (field: keyof typeof settings.questions, value: string) => {
-    setSettings({
-      ...settings,
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings);
+    }
+  }, [settings]);
+  // Update handlers to modify local state instead of calling updateSettings
+  const handleQuestionChange = (field: keyof typeof formData.questions, value: string) => {
+    setFormData(prev => ({
+      ...prev,
       questions: {
-        ...settings.questions,
+        ...prev.questions,
         [field]: value
       }
-    });
+    }));
   };
 
   const handleDeadlineChange = (value: string) => {
-    setSettings({
-      ...settings,
-      submissionDeadline: value
-    });
+    setFormData(prev => ({
+      ...prev,
+      submission_deadline: value
+    }));
   };
 
   const handleEmailRemindersChange = (checked: boolean) => {
-    setSettings({
-      ...settings,
-      emailReminders: checked
-    });
+    setFormData(prev => ({
+      ...prev,
+      email_reminders: checked
+    }));
   };
 
   const addQuestion = (questionNumber: number) => {
-    const field = `question${questionNumber}` as keyof typeof settings.questions;
+    const field = `question${questionNumber}` as keyof typeof formData.questions;
     handleQuestionChange(field, `Question ${questionNumber}`);
   };
 
   const removeQuestion = (questionNumber: number) => {
-    const field = `question${questionNumber}` as keyof typeof settings.questions;
-    handleQuestionChange(field, '');
+    const field = `question${questionNumber}` as keyof typeof formData.questions;
+    const updatedQuestions = { ...formData.questions };
+    delete updatedQuestions[field];
+
+    setFormData(prev => ({
+      ...prev,
+      questions: updatedQuestions
+    }));
   };
+
+  // Update save handler to save all changes at once
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!settings) return;
+
+    try {
+      await updateSettings({
+        ...settings,
+        ...formData
+      });
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      toast.error('Failed to save settings');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error || !settings) {
+    return (
+      <DashboardLayout>
+        <div className="text-center text-red-500">
+          Failed to load settings. Please try again.
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -91,7 +140,7 @@ const Settings: React.FC = () => {
                     <TextArea
                       id="accomplishments"
                       label="Question 1 (Accomplishments)"
-                      value={settings.questions.accomplishments}
+                      value={formData.questions.accomplishments}
                       onChange={(e) => handleQuestionChange('accomplishments', e.target.value)}
                       required
                     />
@@ -99,7 +148,7 @@ const Settings: React.FC = () => {
                     <TextArea
                       id="blockers"
                       label="Question 2 (Blockers)"
-                      value={settings.questions.blockers}
+                      value={formData.questions.blockers}
                       onChange={(e) => handleQuestionChange('blockers', e.target.value)}
                       required
                     />
@@ -107,17 +156,17 @@ const Settings: React.FC = () => {
                     <TextArea
                       id="priorities"
                       label="Question 3 (Priorities)"
-                      value={settings.questions.priorities}
+                      value={formData.questions.priorities}
                       onChange={(e) => handleQuestionChange('priorities', e.target.value)}
                       required
                     />
                     
-                    {settings.questions.question4 && (
+                    {formData.questions.question4 && (
                       <div className="relative">
                         <TextArea
                           id="question4"
                           label="Question 4 (Optional)"
-                          value={settings.questions.question4}
+                          value={formData.questions.question4}
                           onChange={(e) => handleQuestionChange('question4', e.target.value)}
                         />
                         <button
@@ -130,12 +179,12 @@ const Settings: React.FC = () => {
                       </div>
                     )}
                     
-                    {settings.questions.question5 && (
+                    {formData.questions.question5 && (
                       <div className="relative">
                         <TextArea
                           id="question5"
                           label="Question 5 (Optional)"
-                          value={settings.questions.question5}
+                          value={formData.questions.question5}
                           onChange={(e) => handleQuestionChange('question5', e.target.value)}
                         />
                         <button
@@ -175,23 +224,14 @@ const Settings: React.FC = () => {
                       <select
                         id="deadline"
                         className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={settings.submissionDeadline}
+                        value={settings.submission_deadline}
                         onChange={(e) => handleDeadlineChange(e.target.value)}
                       >
-                        <option value="09:00">9:00 AM</option>
-                        <option value="10:00">10:00 AM</option>
-                        <option value="11:00">11:00 AM</option>
-                        <option value="12:00">12:00 PM</option>
-                        <option value="13:00">1:00 PM</option>
-                        <option value="14:00">2:00 PM</option>
-                        <option value="15:00">3:00 PM</option>
-                        <option value="16:00">4:00 PM</option>
-                        <option value="17:00">5:00 PM</option>
-                        <option value="18:00">6:00 PM</option>
-                        <option value="19:00">7:00 PM</option>
-                        <option value="20:00">8:00 PM</option>
-                        <option value="21:00">9:00 PM</option>
-                        <option value="22:00">10:00 PM</option>
+                        {timeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     
@@ -200,10 +240,12 @@ const Settings: React.FC = () => {
                         <input
                           type="checkbox"
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
-                          checked={settings.emailReminders}
+                          checked={settings.email_reminders}
                           onChange={(e) => handleEmailRemindersChange(e.target.checked)}
                         />
-                        <span className="ml-2 text-sm text-gray-900 dark:text-white">Send automatic reminders</span>
+                        <span className="ml-2 text-sm text-gray-900 dark:text-white">
+                          Send automatic reminders
+                        </span>
                       </label>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 ml-6">
                         Automatically send reminders to team members who haven't submitted their brief by the deadline.
@@ -214,17 +256,16 @@ const Settings: React.FC = () => {
                   <div className="mt-6 flex justify-end">
                     <Button
                       type="submit"
-                      isLoading={isSaving}
+                      isLoading={isUpdating}
                     >
-                      {isSaved ? 'Saved!' : 'Save Changes'}
+                      Save Changes
                     </Button>
                   </div>
                 </form>
               </CardBody>
             </Card>
           )}
-
-          <Card>
+        <Card>
             <CardHeader>
               <h2 className="text-lg font-medium text-gray-900 dark:text-white">Account Settings</h2>
             </CardHeader>
@@ -292,7 +333,6 @@ const Settings: React.FC = () => {
             </CardFooter>
           </Card>
         </div>
-
         <div>
           {isAdmin && (
             <Card className="mb-6">

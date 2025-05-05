@@ -44,7 +44,7 @@ export const useTeamInvitations = () => {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+      // queryClient.invalidateQueries({ queryKey: ["invitations"] });
       navigate("/login");
     },
   });
