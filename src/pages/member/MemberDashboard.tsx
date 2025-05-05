@@ -9,33 +9,48 @@ import TextArea from '../../components/UI/TextArea';
 import Badge from '../../components/UI/Badge';
 import { mockUserBriefs, mockSettings } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../hooks/useSettings';
 
 const MemberDashboard: React.FC = () => {
   const { currentUser } = useAuth();
-  const [accomplishments, setAccomplishments] = useState('');
-  const [blockers, setBlockers] = useState('');
-  const [priorities, setPriorities] = useState('');
-  const [question4, setQuestion4] = useState('');
-  const [question5, setQuestion5] = useState('');
+  const { settings, isLoading: isLoadingSettings } = useSettings();
+  
+  const [formData, setFormData] = useState({
+    accomplishments: '',
+    blockers: '',
+    priorities: '',
+    question4: '',
+    question5: ''
+  });
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
+    // Simulate API call - Replace with real API call later
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSubmitted(true);
       
       // Reset form after successful submission
       setTimeout(() => {
-        setAccomplishments('');
-        setBlockers('');
-        setPriorities('');
-        setQuestion4('');
-        setQuestion5('');
+        setFormData({
+          accomplishments: '',
+          blockers: '',
+          priorities: '',
+          question4: '',
+          question5: ''
+        });
       }, 500);
     }, 1000);
   };
@@ -44,16 +59,30 @@ const MemberDashboard: React.FC = () => {
   
   // Format the deadline time for display
   const formatDeadlineTime = () => {
-    const deadlineHour = parseInt(mockSettings.submissionDeadline.split(':')[0]);
-    const amPm = deadlineHour >= 12 ? 'PM' : 'AM';
-    const hour12 = deadlineHour > 12 ? deadlineHour - 12 : deadlineHour === 0 ? 12 : deadlineHour;
+    if (!settings?.submission_deadline) return '5:00 PM';
+    const [hours] = settings.submission_deadline.split(':');
+    const hour = parseInt(hours);
+    const amPm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
     return `${hour12}:00 ${amPm}`;
   };
+
+  if (isLoadingSettings) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome, {currentUser?.name || 'Team Member'}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Welcome, {currentUser?.name || 'Team Member'}
+        </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Submit your daily brief and keep your team updated.
         </p>
@@ -74,7 +103,9 @@ const MemberDashboard: React.FC = () => {
                   <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                     <CheckCircle className="h-6 w-6 text-green-600" />
                   </div>
-                  <h3 className="mt-3 text-lg font-medium text-gray-900 dark:text-white">Brief submitted successfully!</h3>
+                  <h3 className="mt-3 text-lg font-medium text-gray-900 dark:text-white">
+                    Brief submitted successfully!
+                  </h3>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Thank you for submitting your daily brief. Your team will be notified.
                   </p>
@@ -92,47 +123,48 @@ const MemberDashboard: React.FC = () => {
                   <div className="space-y-4">
                     <TextArea
                       id="accomplishments"
-                      label={mockSettings.questions.accomplishments}
+                      label={settings?.questions.accomplishments || ''}
                       rows={3}
                       required
-                      value={accomplishments}
-                      onChange={(e) => setAccomplishments(e.target.value)}
+                      value={formData.accomplishments}
+                      onChange={(e) => handleInputChange('accomplishments', e.target.value)}
                     />
                     
                     <TextArea
                       id="blockers"
-                      label={mockSettings.questions.blockers}
+                      label={settings?.questions.blockers || ''}
                       rows={3}
-                      value={blockers}
-                      onChange={(e) => setBlockers(e.target.value)}
+                      required
+                      value={formData.blockers}
+                      onChange={(e) => handleInputChange('blockers', e.target.value)}
                     />
                     
                     <TextArea
                       id="priorities"
-                      label={mockSettings.questions.priorities}
+                      label={settings?.questions.priorities || ''}
                       rows={3}
                       required
-                      value={priorities}
-                      onChange={(e) => setPriorities(e.target.value)}
+                      value={formData.priorities}
+                      onChange={(e) => handleInputChange('priorities', e.target.value)}
                     />
                     
-                    {mockSettings.questions.question4 && (
+                    {settings?.questions.question4 && (
                       <TextArea
                         id="question4"
-                        label={mockSettings.questions.question4}
+                        label={settings.questions.question4}
                         rows={3}
-                        value={question4}
-                        onChange={(e) => setQuestion4(e.target.value)}
+                        value={formData.question4}
+                        onChange={(e) => handleInputChange('question4', e.target.value)}
                       />
                     )}
                     
-                    {mockSettings.questions.question5 && (
+                    {settings?.questions.question5 && (
                       <TextArea
                         id="question5"
-                        label={mockSettings.questions.question5}
+                        label={settings.questions.question5}
                         rows={3}
-                        value={question5}
-                        onChange={(e) => setQuestion5(e.target.value)}
+                        value={formData.question5}
+                        onChange={(e) => handleInputChange('question5', e.target.value)}
                       />
                     )}
                   </div>
@@ -158,6 +190,7 @@ const MemberDashboard: React.FC = () => {
             </CardHeader>
             <CardBody className="p-0">
               <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {/* We'll add real brief history here later */}
                 {mockUserBriefs.map((brief) => (
                   <div key={brief.id} className="p-4">
                     <div className="flex justify-between items-start">
@@ -179,6 +212,9 @@ const MemberDashboard: React.FC = () => {
                     </div>
                   </div>
                 ))}
+                <div className="p-4 text-center text-sm text-gray-500">
+                  No submissions yet
+                </div>
               </div>
             </CardBody>
             <CardFooter>
@@ -201,8 +237,12 @@ const MemberDashboard: React.FC = () => {
                     <Clock className="h-5 w-5 text-gray-400" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">Today at {formatDeadlineTime()}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Don't forget to submit your brief before the deadline</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      Today at {formatDeadlineTime()}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Don't forget to submit your brief before the deadline
+                    </p>
                   </div>
                 </div>
               </CardBody>
