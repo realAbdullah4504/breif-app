@@ -24,6 +24,15 @@ export interface CreateBriefDTO {
   question5_response?: string;
 }
 
+interface BriefWithUser extends Brief {
+  users: {
+    id: string;
+    name: string;
+    email: string;
+    avatar_url?: string;
+    invited_by: string;
+  };
+}
 export class BriefService {
   async submitBrief(brief: CreateBriefDTO): Promise<{ data: Brief | null; error: Error | null }> {
     try {
@@ -65,8 +74,11 @@ export class BriefService {
       return { data: [], error: error as Error };
     }
   }
-  async getAllBriefs() {
+  async getAllBriefs(): Promise<{ data: BriefWithUser[] | null; error: Error | null }> {
     try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+
       const { data, error } = await supabase
         .from('briefs')
         .select(`
@@ -75,16 +87,18 @@ export class BriefService {
             id,
             name,
             email,
-            avatar_url
+            avatar_url,
+            invited_by
           )
         `)
+        .eq('users.invited_by', user.id)
         .order('submitted_at', { ascending: false });
 
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
       console.error('Error fetching briefs:', error);
-      return { data: null, error };
+      return { data: null, error: error as Error };
     }
   }
   async reviewBrief(briefId: string, adminNotes: string) {

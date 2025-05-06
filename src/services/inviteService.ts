@@ -22,12 +22,14 @@ export class InviteService {
       return { error: error as Error };
     }
   }
-  async getInvitations(id:string): Promise<{ data: any[]; error: Error | null }> {
+  async getInvitations(
+    id: string
+  ): Promise<{ data: any[]; error: Error | null }> {
     try {
       const { data, error } = await supabase
         .from("invitations")
         .select("*")
-        .eq("invited_by", id)
+        .eq("invited_by", id);
 
       if (error) throw error;
 
@@ -38,12 +40,15 @@ export class InviteService {
     }
   }
 
-  async deleteInvitation(invitationId: string, adminId: string): Promise<{ error: Error | null }> {
+  async deleteInvitation(
+    invitationId: string,
+    adminId: string
+  ): Promise<{ error: Error | null }> {
     try {
       const { data, error } = await supabase.functions.invoke(
-        'delete-invitation',
+        "delete-invitation",
         {
-          body: { invitationId, adminId }
+          body: { invitationId, adminId },
         }
       );
 
@@ -55,9 +60,12 @@ export class InviteService {
 
       return { error: null };
     } catch (error) {
-      console.error('Error deleting invitation:', error);
-      return { 
-        error: error instanceof Error ? error : new Error('Failed to delete invitation')
+      console.error("Error deleting invitation:", error);
+      return {
+        error:
+          error instanceof Error
+            ? error
+            : new Error("Failed to delete invitation"),
       };
     }
   }
@@ -76,16 +84,27 @@ export class InviteService {
 
       if (passwordError) throw passwordError;
 
+      const { data: invitation, error: inviteError } = await supabase
+        .from("invitations")
+        .select("invited_by")
+        .eq("email", email)
+        .single();
+
+      if (inviteError) throw inviteError;
+
       const { error: updateError } = await supabase
         .from("invitations")
         .update({ status: "accepted" })
         .eq("email", email)
         .single();
 
+      if (updateError) throw updateError;
+
       await supabase.from("users").upsert({
         id,
         email,
         role,
+        invited_by: invitation.invited_by,
       });
 
       if (updateError) throw updateError;

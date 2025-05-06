@@ -29,8 +29,10 @@ import Input from '../../components/UI/Input';
 import TextArea from '../../components/UI/TextArea';
 import { mockBriefs, mockSettings } from '../../data/mockData';
 import { Brief } from '../../types';
+import { useAdminBriefs } from '../../hooks/useAdminBriefs';
 
 const AdminDashboard: React.FC = () => {
+  const {briefs}=useAdminBriefs();
   const [selectedBrief, setSelectedBrief] = useState<Brief | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reminderSent, setReminderSent] = useState<Record<string, boolean>>({});
