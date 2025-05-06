@@ -74,10 +74,25 @@ export class BriefService {
       return { data: [], error: error as Error };
     }
   }
-  async getAllBriefs(adminId:string): Promise<{ data: BriefWithUser[] | null; error: Error | null }> {
+  async getAllBriefs(adminId: string): Promise<{ teamMembers:BriefWithUser[],data: BriefWithUser[] | null; error: Error | null }> {
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // First, get all team members under this admin
+      const { data: teamMembers, error: teamError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('invited_by', adminId)
+        .eq('role', 'member');
+  
+      if (teamError) throw teamError;
+  
+      if (!teamMembers?.length) {
+        return { teamMembers:[],data: [], error: null };
+      }
+  
+      // Get the user IDs of all team members
+      const teamMemberIds = teamMembers.map(member => member.id);
+  
+      // Then fetch briefs for all these team members
       const { data, error } = await supabase
         .from('briefs')
         .select(`
@@ -90,14 +105,12 @@ export class BriefService {
             invited_by
           )
         `)
-        // .gte('submitted_at', today.toISOString())
+        .in('user_id', teamMemberIds)
         .order('submitted_at', { ascending: false });
-        const filtered = data?.filter(
-          (brief) => brief.users?.invited_by === adminId
-        );
-
+  
       if (error) throw error;
-      return { data: filtered || null, error: null };
+  
+      return { teamMembers:teamMembers,data: data || null, error: null };
     } catch (error) {
       console.error('Error fetching briefs:', error);
       return { data: null, error: error as Error };

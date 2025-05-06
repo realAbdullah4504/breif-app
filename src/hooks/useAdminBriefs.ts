@@ -44,6 +44,7 @@ export const useAdminBriefs = () => {
 
   return {
     briefs: briefsQuery.data?.data || [],
+    teamMembers: briefsQuery.data?.teamMembers || [],
     isLoading: briefsQuery.isLoading,
     error: briefsQuery.error,
     stats: statsQuery.data?.data || {
