@@ -33,7 +33,7 @@ import { useAdminBriefs } from "../../hooks/useAdminBriefs";
 import { useSettings } from "../../hooks/useSettings";
 
 const AdminDashboard: React.FC = () => {
-  const { briefs, teamMembers, stats,reviewBrief } = useAdminBriefs();
+  const { briefs, teamMembers, stats, reviewBrief } = useAdminBriefs();
   const { settings } = useSettings();
 
   const [selectedBrief, setSelectedBrief] = useState<Brief | null>(null);
@@ -113,12 +113,10 @@ const AdminDashboard: React.FC = () => {
 
   const handleMarkAsReviewed = (briefId: string) => {
     setReviewedBriefs((prev) => ({ ...prev, [briefId]: true }));
-    reviewBrief(
-      { 
-        briefId, 
-        adminNotes 
-      }
-    );
+    reviewBrief({
+      briefId,
+      adminNotes,
+    });
     setIsModalOpen(false);
     setAdminNotes("");
     // In a real app, this would update the database
@@ -814,6 +812,9 @@ const AdminDashboard: React.FC = () => {
                       const memberBrief = briefs.find(
                         (brief) => brief?.user_id === member?.id
                       );
+                      const submittedAt = memberBrief?.submitted_at
+                        ? format(new Date(memberBrief.submitted_at), "h:mm a")
+                        : "";
                       return (
                         <tr
                           key={member.id}
@@ -894,7 +895,7 @@ const AdminDashboard: React.FC = () => {
                               isDarkMode ? "text-gray-300" : "text-gray-500"
                             }`}
                           >
-                            {memberBrief ? "5:03 PM" : "-"}
+                            {memberBrief ? submittedAt : "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             {memberBrief ? (
@@ -969,7 +970,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {reviewedBriefs[selectedBrief.id] ? (
+                  {selectedBrief?.reviewed_by ? (
                     <Badge variant="info" className="flex items-center">
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Reviewed
@@ -1114,7 +1115,7 @@ const AdminDashboard: React.FC = () => {
                   >
                     Close
                   </Button>
-                  {!reviewedBriefs[selectedBrief.id] && (
+                  {!selectedBrief?.reviewed_by && (
                     <Button
                       onClick={() => {
                         handleMarkAsReviewed(selectedBrief.id);
