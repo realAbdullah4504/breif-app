@@ -74,11 +74,10 @@ export class BriefService {
       return { data: [], error: error as Error };
     }
   }
-  async getAllBriefs(): Promise<{ data: BriefWithUser[] | null; error: Error | null }> {
+  async getAllBriefs(adminId:string): Promise<{ data: BriefWithUser[] | null; error: Error | null }> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const { data, error } = await supabase
         .from('briefs')
         .select(`
@@ -91,11 +90,14 @@ export class BriefService {
             invited_by
           )
         `)
-        .eq('users.invited_by', user.id)
+        // .gte('submitted_at', today.toISOString())
         .order('submitted_at', { ascending: false });
+        const filtered = data?.filter(
+          (brief) => brief.users?.invited_by === adminId
+        );
 
       if (error) throw error;
-      return { data, error: null };
+      return { data: filtered || null, error: null };
     } catch (error) {
       console.error('Error fetching briefs:', error);
       return { data: null, error: error as Error };
@@ -124,30 +126,35 @@ export class BriefService {
       return { data: null, error };
     }
   }
-  async getBriefStats() {
+  async getBriefStats(adminId:string) {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       const { data: members, error: membersError } = await supabase
-        .from('users')
-        .select('count')
-        .eq('role', 'member');
+      .from('users')
+      .select('count')
+      .eq('role', 'member')
+      .eq('invited_by', adminId);
 
       if (membersError) throw membersError;
 
       const { data: submitted, error: submittedError } = await supabase
-        .from('briefs')
-        .select('count')
-        .gte('submitted_at', today.toISOString());
+      .from('briefs')
+      .select('*, users:user_id (invited_by)')
+      // .gte('submitted_at', today.toISOString());
 
       if (submittedError) throw submittedError;
-
+      
+      const filteredSubmittedCount= submitted?.filter(
+        (brief) => brief?.users?.invited_by === adminId
+      ).length || 0;
+      console.log("total",members[0].count, "submitted", filteredSubmittedCount, "pending", members[0].count - filteredSubmittedCount)
       return {
         data: {
           totalMembers: members[0].count,
-          submittedCount: submitted[0].count,
-          pendingCount: members[0].count - submitted[0].count
+          submittedCount: filteredSubmittedCount,
+          pendingCount: members[0].count - filteredSubmittedCount
         },
         error: null
       };

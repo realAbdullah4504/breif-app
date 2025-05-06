@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { parse,format, formatDistanceToNow } from 'date-fns';
 import { 
   CheckCircle, 
   XCircle, 
@@ -30,9 +30,13 @@ import TextArea from '../../components/UI/TextArea';
 import { mockBriefs, mockSettings } from '../../data/mockData';
 import { Brief } from '../../types';
 import { useAdminBriefs } from '../../hooks/useAdminBriefs';
+import { useSettings } from '../../hooks/useSettings';
 
 const AdminDashboard: React.FC = () => {
-  const {briefs}=useAdminBriefs();
+  const {briefs,stats}=useAdminBriefs();
+  const {settings}=useSettings();
+
+
   const [selectedBrief, setSelectedBrief] = useState<Brief | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reminderSent, setReminderSent] = useState<Record<string, boolean>>({});
@@ -49,21 +53,30 @@ const AdminDashboard: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Calculate dashboard metrics
-  const totalBriefs = mockBriefs.length;
-  const submittedBriefs = mockBriefs.filter(brief => brief.submitted).length;
+  const totalBriefs = stats?.totalMembers;
+  const submittedBriefs = stats?.submittedCount;
   const pendingBriefs = totalBriefs - submittedBriefs;
   const submissionRate = (submittedBriefs / totalBriefs) * 100;
 
-  // Calculate time until deadline
-  const deadlineHour = parseInt(mockSettings.submissionDeadline.split(':')[0]);
-  const deadlineMinute = parseInt(mockSettings.submissionDeadline.split(':')[1]);
-  const now = new Date();
-  const deadline = new Date(now);
-  deadline.setHours(deadlineHour, deadlineMinute, 0, 0);
-  if (deadline < now) {
-    deadline.setDate(deadline.getDate() + 1);
-  }
-  const timeUntilDeadline = formatDistanceToNow(deadline, { addSuffix: true });
+  const formatDeadlineTime = (timeString: string | undefined | null) => {
+    if (!timeString) return new Date();
+    try {
+      // Parse time string in 24-hour format "18:00:00"
+      const [hours, minutes, seconds] = timeString.split(':').map(Number);
+      const date = new Date();
+      date.setHours(hours, minutes, seconds);
+      return date;
+    } catch (error) {
+      console.error('Error parsing time:', error);
+      return new Date();
+    }
+  };
+  
+  // The rest of the deadline calculations remain the same
+  const deadline = formatDeadlineTime(settings?.submission_deadline) || new Date();
+  const timeUntilDeadline = settings?.submission_deadline 
+    ? formatDistanceToNow(deadline, { addSuffix: true })
+    : 'No deadline set';
 
   const handleViewBrief = (brief: Brief) => {
     setSelectedBrief(brief);
@@ -97,28 +110,7 @@ const AdminDashboard: React.FC = () => {
     alert('PDF download functionality would be implemented here');
   };
 
-  const filteredBriefs = mockBriefs.filter(brief => {
-    // Filter by search term
-    const matchesSearch = brief.userName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Filter by submission status
-    const matchesStatus = 
-      filterStatus === 'all' || 
-      (filterStatus === 'submitted' && brief.submitted) || 
-      (filterStatus === 'pending' && !brief.submitted);
-    
-    // Filter by review status
-    const isReviewed = reviewedBriefs[brief.id];
-    const matchesReview = 
-      filterReview === 'all' || 
-      (filterReview === 'reviewed' && isReviewed) || 
-      (filterReview === 'pending' && !isReviewed && brief.submitted);
-    
-    // Filter by date (simplified for demo)
-    const matchesDate = true; // In a real app, we would check the date
-    
-    return matchesSearch && matchesStatus && matchesReview && matchesDate;
-  });
+  const filteredBriefs = briefs
 
   const today = format(new Date(), 'EEEE, MMMM d, yyyy');
 
@@ -170,7 +162,7 @@ const AdminDashboard: React.FC = () => {
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
-                  <CountUp end={submittedBriefs} duration={1.5} /> of {totalBriefs} briefs submitted
+                  <CountUp end={stats.submittedCount} duration={1.5} /> of {totalBriefs} briefs submitted
                 </span>
                 <span className={`text-sm font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>
                   <CountUp end={submissionRate} duration={1.5} decimals={0} suffix="%" />
