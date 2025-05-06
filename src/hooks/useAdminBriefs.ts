@@ -35,7 +35,7 @@ export const useAdminBriefs = () => {
     }: {
       briefId: string;
       adminNotes: string;
-    }) => briefService.reviewBrief(briefId, adminNotes),
+    }) => briefService.reviewBrief(currentUser?.id,briefId, adminNotes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-briefs"] });
       queryClient.invalidateQueries({ queryKey: ["brief-stats"] });

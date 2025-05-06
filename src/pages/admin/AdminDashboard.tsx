@@ -33,7 +33,7 @@ import { useAdminBriefs } from "../../hooks/useAdminBriefs";
 import { useSettings } from "../../hooks/useSettings";
 
 const AdminDashboard: React.FC = () => {
-  const { briefs, teamMembers, stats } = useAdminBriefs();
+  const { briefs, teamMembers, stats,reviewBrief } = useAdminBriefs();
   const { settings } = useSettings();
 
   const [selectedBrief, setSelectedBrief] = useState<Brief | null>(null);
@@ -113,6 +113,14 @@ const AdminDashboard: React.FC = () => {
 
   const handleMarkAsReviewed = (briefId: string) => {
     setReviewedBriefs((prev) => ({ ...prev, [briefId]: true }));
+    reviewBrief(
+      { 
+        briefId, 
+        adminNotes 
+      }
+    );
+    setIsModalOpen(false);
+    setAdminNotes("");
     // In a real app, this would update the database
   };
 

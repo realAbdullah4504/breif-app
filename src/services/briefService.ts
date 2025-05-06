@@ -74,7 +74,7 @@ export class BriefService {
       return { data: [], error: error as Error };
     }
   }
-  async getAllBriefs(adminId: string): Promise<{ teamMembers:BriefWithUser[],data: BriefWithUser[] | null; error: Error | null }> {
+  async getAllBriefs(adminId: string): Promise<{ teamMembers:BriefWithUser[] | null,data: BriefWithUser[] | null; error: Error | null }> {
     try {
       // First, get all team members under this admin
       const { data: teamMembers, error: teamError } = await supabase
@@ -113,19 +113,17 @@ export class BriefService {
       return { teamMembers:teamMembers,data: data || null, error: null };
     } catch (error) {
       console.error('Error fetching briefs:', error);
-      return { data: null, error: error as Error };
+      return { teamMembers:null,data: null, error: error as Error };
     }
   }
-  async reviewBrief(briefId: string, adminNotes: string) {
+  async reviewBrief(adminId:string,briefId: string, adminNotes: string) {
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
 
       const { data, error } = await supabase
         .from('briefs')
         .update({
           reviewed_at: new Date().toISOString(),
-          reviewed_by: userData.user.id,
+          reviewed_by: adminId,
           admin_notes: adminNotes
         })
         .eq('id', briefId)
