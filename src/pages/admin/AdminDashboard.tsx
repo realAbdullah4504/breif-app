@@ -126,7 +126,17 @@ const AdminDashboard: React.FC = () => {
       !briefs.some(brief => brief.user_id === member.id)
     );
   
-    pendingMembers.forEach(member => {
+    // Send reminders sequentially with delay
+    let currentIndex = 0;
+  
+    const sendNextReminder = () => {
+      if (currentIndex >= pendingMembers.length) {
+        toast.success(`Finished sending reminders to ${pendingMembers.length} members`);
+        return;
+      }
+  
+      const member = pendingMembers[currentIndex];
+  
       sendEmail(
         {
           to: member.email,
@@ -137,14 +147,23 @@ const AdminDashboard: React.FC = () => {
           onSuccess: () => {
             setReminderSent(prev => ({ ...prev, [member.id]: true }));
             toast.success(`Reminder sent to ${member.name}`);
+            currentIndex++;
+            // Add 500ms delay before sending next reminder (2 requests/second limit)
+            setTimeout(sendNextReminder, 500);
           },
           onError: (error) => {
             console.error('Error sending reminder:', error);
             toast.error(`Failed to send reminder to ${member.name}`);
+            currentIndex++;
+            // Continue with next reminder after error
+            setTimeout(sendNextReminder, 500);
           }
         }
       );
-    });
+    };
+  
+    // Start sending reminders
+    sendNextReminder();
   };
 
   const handleMarkAsReviewed = (briefId: string) => {
