@@ -31,11 +31,14 @@ import { mockBriefs, mockSettings } from "../../data/mockData";
 import { Brief } from "../../types";
 import { useAdminBriefs } from "../../hooks/useAdminBriefs";
 import { useSettings } from "../../hooks/useSettings";
+import { useEmail } from "../../hooks/useEmail";
+import toast from "react-hot-toast";
 
 const AdminDashboard: React.FC = () => {
-  const { briefs, teamMembers, stats, reviewBrief } = useAdminBriefs();
-  const { settings } = useSettings();
-
+  const { briefs, teamMembers, stats, reviewBrief,isLoading:isLoadingBriefs } = useAdminBriefs();
+  const { settings,isLoading:isLoadingSettings } = useSettings();
+  const { sendEmail, isLoading: isSendingEmail } = useEmail();
+  console.log("settings",settings)
   const [selectedBrief, setSelectedBrief] = useState<Brief | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reminderSent, setReminderSent] = useState<Record<string, boolean>>({});
@@ -96,19 +99,52 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSendReminder = (userId: string) => {
-    setReminderSent((prev) => ({ ...prev, [userId]: true }));
-    // In a real app, this would send an API request
+    const member = teamMembers.find(m => m.id === userId);
+    if (!member) return;
+  
+    sendEmail(
+      {
+        to: member.email,
+        subject:settings?.reminder_template?.subject || "Reminder: Brief Submission",
+        html: settings?.reminder_template?.body?.replace('{{name}}', member.name) || "Please submit your brief.",
+      },
+      {
+        onSuccess: () => {
+          setReminderSent(prev => ({ ...prev, [userId]: true }));
+          toast.success(`Reminder sent to ${member.name}`);
+        },
+        onError: (error) => {
+          console.error('Error sending reminder:', error);
+          toast.error(`Failed to send reminder to ${member.name}`);
+        }
+      }
+    );
   };
 
   const handleSendAllReminders = () => {
-    const newReminderSent = { ...reminderSent };
-    mockBriefs.forEach((brief) => {
-      if (!brief.submitted) {
-        newReminderSent[brief.userId] = true;
-      }
+    const pendingMembers = teamMembers.filter(member => 
+      !briefs.some(brief => brief.user_id === member.id)
+    );
+  
+    pendingMembers.forEach(member => {
+      sendEmail(
+        {
+          to: member.email,
+          subject: settings?.reminder_template?.subject || "Reminder: Brief Submission",
+          html: settings?.reminder_template?.body?.replace('{{name}}', member.name || "member") || "Please submit your brief.",
+        },
+        {
+          onSuccess: () => {
+            setReminderSent(prev => ({ ...prev, [member.id]: true }));
+            toast.success(`Reminder sent to ${member.name}`);
+          },
+          onError: (error) => {
+            console.error('Error sending reminder:', error);
+            toast.error(`Failed to send reminder to ${member.name}`);
+          }
+        }
+      );
     });
-    setReminderSent(newReminderSent);
-    // In a real app, this would send API requests
   };
 
   const handleMarkAsReviewed = (briefId: string) => {
@@ -154,15 +190,15 @@ const AdminDashboard: React.FC = () => {
 
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
 
-  // if (isLoadingSettings || isLoadingBriefs) {
-  //   return (
-  //     <DashboardLayout>
-  //       <div className="flex items-center justify-center h-screen">
-  //         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-  //       </div>
-  //     </DashboardLayout>
-  //   );
-  // }
+  if (isLoadingSettings || isLoadingBriefs) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
   return (
     <DashboardLayout>
       <div

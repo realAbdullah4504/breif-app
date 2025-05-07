@@ -76,6 +76,8 @@ export class BriefService {
   }
   async getAllBriefs(adminId: string): Promise<{ teamMembers:BriefWithUser[] | null,data: BriefWithUser[] | null; error: Error | null }> {
     try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       // First, get all team members under this admin
       const { data: teamMembers, error: teamError } = await supabase
         .from('users')
@@ -106,7 +108,8 @@ export class BriefService {
           )
         `)
         .in('user_id', teamMemberIds)
-        .order('submitted_at', { ascending: false });
+        .order('submitted_at', { ascending: false })
+        .gte('submitted_at', today.toISOString());
   
       if (error) throw error;
   
@@ -153,7 +156,7 @@ export class BriefService {
       const { data: submitted, error: submittedError } = await supabase
       .from('briefs')
       .select('*, users:user_id (invited_by)')
-      // .gte('submitted_at', today.toISOString());
+      .gte('submitted_at', today.toISOString());
 
       if (submittedError) throw submittedError;
       
