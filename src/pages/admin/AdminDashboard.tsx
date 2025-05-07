@@ -182,30 +182,68 @@ const AdminDashboard: React.FC = () => {
     alert("PDF download functionality would be implemented here");
   };
 
-  const filteredBriefs = mockBriefs.filter((brief) => {
-    // Filter by search term
-    const matchesSearch = brief.userName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-
-    // Filter by submission status
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "submitted" && brief.submitted) ||
-      (filterStatus === "pending" && !brief.submitted);
-
-    // Filter by review status
-    const isReviewed = reviewedBriefs[brief.id];
-    const matchesReview =
-      filterReview === "all" ||
-      (filterReview === "reviewed" && isReviewed) ||
-      (filterReview === "pending" && !isReviewed && brief.submitted);
-
-    // Filter by date (simplified for demo)
-    const matchesDate = true; // In a real app, we would check the date
-
-    return matchesSearch && matchesStatus && matchesReview && matchesDate;
-  });
+  const getFilteredMembers = () => {
+    return teamMembers.filter(member => {
+      const memberBrief = briefs.find(brief => brief.user_id === member.id);
+      
+      // Search filter
+      const matchesSearch = member?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase());
+  
+      // Submission status filter
+      const matchesStatus =
+        filterStatus === "all" ||
+        (filterStatus === "submitted" && memberBrief) ||
+        (filterStatus === "pending" && !memberBrief);
+  
+      // Review status filter
+      const matchesReview =
+        filterReview === "all" ||
+        (filterReview === "reviewed" && memberBrief?.reviewed_by) ||
+        (filterReview === "pending" && memberBrief && !memberBrief.reviewed_by);
+  
+      // Date filter
+      const briefDate = memberBrief?.submitted_at ? new Date(memberBrief.submitted_at) : null;
+      let matchesDate = true;
+  
+      if (briefDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+  
+        switch (filterDate) {
+          case "today":
+            matchesDate = briefDate >= today;
+            break;
+          case "yesterday":
+            matchesDate = briefDate >= yesterday && briefDate < today;
+            break;
+          case "week":
+            matchesDate = briefDate >= weekAgo;
+            break;
+          case "custom":
+            if (customDateRange.start && customDateRange.end) {
+              const start = new Date(customDateRange.start);
+              const end = new Date(customDateRange.end);
+              end.setHours(23, 59, 59, 999);
+              matchesDate = briefDate >= start && briefDate <= end;
+            }
+            break;
+          default:
+            matchesDate = true;
+        }
+      }
+  
+      return matchesSearch && matchesStatus && matchesReview && matchesDate;
+    });
+  };
+  
+  // Update the rendering section to use filteredMembers
+  const filteredMembers = getFilteredMembers();
 
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
 
@@ -681,7 +719,7 @@ const AdminDashboard: React.FC = () => {
         <div className="mb-6">
           {viewMode === "card" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {teamMembers?.map((member) => {
+              {filteredMembers?.map((member) => {
                 const memberBrief = briefs.find(
                   (brief) => brief?.user_id === member?.id
                 );

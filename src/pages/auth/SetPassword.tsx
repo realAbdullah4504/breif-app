@@ -1,23 +1,22 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Lock, AlertTriangle, CheckCircle } from "lucide-react";
+import { Lock, AlertTriangle, CheckCircle, User } from "lucide-react";
 import Button from "../../components/UI/Button";
 import { useAuth } from "../../context/AuthContext";
 import { useTeamInvitations } from "../../hooks/useTeamInvitations";
-import {validatePassword} from "../../utils/passwordValidation";
+import { validatePassword } from "../../utils/passwordValidation";
 
 export const SetPassword: React.FC = () => {
-  
   const { currentUser } = useAuth();
-  const { setPassword, isSettingPassword} = useTeamInvitations();
+  const { setPassword, isSettingPassword } = useTeamInvitations();
   const [formData, setFormData] = useState({
+    username: "",
     password: "",
     confirmPassword: "",
   });
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [error, setError] = useState<string>();
-
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,7 +35,10 @@ export const SetPassword: React.FC = () => {
       setError("No valid session found");
       return;
     }
-
+    if (!formData.username.trim()) {
+      setError("Username is required");
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -48,7 +50,7 @@ export const SetPassword: React.FC = () => {
       return;
     }
 
-    setPassword(formData.password);
+    setPassword({username:formData.username,password:formData.password});
   };
 
   if (!currentUser) {
@@ -101,6 +103,29 @@ export const SetPassword: React.FC = () => {
             </div>
           )}
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Username
+              </label>
+              <div className="mt-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Choose a username"
+                />
+              </div>
+            </div>
             <div>
               <label
                 htmlFor="password"
@@ -171,11 +196,7 @@ export const SetPassword: React.FC = () => {
               </div>
             )}
 
-            <Button
-              type="submit"
-              fullWidth
-              isLoading={isSettingPassword}
-            >
+            <Button type="submit" fullWidth isLoading={isSettingPassword}>
               Set Password & Continue
             </Button>
           </form>

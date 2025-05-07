@@ -73,6 +73,7 @@ export class InviteService {
   async setPassword(
     id: string,
     email: string,
+    name:string,
     password: string,
     role: string = "member"
   ): Promise<{ error: Error | null }> {
@@ -102,6 +103,7 @@ export class InviteService {
 
       await supabase.from("users").upsert({
         id,
+        name,
         email,
         role,
         invited_by: invitation.invited_by,

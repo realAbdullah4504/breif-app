@@ -33,13 +33,20 @@ export const useTeamInvitations = () => {
   });
 
   const setPasswordMutation = useMutation({
-    mutationFn: (password: string) => {
+    mutationFn: ({
+      username,
+      password,
+    }: {
+      username: string;
+      password: string;
+    }) => {
       if (!currentUser?.email) {
         return Promise.reject(new Error("No user email found"));
       }
       return inviteService.setPassword(
         currentUser.id,
         currentUser.email,
+        username,
         password
       );
     },
@@ -69,7 +76,7 @@ export const useTeamInvitations = () => {
     isError: invitationsQuery.isError,
     sendInvite: (email: string) => sendInviteMutation.mutate(email),
     isInviting: sendInviteMutation.isPending,
-    setPassword: (password: string) => setPasswordMutation.mutate(password),
+    setPassword:setPasswordMutation.mutate,
     isSettingPassword: setPasswordMutation.isPending,
     deleteInvite: (id: string) => deleteInvite.mutate(id),
   };
