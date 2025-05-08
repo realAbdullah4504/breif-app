@@ -2,8 +2,14 @@ import { supabase } from "../lib/supabase";
 import { AuthError, User } from "@supabase/supabase-js";
 
 interface AuthResponse {
-  user: User | null;
+  user: ExtendedUser | null;
   error: AuthError | null;
+}
+
+export interface ExtendedUser extends User {
+  role: string;
+  name: string;
+  avatar_url: string | null;
 }
 
 export class AuthService {
@@ -39,13 +45,15 @@ export class AuthService {
       email,
       password,
     });
-    const { data} = await supabase
+    const { data } = await supabase
       .from("users")
-      .select("role")
+      .select("role,name,avatar_url")
       .eq("id", user?.id)
       .single();
     const role = data?.role;
-    const userWithRole = { ...user, role } as User;
+    const name = data?.name;
+    const avatar_url = data?.avatar_url;
+    const userWithRole = { ...user, role, name, avatar_url } as ExtendedUser;
     return { user: userWithRole, error };
   }
 
@@ -59,32 +67,36 @@ export class AuthService {
     return { error };
   }
 
-  async getCurrentUser(): Promise<User | null> {
+  async getCurrentUser(): Promise<ExtendedUser | null> {
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
       if (authError || !user) {
         return null;
       }
-  
+
       const { data, error: roleError } = await supabase
         .from("users")
-        .select("role")
+        .select("role,name,avatar_url")
         .eq("id", user.id)
         .single();
-  
+
       if (roleError || !data) {
-        console.error('Error fetching user role:', roleError);
-        return user;
+        console.error("Error fetching user role:", roleError);
+        return user as ExtendedUser;
       }
-  
+
       return {
         ...user,
-        role: data.role
-      } as User;
-  
+        role: data.role,
+        name: data.name,
+        avatar_url: data.avatar_url,
+      } as ExtendedUser;
     } catch (error) {
-      console.error('Error in getCurrentUser:', error);
+      console.error("Error in getCurrentUser:", error);
       return null;
     }
   }

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { SettingsService, WorkspaceSettings } from '../services/settingsService';
+import { SettingsService} from '../services/settingsService';
+import { WorkspaceSettings } from '../types/settingTypes';
 
 const settingsService = new SettingsService();
 

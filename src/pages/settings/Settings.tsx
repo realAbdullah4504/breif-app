@@ -1,37 +1,66 @@
-import React, { useEffect, useState } from 'react';
-import DashboardLayout from '../../components/Layout/DashboardLayout';
-import Card, { CardHeader, CardBody, CardFooter } from '../../components/UI/Card';
-import Button from '../../components/UI/Button';
-import Input from '../../components/UI/Input';
-import TextArea from '../../components/UI/TextArea';
-import { useAuth } from '../../context/AuthContext';
-import { useSettings } from '../../hooks/useSettings';
-import { Plus, Trash2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { generateTimeOptions } from '../../utils/timeUtils';
+import React, { useEffect, useRef, useState } from "react";
+import DashboardLayout from "../../components/Layout/DashboardLayout";
+import Card, {
+  CardHeader,
+  CardBody,
+  CardFooter,
+} from "../../components/UI/Card";
+import Button from "../../components/UI/Button";
+import Input from "../../components/UI/Input";
+import TextArea from "../../components/UI/TextArea";
+import { useAuth } from "../../context/AuthContext";
+import { useSettings } from "../../hooks/useSettings";
+import { Plus, Trash2 } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { generateTimeOptions } from "../../utils/timeUtils";
+import { BriefQuestions, WorkspaceSettings } from "../../types/settingTypes";
+import { useProfile } from "../../hooks/useProfile";
 
 const Settings: React.FC = () => {
   const { currentUser } = useAuth();
-  const { 
-    settings, 
-    isLoading, 
-    error,
-    updateSettings,
-    isUpdating 
-  } = useSettings();
+  const [avatar, setAvatar] = useState<File | undefined>(undefined);
+  const { settings, isLoading, error, updateSettings, isUpdating } =
+    useSettings();
 
-  const isAdmin = currentUser?.role === 'admin';
+  const {
+    uploadAvatar,
+    deleteAvatar,
+    updateProfile,
+    isUploading,
+    isUpdatingUUser,
+  } = useProfile();
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatar(file)
+      e.target.value = '';
+    }
+  };
+  const handleUpdate=()=>{
+    if(avatar)
+    uploadAvatar(avatar);
+    setAvatar(undefined);
+  }
+  const isAdmin = currentUser?.role === "admin";
   const timeOptions = generateTimeOptions();
 
-  const [formData, setFormData] = useState(() => settings || {
-    questions: {
-      accomplishments: '',
-      blockers: '',
-      priorities: ''
-    },
-    submission_deadline: '17:00:00',
-    email_reminders: true
-  });
+  const [formData, setFormData] = useState<Partial<WorkspaceSettings>>(
+    () =>
+      settings || {
+        questions: {
+          accomplishments: "",
+          blockers: "",
+          priorities: "",
+          question4: "",
+          question5: "",
+        },
+        submission_deadline: "17:00:00",
+        email_reminders: true,
+      }
+  );
 
   useEffect(() => {
     if (settings) {
@@ -39,45 +68,65 @@ const Settings: React.FC = () => {
     }
   }, [settings]);
   // Update handlers to modify local state instead of calling updateSettings
-  const handleQuestionChange = (field: keyof typeof formData.questions, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      questions: {
-        ...prev.questions,
-        [field]: value
+  const handleQuestionChange = (field: keyof BriefQuestions, value: string) => {
+    setFormData((prev) => {
+      if (!prev?.questions) {
+        return {
+          ...prev,
+          questions: {
+            accomplishments: "",
+            blockers: "",
+            priorities: "",
+            [field]: value,
+          },
+        };
       }
-    }));
+
+      return {
+        ...prev,
+        questions: {
+          ...prev.questions,
+          [field]: value,
+        },
+      };
+    });
   };
 
   const handleDeadlineChange = (value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      submission_deadline: value
+      submission_deadline: value,
     }));
   };
 
   const handleEmailRemindersChange = (checked: boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      email_reminders: checked
+      email_reminders: checked,
     }));
   };
 
   const addQuestion = (questionNumber: number) => {
-    const field = `question${questionNumber}` as keyof typeof formData.questions;
+    const field = `question${questionNumber}` as keyof BriefQuestions;
     handleQuestionChange(field, `Question ${questionNumber}`);
   };
 
   const removeQuestion = (questionNumber: number) => {
-    const field = `question${questionNumber}` as keyof typeof formData.questions;
-    const updatedQuestions = { ...formData.questions };
-    delete updatedQuestions[field];
+    const field = `question${questionNumber}` as keyof BriefQuestions;
 
-    setFormData(prev => ({
-      ...prev,
-      questions: updatedQuestions
-    }));
+    setFormData((prev) => {
+      if (!prev.questions) return prev;
+
+      const updatedQuestions = { ...prev.questions };
+      delete updatedQuestions[field];
+
+      return {
+        ...prev,
+        questions: updatedQuestions,
+      };
+    });
   };
+
 
   // Update save handler to save all changes at once
   const handleSave = async (e: React.FormEvent) => {
@@ -87,11 +136,11 @@ const Settings: React.FC = () => {
     try {
       await updateSettings({
         ...settings,
-        ...formData
+        ...formData,
       });
-      toast.success('Settings saved successfully');
+      toast.success("Settings saved successfully");
     } catch (error) {
-      toast.error('Failed to save settings');
+      toast.error("Failed to save settings");
     }
   };
 
@@ -118,7 +167,9 @@ const Settings: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Settings
+        </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Manage your account and workspace settings.
         </p>
@@ -129,9 +180,12 @@ const Settings: React.FC = () => {
           {isAdmin && (
             <Card className="mb-6">
               <CardHeader>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Brief Questions</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Brief Questions
+                </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Customize the questions your team members will answer in their daily briefs.
+                  Customize the questions your team members will answer in their
+                  daily briefs.
                 </p>
               </CardHeader>
               <CardBody>
@@ -140,34 +194,42 @@ const Settings: React.FC = () => {
                     <TextArea
                       id="accomplishments"
                       label="Question 1 (Accomplishments)"
-                      value={formData.questions.accomplishments}
-                      onChange={(e) => handleQuestionChange('accomplishments', e.target.value)}
+                      value={formData?.questions?.accomplishments}
+                      onChange={(e) =>
+                        handleQuestionChange("accomplishments", e.target.value)
+                      }
                       required
                     />
-                    
+
                     <TextArea
                       id="blockers"
                       label="Question 2 (Blockers)"
-                      value={formData.questions.blockers}
-                      onChange={(e) => handleQuestionChange('blockers', e.target.value)}
+                      value={formData?.questions?.blockers}
+                      onChange={(e) =>
+                        handleQuestionChange("blockers", e.target.value)
+                      }
                       required
                     />
-                    
+
                     <TextArea
                       id="priorities"
                       label="Question 3 (Priorities)"
-                      value={formData.questions.priorities}
-                      onChange={(e) => handleQuestionChange('priorities', e.target.value)}
+                      value={formData?.questions?.priorities}
+                      onChange={(e) =>
+                        handleQuestionChange("priorities", e.target.value)
+                      }
                       required
                     />
-                    
-                    {formData.questions.question4 && (
+
+                    {formData?.questions?.question4 && (
                       <div className="relative">
                         <TextArea
                           id="question4"
                           label="Question 4 (Optional)"
-                          value={formData.questions.question4}
-                          onChange={(e) => handleQuestionChange('question4', e.target.value)}
+                          value={formData?.questions?.question4}
+                          onChange={(e) =>
+                            handleQuestionChange("question4", e.target.value)
+                          }
                         />
                         <button
                           type="button"
@@ -178,14 +240,16 @@ const Settings: React.FC = () => {
                         </button>
                       </div>
                     )}
-                    
-                    {formData.questions.question5 && (
+
+                    {formData?.questions?.question5 && (
                       <div className="relative">
                         <TextArea
                           id="question5"
                           label="Question 5 (Optional)"
                           value={formData.questions.question5}
-                          onChange={(e) => handleQuestionChange('question5', e.target.value)}
+                          onChange={(e) =>
+                            handleQuestionChange("question5", e.target.value)
+                          }
                         />
                         <button
                           type="button"
@@ -196,8 +260,9 @@ const Settings: React.FC = () => {
                         </button>
                       </div>
                     )}
-                    
-                    {(!settings.questions.question4 || !settings.questions.question5) && (
+
+                    {(!settings.questions.question4 ||
+                      !settings.questions.question5) && (
                       <div className="mt-4">
                         <Button
                           type="button"
@@ -216,9 +281,12 @@ const Settings: React.FC = () => {
                         </Button>
                       </div>
                     )}
-                    
+
                     <div className="mt-4">
-                      <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label
+                        htmlFor="deadline"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
                         Submission Deadline
                       </label>
                       <select
@@ -234,30 +302,30 @@ const Settings: React.FC = () => {
                         ))}
                       </select>
                     </div>
-                    
+
                     <div>
                       <label className="flex items-center">
                         <input
                           type="checkbox"
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
                           checked={settings.email_reminders}
-                          onChange={(e) => handleEmailRemindersChange(e.target.checked)}
+                          onChange={(e) =>
+                            handleEmailRemindersChange(e.target.checked)
+                          }
                         />
                         <span className="ml-2 text-sm text-gray-900 dark:text-white">
                           Send automatic reminders
                         </span>
                       </label>
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 ml-6">
-                        Automatically send reminders to team members who haven't submitted their brief by the deadline.
+                        Automatically send reminders to team members who haven't
+                        submitted their brief by the deadline.
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="mt-6 flex justify-end">
-                    <Button
-                      type="submit"
-                      isLoading={isUpdating}
-                    >
+                    <Button type="submit" isLoading={isUpdating}>
                       Save Changes
                     </Button>
                   </div>
@@ -265,45 +333,68 @@ const Settings: React.FC = () => {
               </CardBody>
             </Card>
           )}
-        <Card>
+          <Card>
             <CardHeader>
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Account Settings</h2>
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                Account Settings
+              </h2>
             </CardHeader>
             <CardBody>
               <div className="space-y-6">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 relative group">
                     <img
-                      className="h-16 w-16 rounded-full"
-                      src={currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'}
-                      alt=""
+                      className="h-16 w-16 rounded-full object-cover"
+                      src={currentUser?.avatar_url || "/default-avatar.png"}
+                      alt={currentUser?.name || "Avatar"}
                     />
+                    {currentUser?.avatar_url && (
+                      <button
+                        onClick={deleteAvatar}
+                        className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="h-6 w-6 text-white" />
+                      </button>
+                    )}
                   </div>
                   <div className="ml-4">
-                    <Button variant="outline" size="sm">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      isLoading={isUploading}
+                    >
                       Change avatar
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                   <div className="sm:col-span-3">
                     <Input
                       id="name"
                       label="Full name"
-                      defaultValue={currentUser?.name || ''}
+                      defaultValue={currentUser?.name || ""}
                     />
                   </div>
-                  
+
                   <div className="sm:col-span-3">
                     <Input
                       id="email"
                       label="Email address"
                       type="email"
-                      defaultValue={currentUser?.email || ''}
+                      disabled
+                      defaultValue={currentUser?.email || ""}
                     />
                   </div>
-                  
+
                   <div className="sm:col-span-3">
                     <Input
                       id="password"
@@ -312,7 +403,7 @@ const Settings: React.FC = () => {
                       placeholder="••••••••"
                     />
                   </div>
-                  
+
                   <div className="sm:col-span-3">
                     <Input
                       id="confirm-password"
@@ -326,9 +417,7 @@ const Settings: React.FC = () => {
             </CardBody>
             <CardFooter>
               <div className="flex justify-end">
-                <Button>
-                  Update Account
-                </Button>
+                <Button onClick={handleUpdate}>Update Account</Button>
               </div>
             </CardFooter>
           </Card>
@@ -337,12 +426,17 @@ const Settings: React.FC = () => {
           {isAdmin && (
             <Card className="mb-6">
               <CardHeader>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Workspace Settings</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Workspace Settings
+                </h2>
               </CardHeader>
               <CardBody>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="workspace-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label
+                      htmlFor="workspace-name"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
                       Workspace Name
                     </label>
                     <Input
@@ -351,7 +445,7 @@ const Settings: React.FC = () => {
                       defaultValue="My Team Workspace"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Timezone
@@ -360,10 +454,14 @@ const Settings: React.FC = () => {
                       className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       defaultValue="America/New_York"
                     >
-                      <option value="America/New_York">Eastern Time (ET)</option>
+                      <option value="America/New_York">
+                        Eastern Time (ET)
+                      </option>
                       <option value="America/Chicago">Central Time (CT)</option>
                       <option value="America/Denver">Mountain Time (MT)</option>
-                      <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                      <option value="America/Los_Angeles">
+                        Pacific Time (PT)
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -375,10 +473,12 @@ const Settings: React.FC = () => {
               </CardFooter>
             </Card>
           )}
-          
+
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Notification Preferences</h2>
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                Notification Preferences
+              </h2>
             </CardHeader>
             <CardBody>
               <div>
@@ -388,7 +488,9 @@ const Settings: React.FC = () => {
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
                     defaultChecked
                   />
-                  <span className="ml-2 text-sm text-gray-900 dark:text-white">Email notifications</span>
+                  <span className="ml-2 text-sm text-gray-900 dark:text-white">
+                    Email notifications
+                  </span>
                 </label>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 ml-6">
                   Receive email notifications for reminders and updates.

@@ -5,14 +5,14 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import type { User } from "@supabase/supabase-js";
-import { AuthService } from "../services/auth";
+import { AuthService, ExtendedUser } from "../services/auth";
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: ExtendedUser | null;
+  setCurrentUser: React.Dispatch<React.SetStateAction<ExtendedUser | null>>;
   isAuthenticated: boolean;
-  signUp: (name:string,email: string, password: string, role: string) => Promise<User>;
-  login: (email: string, password: string) => Promise<User>;
+  signUp: (name:string,email: string, password: string, role: string) => Promise<ExtendedUser>;
+  login: (email: string, password: string) => Promise<ExtendedUser>;
   logout: () => Promise<void>;
 }
 
@@ -22,7 +22,7 @@ const authService = new AuthService();
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<ExtendedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<User> => {
+  const login = async (email: string, password: string): Promise<ExtendedUser> => {
     const { user, error } = await authService.signIn(email, password);
 
     if (error) {
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     email: string,
     password: string,
     role: string
-  ): Promise<User> => {
+  ): Promise<ExtendedUser> => {
     const { user, error } = await authService.signUp(name,email, password, role);
 
     if (error) {
@@ -92,6 +92,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     <AuthContext.Provider
       value={{
         currentUser,
+        setCurrentUser,
         isAuthenticated: !!currentUser,
         signUp,
         login,
