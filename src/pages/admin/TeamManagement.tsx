@@ -10,7 +10,7 @@ import { mockInvitations, mockUsers } from '../../data/mockData';
 import { useTeamInvitations } from '../../hooks/useTeamInvitations';
 
 const TeamManagement: React.FC = () => {
-  const {invitations,sendInvite,isInviting,deleteInvite}=useTeamInvitations();
+  const {invitations,sendInvite,isLoading:invitationsLoading,isInviting,deleteInvite}=useTeamInvitations();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
@@ -46,6 +46,16 @@ const TeamManagement: React.FC = () => {
       // In a real app, this would call an API
     }, 500);
   };
+
+  if (invitationsLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

@@ -16,7 +16,7 @@ import toast from "react-hot-toast";
 import { format, parse } from "date-fns";
 
 const EmailTemplates: React.FC = () => {
-  const { settings, updateSettings, isUpdating } = useSettings();
+  const { settings, updateSettings, isUpdating,isLoading:settingsLoading } = useSettings();
   const { sendEmail, isLoading: isSendingEmail } = useEmail();
 
   const [subject, setSubject] = useState("");
@@ -94,7 +94,15 @@ const EmailTemplates: React.FC = () => {
   };
 
   const hourOptions = generateTimeOptions();
-
+  if (settingsLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
   return (
     <DashboardLayout>
       <div className="mb-6">
