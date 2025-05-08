@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { InvitationWithUser } from "../types/invitationTypes";
 
 export class InviteService {
   async createInvite(
@@ -22,18 +23,41 @@ export class InviteService {
       return { error: error as Error };
     }
   }
-  async getInvitations(
-    id: string
-  ) {
+  async getInvitations(id: string): Promise<{ 
+    data: InvitationWithUser[], 
+    error: Error | null 
+  }> {
     try {
-      const { data, error } = await supabase
+      // First get all invitations
+      const { data: invitations, error } = await supabase
         .from("invitations")
         .select("*")
         .eq("invited_by", id);
 
       if (error) throw error;
+      if (!invitations?.length) return { data: [], error: null };
 
-      return { data, error: null };
+      // Get user data for each invitation's email
+      const invitationsWithUsers = await Promise.all(
+        invitations.map(async (invitation) => {
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("name, avatar_url")
+            .eq("email", invitation.email)
+            .single();
+
+          if (userError && userError.code !== 'PGRST116') { // Ignore not found error
+            console.warn(`Could not fetch user data for ${invitation.email}:`, userError);
+          }
+
+          return {
+            ...invitation,
+            user: userData || null
+          };
+        })
+      );
+
+      return { data: invitationsWithUsers, error: null };
     } catch (error) {
       console.error("Error fetching invitations:", error);
       return { data: [], error: error as Error };

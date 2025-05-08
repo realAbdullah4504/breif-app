@@ -7,6 +7,16 @@ export interface UpdateProfileData {
   avatar_url?: string | null;
 }
 
+export interface UpdateProfileData {
+  name?: string;
+  email?: string;
+  avatar_url?: string | null;
+}
+
+export interface UpdatePasswordData {
+  password: string;
+}
+
 export class ProfileService {
   async updateProfile(
     userId: string, 
@@ -22,6 +32,20 @@ export class ProfileService {
       return { error: null };
     } catch (error) {
       console.error('Error updating profile:', error);
+      return { error: error as Error };
+    }
+  }
+
+  async updatePassword(password: string): Promise<{ error: Error | null }> {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      console.error('Error updating password:', error);
       return { error: error as Error };
     }
   }

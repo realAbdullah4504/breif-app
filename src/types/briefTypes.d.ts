@@ -55,15 +55,3 @@ export interface BriefStats {
   submittedCount: number;
   pendingCount: number;
 }
-
-export interface UseAdminBriefsReturn {
-  briefs: Brief[];
-  teamMembers: TeamMember[];
-  filteredTeamMembers: TeamMember[];
-  isLoading: boolean;
-  error: Error | null;
-  stats: BriefStats;
-  isLoadingStats: boolean;
-  reviewBrief: (params: { briefId: string; adminNotes: string }) => void;
-  isReviewing: boolean;
-}

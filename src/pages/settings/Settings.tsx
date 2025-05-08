@@ -18,6 +18,11 @@ import { useProfile } from "../../hooks/useProfile";
 
 const Settings: React.FC = () => {
   const { currentUser } = useAuth();
+  const [profileData, setProfileData] = useState({
+    name: currentUser?.name || '',
+    password: '',
+    confirmPassword: ''
+  });
   const [avatar, setAvatar] = useState<File | undefined>(undefined);
   const { settings, isLoading, error, updateSettings, isUpdating } =
     useSettings();
@@ -26,8 +31,10 @@ const Settings: React.FC = () => {
     uploadAvatar,
     deleteAvatar,
     updateProfile,
+    updatePassword,
     isUploading,
-    isUpdatingUUser,
+    isUpdatingUser,
+    isUpdatingPassword,
   } = useProfile();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,9 +47,23 @@ const Settings: React.FC = () => {
     }
   };
   const handleUpdate=()=>{
+    if (profileData.name !== currentUser?.name) {
+      updateProfile({ name: profileData.name });
+    }
+    if (profileData.password) {
+        updatePassword({
+        password: profileData.password,
+        confirmPassword: profileData.confirmPassword
+      });
+      // Clear password fields after update
+      setProfileData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+    }
     if(avatar)
-    uploadAvatar(avatar);
-    setAvatar(undefined);
+    {
+      uploadAvatar(avatar);
+      setAvatar(undefined);
+    }
+
   }
   const isAdmin = currentUser?.role === "admin";
   const timeOptions = generateTimeOptions();
@@ -369,7 +390,7 @@ const Settings: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
-                      isLoading={isUploading}
+                      disabled={currentUser?.avatar_url ? true : false}
                     >
                       Change avatar
                     </Button>
@@ -382,6 +403,7 @@ const Settings: React.FC = () => {
                       id="name"
                       label="Full name"
                       defaultValue={currentUser?.name || ""}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
                     />
                   </div>
 
@@ -401,6 +423,7 @@ const Settings: React.FC = () => {
                       label="New password"
                       type="password"
                       placeholder="••••••••"
+                      onChange={(e) => setProfileData(prev => ({ ...prev, password: e.target.value }))}
                     />
                   </div>
 
@@ -410,6 +433,7 @@ const Settings: React.FC = () => {
                       label="Confirm password"
                       type="password"
                       placeholder="••••••••"
+                      onChange={(e) => setProfileData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     />
                   </div>
                 </div>
@@ -417,7 +441,7 @@ const Settings: React.FC = () => {
             </CardBody>
             <CardFooter>
               <div className="flex justify-end">
-                <Button onClick={handleUpdate}>Update Account</Button>
+                <Button onClick={handleUpdate} isLoading={isUploading || isUpdating || isUpdatingPassword}>Update Account</Button>
               </div>
             </CardFooter>
           </Card>

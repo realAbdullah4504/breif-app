@@ -10,12 +10,7 @@ export interface User {
   updated_at?: string;
 }
 
-export interface Invitation {
-  id: string;
-  email: string;
-  status: 'pending' | 'accepted';
-  date: string;
-}
+
 
 export interface WorkspaceSettings {
   id: string;

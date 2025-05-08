@@ -8,6 +8,22 @@ const profileService = new ProfileService();
 export const useProfile = () => {
   const { currentUser, setCurrentUser } = useAuth();
 
+  const updatePasswordMutation = useMutation({
+    mutationFn: async ({ password, confirmPassword }: { password: string; confirmPassword: string }) => {
+      if (password !== confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+      return await profileService.updatePassword(password);
+    },
+    onSuccess: () => {
+      toast.success('Password updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to update password');
+    }
+  });
+
+
   const updateProfileMutation = useMutation({
     mutationFn: async (data: UpdateProfileData) => {
       if (!currentUser) throw new Error('No user authenticated');
@@ -58,6 +74,8 @@ export const useProfile = () => {
   });
 
   return {
+    updatePassword: updatePasswordMutation.mutate,
+    isUpdatingPassword: updatePasswordMutation.isPending,
     updateProfile: updateProfileMutation.mutate,
     uploadAvatar: uploadAvatarMutation.mutate,
     deleteAvatar: deleteAvatarMutation.mutate,
