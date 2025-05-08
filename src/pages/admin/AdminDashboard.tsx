@@ -1,46 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { parse, format, formatDistanceToNow } from "date-fns";
+import React, { useState} from "react";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   CheckCircle,
   XCircle,
   Bell,
   Eye,
   Search,
-  Calendar,
   Filter,
   Clock,
   ChevronDown,
   LayoutGrid,
   List,
   Download,
-  MessageSquare,
-  AlertTriangle,
-  X,
+
   UserPlus,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion} from "framer-motion";
 import CountUp from "react-countup";
 
 import DashboardLayout from "../../components/Layout/DashboardLayout";
-import Card, { CardHeader, CardBody } from "../../components/UI/Card";
+import Card, {CardBody } from "../../components/UI/Card";
 import Button from "../../components/UI/Button";
 import Badge from "../../components/UI/Badge";
 import Modal from "../../components/UI/Modal";
-import Input from "../../components/UI/Input";
 import TextArea from "../../components/UI/TextArea";
-import { mockBriefs, mockSettings } from "../../data/mockData";
-import { Brief } from "../../types";
-import { FilterOptions, useAdminBriefs } from "../../hooks/useAdminBriefs";
 import { useSettings } from "../../hooks/useSettings";
 import { useEmail } from "../../hooks/useEmail";
 import toast from "react-hot-toast";
-import { getFilteredMembers } from "../../utils/filters";
 import EmptyState from "../../components/EmptyState";
+import { BriefWithUser, FilterOptions } from "../../types/briefTypes";
+import { useAdminBriefs } from "../../hooks/useAdminBriefs";
 
 const AdminDashboard: React.FC = () => {
   const { settings, isLoading: isLoadingSettings } = useSettings();
   const { sendEmail, isLoading: isSendingEmail } = useEmail();
-  const [selectedBrief, setSelectedBrief] = useState<Brief | null>(null);
+  const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reminderSent, setReminderSent] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -106,7 +100,7 @@ const AdminDashboard: React.FC = () => {
     ? formatDistanceToNow(deadline, { addSuffix: true })
     : "No deadline set";
 
-  const handleViewBrief = (brief: Brief) => {
+  const handleViewBrief = (brief:BriefWithUser) => {
     setSelectedBrief(brief);
     setAdminNotes("");
     setIsModalOpen(true);
@@ -1031,8 +1025,8 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <img
-                    src={selectedBrief.userAvatarUrl}
-                    alt={selectedBrief.userName}
+                    src={selectedBrief.users?.avatar_url}
+                    alt={selectedBrief.users?.name}
                     className="h-10 w-10 rounded-full mr-3"
                   />
                   <div>
@@ -1041,14 +1035,14 @@ const AdminDashboard: React.FC = () => {
                         isDarkMode ? "text-white" : "text-gray-900"
                       }`}
                     >
-                      {selectedBrief.userName}
+                      {selectedBrief?.users?.name}
                     </h3>
                     <p
                       className={`text-sm ${
                         isDarkMode ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
-                      {selectedBrief.date} • Submitted at 5:03 PM
+                      {selectedBrief?.submitted_at} • Submitted at 5:03 PM
                     </p>
                   </div>
                 </div>

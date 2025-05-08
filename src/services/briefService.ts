@@ -1,40 +1,8 @@
-import { FilterOptions, TeamMember } from '../hooks/useAdminBriefs';
 import { supabase } from '../lib/supabase';
+import { Brief, CreateBriefDTO, FilterOptions} from '../types/briefTypes';
 import { getFilteredMembers } from '../utils/filters';
 
-export interface Brief {
-  id: string;
-  user_id: string;
-  accomplishments: string;
-  blockers: string;
-  priorities: string;
-  question4_response?: string;
-  question5_response?: string;
-  submitted_at: string;
-  reviewed_at?: string;
-  reviewed_by?: string;
-  admin_notes?: string;
-  created_at: string;
-  updated_at: string;
-}
 
-export interface CreateBriefDTO {
-  accomplishments: string;
-  blockers: string;
-  priorities: string;
-  question4_response?: string;
-  question5_response?: string;
-}
-
-interface BriefWithUser extends Brief {
-  users: {
-    id: string;
-    name: string;
-    email: string;
-    avatar_url?: string;
-    invited_by: string;
-  };
-}
 export class BriefService {
   async submitBrief(brief: CreateBriefDTO): Promise<{ data: Brief | null; error: Error | null }> {
     try {
@@ -76,11 +44,7 @@ export class BriefService {
       return { data: [], error: error as Error };
     }
   }
-  async getAllBriefs(adminId: string,filters:FilterOptions): Promise<{ 
-    teamMembers: TeamMember[] | null, 
-    data: BriefWithUser[] | null; 
-    error: Error | null 
-  }> {
+  async getAllBriefs(adminId: string,filters:FilterOptions) {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -148,7 +112,6 @@ export class BriefService {
       if (error) throw error;
   
       const filteredTeamMembers = getFilteredMembers(teamMembers, data, filters.status, filters.review);
-        // console.log('Filtered Members:', filteredTeamMembers, 'Status:', filterStatus, 'Review:', filterReview);
         return { teamMembers, filteredTeamMembers, data: data || null, error: null };
     } catch (error) {
         console.error('Error fetching briefs:', error);

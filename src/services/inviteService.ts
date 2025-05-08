@@ -24,7 +24,7 @@ export class InviteService {
   }
   async getInvitations(
     id: string
-  ): Promise<{ data: any[]; error: Error | null }> {
+  ) {
     try {
       const { data, error } = await supabase
         .from("invitations")
@@ -76,7 +76,7 @@ export class InviteService {
     name:string,
     password: string,
     role: string = "member"
-  ): Promise<{ error: Error | null }> {
+  ){
     try {
       // Update password
       const { error: passwordError } = await supabase.auth.updateUser({

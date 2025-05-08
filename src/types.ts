@@ -10,25 +10,6 @@ export interface User {
   updated_at?: string;
 }
 
-export interface Brief {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatarUrl?: string;
-  date: string;
-  accomplishments: string;
-  blockers: string;
-  priorities: string;
-  question4_response?: string;
-  question5_response?: string;
-  submitted_at: string;
-  reviewed_at?: string;
-  reviewed_by?: string;
-  admin_notes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export interface Invitation {
   id: string;
   email: string;
