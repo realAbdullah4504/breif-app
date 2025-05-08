@@ -1,4 +1,6 @@
+import { FilterOptions, TeamMember } from '../hooks/useAdminBriefs';
 import { supabase } from '../lib/supabase';
+import { getFilteredMembers } from '../utils/filters';
 
 export interface Brief {
   id: string;
@@ -74,11 +76,43 @@ export class BriefService {
       return { data: [], error: error as Error };
     }
   }
-  async getAllBriefs(adminId: string): Promise<{ teamMembers:BriefWithUser[] | null,data: BriefWithUser[] | null; error: Error | null }> {
+  async getAllBriefs(adminId: string,filters:FilterOptions): Promise<{ 
+    teamMembers: TeamMember[] | null, 
+    data: BriefWithUser[] | null; 
+    error: Error | null 
+  }> {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      // First, get all team members under this admin
+  
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+  
+      let startDate = today;
+      let endDate = tomorrow;
+  
+      switch (filters.date) {
+        case "today":
+          // startDate and endDate already set
+          break;
+        case "yesterday": {
+          startDate = new Date(today);
+          startDate.setDate(startDate.getDate() - 1);
+          endDate = today;
+          break;
+        }
+        case "custom": {
+          if (filters.customRange?.start && filters.customRange?.end) {
+            startDate = new Date(filters.customRange.start);
+            startDate.setHours(0, 0, 0, 0);
+            endDate = new Date(filters.customRange.end);
+            endDate.setHours(23, 59, 59, 999);
+          }
+          break;
+        }
+      }
+  
+      // Get team members
       const { data: teamMembers, error: teamError } = await supabase
         .from('users')
         .select('*')
@@ -88,13 +122,12 @@ export class BriefService {
       if (teamError) throw teamError;
   
       if (!teamMembers?.length) {
-        return { teamMembers:[],data: [], error: null };
+        return { teamMembers: [], data: [], error: null };
       }
   
-      // Get the user IDs of all team members
       const teamMemberIds = teamMembers.map(member => member.id);
   
-      // Then fetch briefs for all these team members
+      // Fetch briefs with date filter
       const { data, error } = await supabase
         .from('briefs')
         .select(`
@@ -108,15 +141,23 @@ export class BriefService {
           )
         `)
         .in('user_id', teamMemberIds)
-        .order('submitted_at', { ascending: false })
-        .gte('submitted_at', today.toISOString());
+        .gte('submitted_at', startDate.toISOString())
+        .lt('submitted_at', endDate.toISOString())
+        .order('submitted_at', { ascending: false });
   
       if (error) throw error;
   
-      return { teamMembers:teamMembers,data: data || null, error: null };
+      const filteredTeamMembers = getFilteredMembers(teamMembers, data, filters.status, filters.review);
+        // console.log('Filtered Members:', filteredTeamMembers, 'Status:', filterStatus, 'Review:', filterReview);
+        return { teamMembers, filteredTeamMembers, data: data || null, error: null };
     } catch (error) {
-      console.error('Error fetching briefs:', error);
-      return { teamMembers:null,data: null, error: error as Error };
+        console.error('Error fetching briefs:', error);
+        return { 
+            teamMembers: null, 
+            filteredTeamMembers: null, // Initialize this properly
+            data: null, 
+            error: error as Error 
+        };
     }
   }
   async reviewBrief(adminId:string,briefId: string, adminNotes: string) {
@@ -140,30 +181,67 @@ export class BriefService {
       return { data: null, error };
     }
   }
-  async getBriefStats(adminId:string) {
+  async getBriefStats(adminId: string, filters: FilterOptions) {
     try {
+      // Set up date range based on filters
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
+  
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+  
+      let startDate = today;
+      let endDate = tomorrow;
+  
+      switch (filters.date) {
+        case "today":
+          // startDate and endDate already set
+          break;
+        case "yesterday": {
+          startDate = new Date(today);
+          startDate.setDate(startDate.getDate() - 1);
+          endDate = today;
+          break;
+        }
+        case "week": {
+          startDate = new Date(today);
+          startDate.setDate(startDate.getDate() - 7);
+          endDate = tomorrow;
+          break;
+        }
+        case "custom": {
+          if (filters.customRange?.start && filters.customRange?.end) {
+            startDate = new Date(filters.customRange.start);
+            startDate.setHours(0, 0, 0, 0);
+            endDate = new Date(filters.customRange.end);
+            endDate.setHours(23, 59, 59, 999);
+          }
+          break;
+        }
+      }
+  
+      // Get total team members
       const { data: members, error: membersError } = await supabase
-      .from('users')
-      .select('count')
-      .eq('role', 'member')
-      .eq('invited_by', adminId);
-
+        .from('users')
+        .select('count')
+        .eq('role', 'member')
+        .eq('invited_by', adminId);
+  
       if (membersError) throw membersError;
-
+  
+      // Get submitted briefs within date range
       const { data: submitted, error: submittedError } = await supabase
-      .from('briefs')
-      .select('*, users:user_id (invited_by)')
-      .gte('submitted_at', today.toISOString());
-
+        .from('briefs')
+        .select('*, users:user_id (invited_by)')
+        .gte('submitted_at', startDate.toISOString())
+        .lt('submitted_at', endDate.toISOString());
+  
       if (submittedError) throw submittedError;
       
-      const filteredSubmittedCount= submitted?.filter(
+      const filteredSubmittedCount = submitted?.filter(
         (brief) => brief?.users?.invited_by === adminId
       ).length || 0;
-      console.log("total",members[0].count, "submitted", filteredSubmittedCount, "pending", members[0].count - filteredSubmittedCount)
+  
       return {
         data: {
           totalMembers: members[0].count,
@@ -174,7 +252,10 @@ export class BriefService {
       };
     } catch (error) {
       console.error('Error getting brief stats:', error);
-      return { data: null, error };
+      return { 
+        data: null, 
+        error: error as Error 
+      };
     }
   }
 }

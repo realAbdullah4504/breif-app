@@ -29,16 +29,15 @@ import Input from "../../components/UI/Input";
 import TextArea from "../../components/UI/TextArea";
 import { mockBriefs, mockSettings } from "../../data/mockData";
 import { Brief } from "../../types";
-import { useAdminBriefs } from "../../hooks/useAdminBriefs";
+import { FilterOptions, useAdminBriefs } from "../../hooks/useAdminBriefs";
 import { useSettings } from "../../hooks/useSettings";
 import { useEmail } from "../../hooks/useEmail";
 import toast from "react-hot-toast";
+import { getFilteredMembers } from "../../utils/filters";
 
 const AdminDashboard: React.FC = () => {
-  const { briefs, teamMembers, stats, reviewBrief,isLoading:isLoadingBriefs } = useAdminBriefs();
-  const { settings,isLoading:isLoadingSettings } = useSettings();
+  const { settings, isLoading: isLoadingSettings } = useSettings();
   const { sendEmail, isLoading: isSendingEmail } = useEmail();
-  console.log("settings",settings)
   const [selectedBrief, setSelectedBrief] = useState<Brief | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reminderSent, setReminderSent] = useState<Record<string, boolean>>({});
@@ -57,14 +56,27 @@ const AdminDashboard: React.FC = () => {
     start: "",
     end: "",
   });
-  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
-  const [reviewedBriefs, setReviewedBriefs] = useState<Record<string, boolean>>(
-    {}
-  );
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({
+    status: "all",
+    review: "all",
+    date: "today",
+    customRange: {
+      start: "",
+      end: "",
+    },
+  });
 
+  const {
+    briefs,
+    teamMembers,
+    filteredTeamMembers,
+    stats,
+    reviewBrief,
+    isLoading: isLoadingBriefs,
+  } = useAdminBriefs(filters);
   // Calculate dashboard metrics
   const totalBriefs = stats?.totalMembers;
   const submittedBriefs = stats?.submittedCount;
@@ -99,75 +111,85 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleSendReminder = (userId: string) => {
-    const member = teamMembers.find(m => m.id === userId);
+    const member = teamMembers.find((m) => m.id === userId);
     if (!member) return;
-  
+
     sendEmail(
       {
         to: member.email,
-        subject:settings?.reminder_template?.subject || "Reminder: Brief Submission",
-        html: settings?.reminder_template?.body?.replace('{{name}}', member.name) || "Please submit your brief.",
+        subject:
+          settings?.reminder_template?.subject || "Reminder: Brief Submission",
+        html:
+          settings?.reminder_template?.body?.replace("{{name}}", member.name) ||
+          "Please submit your brief.",
       },
       {
         onSuccess: () => {
-          setReminderSent(prev => ({ ...prev, [userId]: true }));
+          setReminderSent((prev) => ({ ...prev, [userId]: true }));
           toast.success(`Reminder sent to ${member.name}`);
         },
         onError: (error) => {
-          console.error('Error sending reminder:', error);
+          console.error("Error sending reminder:", error);
           toast.error(`Failed to send reminder to ${member.name}`);
-        }
+        },
       }
     );
   };
 
   const handleSendAllReminders = () => {
-    const pendingMembers = teamMembers.filter(member => 
-      !briefs.some(brief => brief.user_id === member.id)
+    const pendingMembers = teamMembers.filter(
+      (member) => !briefs.some((brief) => brief.user_id === member.id)
     );
-  
+
     // Send reminders sequentially with delay
     let currentIndex = 0;
-  
+
     const sendNextReminder = () => {
       if (currentIndex >= pendingMembers.length) {
-        toast.success(`Finished sending reminders to ${pendingMembers.length} members`);
+        toast.success(
+          `Finished sending reminders to ${pendingMembers.length} members`
+        );
         return;
       }
-  
+
       const member = pendingMembers[currentIndex];
-  
+
       sendEmail(
         {
           to: member.email,
-          subject: settings?.reminder_template?.subject || "Reminder: Brief Submission",
-          html: settings?.reminder_template?.body?.replace('{{name}}', member.name || "member") || "Please submit your brief.",
+          subject:
+            settings?.reminder_template?.subject ||
+            "Reminder: Brief Submission",
+          html:
+            settings?.reminder_template?.body?.replace(
+              "{{name}}",
+              member.name || "member"
+            ) || "Please submit your brief.",
         },
         {
           onSuccess: () => {
-            setReminderSent(prev => ({ ...prev, [member.id]: true }));
+            setReminderSent((prev) => ({ ...prev, [member.id]: true }));
             toast.success(`Reminder sent to ${member.name}`);
             currentIndex++;
             // Add 500ms delay before sending next reminder (2 requests/second limit)
             setTimeout(sendNextReminder, 500);
           },
           onError: (error) => {
-            console.error('Error sending reminder:', error);
+            console.error("Error sending reminder:", error);
             toast.error(`Failed to send reminder to ${member.name}`);
             currentIndex++;
             // Continue with next reminder after error
             setTimeout(sendNextReminder, 500);
-          }
+          },
         }
       );
     };
-  
+
     // Start sending reminders
     sendNextReminder();
   };
 
   const handleMarkAsReviewed = (briefId: string) => {
-    setReviewedBriefs((prev) => ({ ...prev, [briefId]: true }));
     reviewBrief({
       briefId,
       adminNotes,
@@ -182,68 +204,11 @@ const AdminDashboard: React.FC = () => {
     alert("PDF download functionality would be implemented here");
   };
 
-  const getFilteredMembers = () => {
-    return teamMembers.filter(member => {
-      const memberBrief = briefs.find(brief => brief.user_id === member.id);
-      
-      // Search filter
-      const matchesSearch = member?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase());
-  
-      // Submission status filter
-      const matchesStatus =
-        filterStatus === "all" ||
-        (filterStatus === "submitted" && memberBrief) ||
-        (filterStatus === "pending" && !memberBrief);
-  
-      // Review status filter
-      const matchesReview =
-        filterReview === "all" ||
-        (filterReview === "reviewed" && memberBrief?.reviewed_by) ||
-        (filterReview === "pending" && memberBrief && !memberBrief.reviewed_by);
-  
-      // Date filter
-      const briefDate = memberBrief?.submitted_at ? new Date(memberBrief.submitted_at) : null;
-      let matchesDate = true;
-  
-      if (briefDate) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        const weekAgo = new Date(today);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-  
-        switch (filterDate) {
-          case "today":
-            matchesDate = briefDate >= today;
-            break;
-          case "yesterday":
-            matchesDate = briefDate >= yesterday && briefDate < today;
-            break;
-          case "week":
-            matchesDate = briefDate >= weekAgo;
-            break;
-          case "custom":
-            if (customDateRange.start && customDateRange.end) {
-              const start = new Date(customDateRange.start);
-              const end = new Date(customDateRange.end);
-              end.setHours(23, 59, 59, 999);
-              matchesDate = briefDate >= start && briefDate <= end;
-            }
-            break;
-          default:
-            matchesDate = true;
-        }
-      }
-  
-      return matchesSearch && matchesStatus && matchesReview && matchesDate;
-    });
+  const handleFilters = () => {
+    const filter={status:filterStatus, review: filterReview, date: filterDate,customRange:customDateRange};
+    setFilters(filter)
+    setIsFilterOpen(false);
   };
-  
-  // Update the rendering section to use filteredMembers
-  const filteredMembers = getFilteredMembers();
 
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
 
@@ -610,7 +575,7 @@ const AdminDashboard: React.FC = () => {
                         >
                           <option value="today">Today</option>
                           <option value="yesterday">Yesterday</option>
-                          <option value="week">Last 7 Days</option>
+                          {/* <option value="week">Last 7 Days</option> */}
                           <option value="custom">Custom Range</option>
                         </select>
                       </div>
@@ -669,10 +634,7 @@ const AdminDashboard: React.FC = () => {
                       )}
 
                       <div className="pt-2 flex justify-end">
-                        <Button
-                          size="sm"
-                          onClick={() => setIsFilterOpen(false)}
-                        >
+                        <Button size="sm" onClick={handleFilters}>
                           Apply Filters
                         </Button>
                       </div>
@@ -719,7 +681,7 @@ const AdminDashboard: React.FC = () => {
         <div className="mb-6">
           {viewMode === "card" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredMembers?.map((member) => {
+              {filteredTeamMembers?.map((member) => {
                 const memberBrief = briefs.find(
                   (brief) => brief?.user_id === member?.id
                 );
@@ -901,7 +863,7 @@ const AdminDashboard: React.FC = () => {
                         : "bg-white divide-gray-200"
                     }`}
                   >
-                    {teamMembers.map((member) => {
+                    {filteredTeamMembers?.map((member) => {
                       const memberBrief = briefs.find(
                         (brief) => brief?.user_id === member?.id
                       );
