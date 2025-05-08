@@ -16,6 +16,7 @@ import {
   MessageSquare,
   AlertTriangle,
   X,
+  UserPlus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CountUp from "react-countup";
@@ -34,6 +35,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { useEmail } from "../../hooks/useEmail";
 import toast from "react-hot-toast";
 import { getFilteredMembers } from "../../utils/filters";
+import EmptyState from "../../components/EmptyState";
 
 const AdminDashboard: React.FC = () => {
   const { settings, isLoading: isLoadingSettings } = useSettings();
@@ -205,13 +207,17 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleFilters = () => {
-    const filter={status:filterStatus, review: filterReview, date: filterDate,customRange:customDateRange};
-    setFilters(filter)
+    const filter = {
+      status: filterStatus,
+      review: filterReview,
+      date: filterDate,
+      customRange: customDateRange,
+    };
+    setFilters(filter);
     setIsFilterOpen(false);
   };
 
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
-
   if (isLoadingSettings || isLoadingBriefs) {
     return (
       <DashboardLayout>
@@ -679,7 +685,29 @@ const AdminDashboard: React.FC = () => {
 
         {/* Team Standup List */}
         <div className="mb-6">
-          {viewMode === "card" ? (
+          {!teamMembers?.length ? (
+            <Card>
+              <CardBody>
+                <EmptyState
+                  title="No Team Members"
+                  message="You haven't added any team members yet. Start by inviting team members to join."
+                  icon={<UserPlus className="h-6 w-6" />}
+                  isDarkMode={isDarkMode}
+                />
+              </CardBody>
+            </Card>
+          ) : !filteredTeamMembers?.length ? (
+            <Card>
+              <CardBody>
+                <EmptyState
+                  title="No Results Found"
+                  message="No team members match your current filters. Try adjusting your search or filter criteria."
+                  icon={<Search className="h-6 w-6" />}
+                  isDarkMode={isDarkMode}
+                />
+              </CardBody>
+            </Card>
+          ) : viewMode === "card" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredTeamMembers?.map((member) => {
                 const memberBrief = briefs.find(
