@@ -1,4 +1,4 @@
-import React, { useState} from "react";
+import React, { useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   CheckCircle,
@@ -12,14 +12,13 @@ import {
   LayoutGrid,
   List,
   Download,
-
   UserPlus,
 } from "lucide-react";
-import { motion} from "framer-motion";
+import { motion } from "framer-motion";
 import CountUp from "react-countup";
 
 import DashboardLayout from "../../components/Layout/DashboardLayout";
-import Card, {CardBody } from "../../components/UI/Card";
+import Card, { CardBody } from "../../components/UI/Card";
 import Button from "../../components/UI/Button";
 import Badge from "../../components/UI/Badge";
 import Modal from "../../components/UI/Modal";
@@ -34,7 +33,9 @@ import { useAdminBriefs } from "../../hooks/useAdminBriefs";
 const AdminDashboard: React.FC = () => {
   const { settings, isLoading: isLoadingSettings } = useSettings();
   const { sendEmail, isLoading: isSendingEmail } = useEmail();
-  const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(null);
+  const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(
+    null
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reminderSent, setReminderSent] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,10 +49,9 @@ const AdminDashboard: React.FC = () => {
   const [filterDate, setFilterDate] = useState<
     "today" | "yesterday" | "week" | "custom"
   >("today");
-  const [customDateRange, setCustomDateRange] = useState({
-    start: "",
-    end: "",
-  });
+  const todayDate = format(new Date(), "yyyy-MM-dd");
+  const [dateError, setDateError] = useState<string>("");
+  const [customDateRange, setCustomDateRange] = useState(todayDate);
   const [adminNotes, setAdminNotes] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -59,10 +59,7 @@ const AdminDashboard: React.FC = () => {
     status: "all",
     review: "all",
     date: "today",
-    customRange: {
-      start: "",
-      end: "",
-    },
+    customRange: "",
   });
 
   const {
@@ -100,7 +97,7 @@ const AdminDashboard: React.FC = () => {
     ? formatDistanceToNow(deadline, { addSuffix: true })
     : "No deadline set";
 
-  const handleViewBrief = (brief:BriefWithUser) => {
+  const handleViewBrief = (brief: BriefWithUser) => {
     setSelectedBrief(brief);
     setAdminNotes("");
     setIsModalOpen(true);
@@ -581,7 +578,7 @@ const AdminDashboard: React.FC = () => {
                       </div>
 
                       {filterDate === "custom" && (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid gap-2">
                           <div>
                             <label
                               className={`block text-xs font-medium mb-1 ${
@@ -592,43 +589,27 @@ const AdminDashboard: React.FC = () => {
                             </label>
                             <input
                               type="date"
-                              value={customDateRange.start}
-                              onChange={(e) =>
-                                setCustomDateRange({
-                                  ...customDateRange,
-                                  start: e.target.value,
-                                })
-                              }
+                              value={customDateRange}
+                              onChange={(e) => {
+                                const selectedDate = e.target.value;
+                                if (selectedDate > todayDate) {
+                                  setDateError("Cannot select future dates");
+                                  return;
+                                }
+                                setDateError("");
+                                setCustomDateRange(selectedDate);
+                              }}
                               className={`block w-full rounded-md border ${
                                 isDarkMode
                                   ? "bg-gray-700 border-gray-600 text-white"
                                   : "bg-white border-gray-300 text-gray-900"
                               } shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
                             />
-                          </div>
-                          <div>
-                            <label
-                              className={`block text-xs font-medium mb-1 ${
-                                isDarkMode ? "text-gray-300" : "text-gray-500"
-                              }`}
-                            >
-                              End Date
-                            </label>
-                            <input
-                              type="date"
-                              value={customDateRange.end}
-                              onChange={(e) =>
-                                setCustomDateRange({
-                                  ...customDateRange,
-                                  end: e.target.value,
-                                })
-                              }
-                              className={`block w-full rounded-md border ${
-                                isDarkMode
-                                  ? "bg-gray-700 border-gray-600 text-white"
-                                  : "bg-white border-gray-300 text-gray-900"
-                              } shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm`}
-                            />
+                            {dateError && (
+                              <p className="mt-1 text-xs text-red-500">
+                                {dateError}
+                              </p>
+                            )}
                           </div>
                         </div>
                       )}

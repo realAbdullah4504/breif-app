@@ -1,4 +1,4 @@
-import { Brief } from '../services/briefService';
+import { Brief } from "../types/briefTypes";
 
 export const checkBriefSubmissionEligibility = (
   briefs: Brief[],
@@ -29,8 +29,8 @@ export const checkBriefSubmissionEligibility = (
 
   if (now > deadlineTime) {
     return {
-      canSubmit: false,
-      message: "Today's submission deadline has passed"
+      canSubmit: true,
+      message: "Today's submission deadline has passed but you can still submit your brief."
     };
   }
 

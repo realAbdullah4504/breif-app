@@ -36,10 +36,7 @@ export interface FilterOptions {
   status: "all" | "submitted" | "pending";
   review: "all" | "reviewed" | "pending";
   date: "today" | "yesterday" | "week" | "custom";
-  customRange: {
-    start: string;
-    end: string;
-  };
+  customRange: string;
 }
 
 export interface TeamMember {
