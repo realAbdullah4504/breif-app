@@ -27,14 +27,15 @@ export class AuthService {
       password,
     });
     if (user) {
-      await supabase.from("users").insert({
+        await supabase.from("users").insert({
         id: user.id,
         name,
         email: user.email,
         role,
       });
     }
-    return { user, error };
+    const extendedUser={...user, role, name} as ExtendedUser;
+    return { user:extendedUser, error };
   }
 
   async signIn(email: string, password: string): Promise<AuthResponse> {

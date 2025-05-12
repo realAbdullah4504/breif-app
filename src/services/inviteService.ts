@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { InvitationWithUser } from "../types/invitationTypes";
 
@@ -7,25 +8,26 @@ export class InviteService {
     role: string = "member",
     adminId: string
   ): Promise<{ error: Error | null }> {
-    try {
       const { data, error } = await supabase.functions.invoke(
         "send-invitation",
         {
           body: { email, role, adminId },
         }
       );
-
-      if (error) throw error;
+      // Check for Supabase error
+      if (error) {
+        if (error instanceof FunctionsHttpError) {
+          const errorData = await error.context.json();
+          throw new Error(errorData.error || 'Failed to send invitation');
+        }
+        throw error;
+      }
 
       return { error: null };
-    } catch (error) {
-      console.error("Error creating invite:", error);
-      return { error: error as Error };
-    }
   }
-  async getInvitations(id: string): Promise<{ 
-    data: InvitationWithUser[], 
-    error: Error | null 
+  async getInvitations(id: string): Promise<{
+    data: InvitationWithUser[];
+    error: Error | null;
   }> {
     try {
       // First get all invitations
@@ -46,13 +48,17 @@ export class InviteService {
             .eq("email", invitation.email)
             .single();
 
-          if (userError && userError.code !== 'PGRST116') { // Ignore not found error
-            console.warn(`Could not fetch user data for ${invitation.email}:`, userError);
+          if (userError && userError.code !== "PGRST116") {
+            // Ignore not found error
+            console.warn(
+              `Could not fetch user data for ${invitation.email}:`,
+              userError
+            );
           }
 
           return {
             ...invitation,
-            user: userData || null
+            user: userData || null,
           };
         })
       );
@@ -97,10 +103,10 @@ export class InviteService {
   async setPassword(
     id: string,
     email: string,
-    name:string,
+    name: string,
     password: string,
     role: string = "member"
-  ){
+  ) {
     try {
       // Update password
       const { error: passwordError } = await supabase.auth.updateUser({
