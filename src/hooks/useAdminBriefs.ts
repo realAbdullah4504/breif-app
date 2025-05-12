@@ -2,12 +2,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BriefService } from "../services/briefService";
 import { useAuth } from "../context/AuthContext";
 import { FilterOptions } from "../types/briefTypes";
+import { useNotificationSender } from "./useNotifications";
 
 const briefService = new BriefService();
 
 export const useAdminBriefs = (filters: FilterOptions) => {
   const queryClient = useQueryClient();
   const { currentUser } = useAuth();
+  const { createNotification } = useNotificationSender();
+  const sender_id = currentUser?.id || "";
+
 
   const statsQuery = useQuery({
     queryKey: ["brief-stats", filters],
@@ -24,12 +28,19 @@ export const useAdminBriefs = (filters: FilterOptions) => {
   const reviewBriefMutation = useMutation({
     mutationFn: ({
       briefId,
+      userId,
       adminNotes,
     }: {
       briefId: string;
+      userId: string;
       adminNotes: string;
     }) => briefService.reviewBrief(currentUser!.id, briefId, adminNotes),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      createNotification({
+        sender_id,
+        receiver_id:variables.userId,
+        message: `${currentUser?.name} has reviewed your brief`,
+      });
       queryClient.invalidateQueries({ queryKey: ["admin-briefs"] });
       queryClient.invalidateQueries({ queryKey: ["brief-stats"] });
     },

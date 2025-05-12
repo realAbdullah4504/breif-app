@@ -62,7 +62,6 @@ const MemberDashboard: React.FC = () => {
       toast.error(submissionStatus.message);
       return;
     }
-    try {
       submitBrief({
         accomplishments: formData.accomplishments,
         blockers: formData.blockers,
@@ -80,10 +79,6 @@ const MemberDashboard: React.FC = () => {
         question5: "",
       });
 
-      toast.success("Brief submitted successfully");
-    } catch (error) {
-      toast.error("Failed to submit brief");
-    }
   };
 
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
@@ -118,7 +113,19 @@ const MemberDashboard: React.FC = () => {
           Submit your daily brief and keep your team updated.
         </p>
       </div>
-
+      {submissionStatus?.canSubmit && submissionStatus?.message && (
+        <div className="text-center py-6">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+            <Clock className="h-6 w-6 text-yellow-600" />
+          </div>
+          <h3 className="mt-3 text-lg font-medium text-gray-900 dark:text-white">
+            {submissionStatus.message}
+          </h3>
+          {/* <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          {submissionStatus.message}
+        </p> */}
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <Card>
@@ -290,22 +297,27 @@ const MemberDashboard: React.FC = () => {
               <CardBody>
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <Clock className={`h-5 w-5 ${
-                      !submissionStatus.canSubmit && !isSubmitted
-                        ? 'text-red-500' 
-                        : 'text-gray-400'
-                    }`} />
+                    <Clock
+                      className={`h-5 w-5 ${
+                        !submissionStatus.canSubmit && !isSubmitted
+                          ? "text-red-500"
+                          : "text-gray-400"
+                      }`}
+                    />
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       Today at {formatDeadlineTime()}
                     </p>
-                    <p className={`text-xs ${
-                      !submissionStatus.canSubmit && !isSubmitted
-                        ? 'text-red-500 font-medium' 
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {submissionStatus.message || "Don't forget to submit your brief before the deadline"}
+                    <p
+                      className={`text-xs ${
+                        !submissionStatus.canSubmit && !isSubmitted
+                          ? "text-red-500 font-medium"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      {submissionStatus.message ||
+                        "Don't forget to submit your brief before the deadline"}
                     </p>
                   </div>
                 </div>

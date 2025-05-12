@@ -182,9 +182,10 @@ const AdminDashboard: React.FC = () => {
     sendNextReminder();
   };
 
-  const handleMarkAsReviewed = (briefId: string) => {
+  const handleMarkAsReviewed = (briefId: string,userId:string) => {
     reviewBrief({
       briefId,
+      userId,
       adminNotes,
     });
     setIsModalOpen(false);
@@ -396,6 +397,8 @@ const AdminDashboard: React.FC = () => {
                   size="sm"
                   className="mt-2"
                   onClick={handleSendAllReminders}
+                  disabled={isSendingEmail}
+                  isLoading={isSendingEmail}
                 >
                   <Bell className="h-4 w-4 mr-1" />
                   Send All Reminders
@@ -795,6 +798,7 @@ const AdminDashboard: React.FC = () => {
                               size="sm"
                               onClick={() => handleSendReminder(member?.id)}
                               disabled={reminderSent[member?.id]}
+                              isLoading={isSendingEmail}
                             >
                               <Bell className="h-4 w-4 mr-1" />
                               {reminderSent[member?.id] ? "Sent" : "Remind"}
@@ -1176,7 +1180,7 @@ const AdminDashboard: React.FC = () => {
                   {!selectedBrief?.reviewed_by && (
                     <Button
                       onClick={() => {
-                        handleMarkAsReviewed(selectedBrief.id);
+                        handleMarkAsReviewed(selectedBrief.id,selectedBrief.user_id);
                         setIsModalOpen(false);
                       }}
                     >

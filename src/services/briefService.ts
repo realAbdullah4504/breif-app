@@ -125,7 +125,6 @@ export class BriefService {
   }
   async reviewBrief(adminId:string,briefId: string, adminNotes: string) {
     try {
-
       const { data, error } = await supabase
         .from('briefs')
         .update({

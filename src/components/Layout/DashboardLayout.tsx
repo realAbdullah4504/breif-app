@@ -19,6 +19,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import Notifications from '../Notifications';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -334,14 +335,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 )}
               </button>
 
-              <button className={`p-1 rounded-full ${
-                isDarkMode 
-                  ? 'text-gray-400 hover:text-gray-300'
-                  : 'text-gray-400 hover:text-gray-500'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}>
-                <span className="sr-only">View notifications</span>
-                <Bell className="h-6 w-6" />
-              </button>
+              <Notifications isDarkMode={isDarkMode} />
               
               {/* Profile dropdown */}
               <div className="relative profile-dropdown">
