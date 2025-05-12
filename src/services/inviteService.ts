@@ -8,22 +8,19 @@ export class InviteService {
     role: string = "member",
     adminId: string
   ): Promise<{ error: Error | null }> {
-      const { data, error } = await supabase.functions.invoke(
-        "send-invitation",
-        {
-          body: { email, role, adminId },
-        }
-      );
-      // Check for Supabase error
-      if (error) {
-        if (error instanceof FunctionsHttpError) {
-          const errorData = await error.context.json();
-          throw new Error(errorData.error || 'Failed to send invitation');
-        }
-        throw error;
+    const { data, error } = await supabase.functions.invoke("send-invitation", {
+      body: { email, role, adminId },
+    });
+    // Check for Supabase error
+    if (error) {
+      if (error instanceof FunctionsHttpError) {
+        const errorData = await error.context.json();
+        throw new Error(errorData.error || "Failed to send invitation");
       }
+      throw error;
+    }
 
-      return { error: null };
+    return { error: null };
   }
   async getInvitations(id: string): Promise<{
     data: InvitationWithUser[];
@@ -42,23 +39,29 @@ export class InviteService {
       // Get user data for each invitation's email
       const invitationsWithUsers = await Promise.all(
         invitations.map(async (invitation) => {
-          const { data: userData, error: userError } = await supabase
-            .from("users")
-            .select("name, avatar_url")
-            .eq("email", invitation.email)
-            .single();
+          if (invitation.status !== "pending") {
+            const { data: userData, error: userError } = await supabase
+              .from("users")
+              .select("name, avatar_url")
+              .eq("email", invitation.email)
+              .single();
 
-          if (userError && userError.code !== "PGRST116") {
-            // Ignore not found error
-            console.warn(
-              `Could not fetch user data for ${invitation.email}:`,
-              userError
-            );
+            if (userError && userError.code !== "PGRST116") {
+              // Ignore not found error
+              console.warn(
+                `Could not fetch user data for ${invitation.email}:`,
+                userError
+              );
+            }
+
+            return {
+              ...invitation,
+              user: userData || null,
+            };
           }
-
           return {
             ...invitation,
-            user: userData || null,
+            user: null,
           };
         })
       );

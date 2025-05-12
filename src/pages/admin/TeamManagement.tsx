@@ -122,39 +122,49 @@ const TeamManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {acceptedInvitations?.map((user) => (
-                      <tr key={user?.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <img
-                                className="h-10 w-10 rounded-full"
-                                src={user?.user?.avatar_url}
-                                alt=""
-                              />
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {user?.user?.name}
-                              </div>
-                            </div>
+                    {invitationsLoading ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-4">
+                          <div className="flex items-center justify-center min-h-[100px]">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">
-                            {user?.email}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500 capitalize">
-                            {user?.role}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="success">Active</Badge>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      acceptedInvitations?.map((user) => (
+                        <tr key={user?.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10">
+                                <img
+                                  className="h-10 w-10 rounded-full"
+                                  src={user?.user?.avatar_url}
+                                  alt=""
+                                />
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {user?.user?.name}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500">
+                              {user?.email}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-500 capitalize">
+                              {user?.role}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge variant="success">Active</Badge>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -212,7 +222,7 @@ const TeamManagement: React.FC = () => {
               </CardHeader>
               <CardBody className="p-0">
                 {invitationsLoading ? (
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-center min-h-[100px]">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   </div>
                 ) : invitations.length === 0 ? (
@@ -238,8 +248,8 @@ const TeamManagement: React.FC = () => {
                           </div>
                           <div className="flex">
                             {/* {invitation.status === "pending" ? ( */}
-                              <>
-                                {/* <button
+                            <>
+                              {/* <button
                                   type="button"
                                   className="text-gray-400 hover:text-gray-500 mr-2"
                                   onClick={() =>
@@ -248,21 +258,21 @@ const TeamManagement: React.FC = () => {
                                 >
                                   <Mail className="h-4 w-4" />
                                 </button> */}
-                                <button
-                                  type="button"
-                                  className="text-gray-400 hover:text-red-500"
-                                  onClick={() =>
-                                    handleDeleteInvitation(invitation.id)
-                                  }
-                                  disabled={isDeleting}
-                                >
-                                  {isDeleting ? (
-                                    <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full" />
-                                  ) : (
-                                    <Trash2 className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </>
+                              <button
+                                type="button"
+                                className="text-gray-400 hover:text-red-500"
+                                onClick={() =>
+                                  handleDeleteInvitation(invitation.id)
+                                }
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? (
+                                  <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </button>
+                            </>
 
                             {/* // : (
                             //   <Badge
