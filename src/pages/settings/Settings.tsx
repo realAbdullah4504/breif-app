@@ -34,7 +34,7 @@ const Settings: React.FC = () => {
     updateProfile,
     updatePassword,
     isUploading,
-    isUpdatingUser,
+    isUpdating: isUpdatingUser,
     isUpdatingPassword,
   } = useProfile();
 
@@ -83,7 +83,7 @@ const Settings: React.FC = () => {
         },
         submission_deadline: "17:00:00",
         email_reminders: true,
-        name:"My Team Workspace",
+        name: "My Team Workspace",
       }
   );
 
@@ -117,13 +117,13 @@ const Settings: React.FC = () => {
     });
   };
 
-  const handleNameChange=(e)=>{
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value || "";
     setFormData((prev) => ({
       ...prev,
-      name: e.target.value,
+      name: value,
     }));
-  }
-
+  };
   const handleDeadlineChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -163,6 +163,8 @@ const Settings: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
+    const hasChanges = JSON.stringify(settings) !== JSON.stringify(formData);
+    if (!hasChanges) return;
 
     try {
       await updateSettings({
@@ -468,7 +470,9 @@ const Settings: React.FC = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handleUpdate}
-                  isLoading={isUploading || isUpdating || isUpdatingPassword || isUpdatingUser}
+                  isLoading={
+                    isUploading || isUpdatingUser || isUpdatingPassword
+                  }
                 >
                   Update Account
                 </Button>
@@ -523,7 +527,13 @@ const Settings: React.FC = () => {
                 </div>
               </CardBody>
               <CardFooter>
-                <Button variant="outline" size="sm" fullWidth onClick={handleSave} isLoading={isUpdating}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  fullWidth
+                  onClick={handleSave}
+                  isLoading={isUpdating}
+                >
                   Update Workspace
                 </Button>
               </CardFooter>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import DashboardLayout from "../../components/Layout/DashboardLayout";
 import Card, {
   CardHeader,
@@ -13,7 +12,6 @@ import Modal from "../../components/UI/Modal";
 import { useSettings } from "../../hooks/useSettings";
 import { useEmail } from "../../hooks/useEmail";
 import toast from "react-hot-toast";
-import { format, parse } from "date-fns";
 
 const EmailTemplates: React.FC = () => {
   const { settings, updateSettings, isUpdating,isLoading:settingsLoading } = useSettings();

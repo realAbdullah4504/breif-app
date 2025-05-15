@@ -24,6 +24,7 @@ export interface WorkspaceSettings {
   reminder_template: ReminderTemplate;
   admin_id:string;
   name:string;
+  send_reminders_at:string;
   created_at: string;
   updated_at: string;
 }

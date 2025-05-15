@@ -11,7 +11,7 @@ export const useSettings = () => {
 
   const settingsQuery = useQuery({
     queryKey: ['workspace-settings'],
-    queryFn: () => settingsService.getSettings(currentUser?.id),
+    queryFn: () => settingsService.getSettings(currentUser?.id || ""),
     select: (response) => response.data
   });
 
