@@ -15,13 +15,14 @@ import { toast } from "react-hot-toast";
 import { generateTimeOptions } from "../../utils/timeUtils";
 import { BriefQuestions, WorkspaceSettings } from "../../types/settingTypes";
 import { useProfile } from "../../hooks/useProfile";
+import { UserAvatar } from "../../components/UI/UserAvatar";
 
 const Settings: React.FC = () => {
   const { currentUser } = useAuth();
   const [profileData, setProfileData] = useState({
-    name: currentUser?.name || '',
-    password: '',
-    confirmPassword: ''
+    name: currentUser?.name || "",
+    password: "",
+    confirmPassword: "",
   });
   const [avatar, setAvatar] = useState<File | undefined>(undefined);
   const { settings, isLoading, error, updateSettings, isUpdating } =
@@ -36,35 +37,37 @@ const Settings: React.FC = () => {
     isUpdatingUser,
     isUpdatingPassword,
   } = useProfile();
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setAvatar(file)
-      e.target.value = '';
+      setAvatar(file);
+      e.target.value = "";
     }
   };
-  const handleUpdate=()=>{
+  const handleUpdate = () => {
     if (profileData.name !== currentUser?.name) {
       updateProfile({ name: profileData.name });
     }
     if (profileData.password) {
-        updatePassword({
+      updatePassword({
         password: profileData.password,
-        confirmPassword: profileData.confirmPassword
+        confirmPassword: profileData.confirmPassword,
       });
       // Clear password fields after update
-      setProfileData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+      setProfileData((prev) => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+      }));
     }
-    if(avatar)
-    {
+    if (avatar) {
       uploadAvatar(avatar);
       setAvatar(undefined);
     }
-
-  }
+  };
   const isAdmin = currentUser?.role === "admin";
   const timeOptions = generateTimeOptions();
 
@@ -147,7 +150,6 @@ const Settings: React.FC = () => {
       };
     });
   };
-
 
   // Update save handler to save all changes at once
   const handleSave = async (e: React.FormEvent) => {
@@ -364,10 +366,10 @@ const Settings: React.FC = () => {
               <div className="space-y-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 relative group">
-                    <img
-                      className="h-16 w-16 rounded-full object-cover"
-                      src={currentUser?.avatar_url || "/default-avatar.png"}
-                      alt={currentUser?.name || "Avatar"}
+                    <UserAvatar
+                      src={currentUser?.avatar_url}
+                      name={currentUser?.name || "User"}
+                      size="h-16 w-16"
                     />
                     {currentUser?.avatar_url && (
                       <button
@@ -403,7 +405,12 @@ const Settings: React.FC = () => {
                       id="name"
                       label="Full name"
                       defaultValue={currentUser?.name || ""}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) =>
+                        setProfileData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
                     />
                   </div>
 
@@ -423,7 +430,12 @@ const Settings: React.FC = () => {
                       label="New password"
                       type="password"
                       placeholder="••••••••"
-                      onChange={(e) => setProfileData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={(e) =>
+                        setProfileData((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                     />
                   </div>
 
@@ -433,7 +445,12 @@ const Settings: React.FC = () => {
                       label="Confirm password"
                       type="password"
                       placeholder="••••••••"
-                      onChange={(e) => setProfileData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      onChange={(e) =>
+                        setProfileData((prev) => ({
+                          ...prev,
+                          confirmPassword: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -441,7 +458,12 @@ const Settings: React.FC = () => {
             </CardBody>
             <CardFooter>
               <div className="flex justify-end">
-                <Button onClick={handleUpdate} isLoading={isUploading || isUpdating || isUpdatingPassword}>Update Account</Button>
+                <Button
+                  onClick={handleUpdate}
+                  isLoading={isUploading || isUpdating || isUpdatingPassword}
+                >
+                  Update Account
+                </Button>
               </div>
             </CardFooter>
           </Card>
