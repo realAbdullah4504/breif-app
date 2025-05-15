@@ -11,7 +11,7 @@ Deno.serve(async (req)=>{
     });
   }
   try {
-    const resend = new Resend('re_PQZx1JMM_9vsedK2PHDjHwByrvgKEmm5p');
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
     // Get the request body
     const payload = await req.json();
     const { to, subject, html, text } = payload;

@@ -21,6 +21,11 @@ Deno.serve(async (req)=>{
     if (adminError || !adminData || adminData.role !== 'admin') {
       throw new Error('Unauthorized: Only admins can send invites');
     }
+    // Check if user already exists
+    const { data: existingUser, error: userError } = await supabase.from('users').select('id, email').eq('email', email).single();
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
     // Create invitation
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);

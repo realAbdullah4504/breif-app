@@ -28,19 +28,14 @@ Deno.serve(async (req)=>{
     const { data: authData, error: authUserError } = await supabase.auth.admin.listUsers();
     if (authUserError) throw authUserError;
     const authUser = authData.users.find((user)=>user.email === invitation.email);
-    // Delete invitation
-    const { error: deleteError } = await supabase.from('invitations').delete().eq('id', invitationId);
-    if (deleteError) throw deleteError;
-    // Delete from users table if exists
-    const { error: deleteUserError } = await supabase.from('users').delete().eq('email', invitation.email);
-    if (deleteUserError && !deleteUserError.message.includes('no rows')) {
-      throw deleteUserError;
-    }
     // Delete from auth if user exists
     if (authUser) {
       const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(authUser.id);
       if (deleteAuthError) throw deleteAuthError;
     }
+    // Delete invitation
+    const { error: deleteError } = await supabase.from('invitations').delete().eq('id', invitationId);
+    if (deleteError) throw deleteError;
     return new Response(JSON.stringify({
       success: true,
       message: 'Member deleted successfully'
