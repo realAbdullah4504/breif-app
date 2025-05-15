@@ -75,7 +75,12 @@ const EmailTemplates: React.FC = () => {
       {
         to: testEmail,
         subject,
-        html: body.replace("{{name}}", "Test User"),
+        html:
+          settings?.reminder_template?.body
+            ?.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
+            .replace("{{name}}", "abdullah")
+            .replace("{{deadline}}", "17:00:00") || // Convert Date to string
+          "Please submit your brief.",
       },
       {
         onSuccess: () => {

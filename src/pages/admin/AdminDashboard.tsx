@@ -98,6 +98,7 @@ const AdminDashboard: React.FC = () => {
     ? formatDistanceToNow(deadline, { addSuffix: true })
     : "No deadline set";
 
+  const deadlineTime = new Date(deadline).toTimeString().split(" ")[0];
   const handleViewBrief = (brief: BriefWithUser) => {
     setSelectedBrief(brief);
     setAdminNotes("");
@@ -114,7 +115,10 @@ const AdminDashboard: React.FC = () => {
         subject:
           settings?.reminder_template?.subject || "Reminder: Brief Submission",
         html:
-          settings?.reminder_template?.body?.replace("{{name}}", member.name) ||
+          settings?.reminder_template?.body
+            ?.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
+            .replace("{{name}}", member.name)
+            .replace("{{deadline}}", deadlineTime) || // Convert Date to string
           "Please submit your brief.",
       },
       {
@@ -129,7 +133,6 @@ const AdminDashboard: React.FC = () => {
       }
     );
   };
-
   const handleSendAllReminders = () => {
     const pendingMembers = teamMembers.filter(
       (member) => !briefs.some((brief) => brief.user_id === member.id)
@@ -155,10 +158,11 @@ const AdminDashboard: React.FC = () => {
             settings?.reminder_template?.subject ||
             "Reminder: Brief Submission",
           html:
-            settings?.reminder_template?.body?.replace(
-              "{{name}}",
-              member.name || "member"
-            ) || "Please submit your brief.",
+            settings?.reminder_template?.body
+              ?.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
+              .replace("{{name}}", member.name)
+              .replace("{{deadline}}", deadlineTime) || // Convert Date to string
+            "Please submit your brief.",
         },
         {
           onSuccess: () => {
