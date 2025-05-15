@@ -37,6 +37,15 @@ serve(async (req)=>{
           console.error("Error checking briefs:", briefsError);
           continue;
         }
+
+        // Check if any brief was submitted before the deadline
+        const submittedBeforeDeadline = todayBriefs?.some((brief)=>{
+          const briefDate = new Date(brief.submitted_at);
+          const briefHours = briefDate.getHours();
+          const briefMinutes = briefDate.getMinutes();
+          // Compare hours and minutes to see if brief was submitted before deadline
+          return briefHours < deadlineHours || briefHours === deadlineHours && briefMinutes <= deadlineMinutes;
+        });
         // If no briefs found, send a reminder
         if (todayBriefs.length === 0) {
           console.log("Sending reminder to member", member.email);
