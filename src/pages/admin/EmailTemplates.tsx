@@ -12,9 +12,15 @@ import Modal from "../../components/UI/Modal";
 import { useSettings } from "../../hooks/useSettings";
 import { useEmail } from "../../hooks/useEmail";
 import toast from "react-hot-toast";
+import { generateTimeOptions } from "../../utils/timeUtils";
 
 const EmailTemplates: React.FC = () => {
-  const { settings, updateSettings, isUpdating,isLoading:settingsLoading } = useSettings();
+  const {
+    settings,
+    updateSettings,
+    isUpdating,
+    isLoading: settingsLoading,
+  } = useSettings();
   const { sendEmail, isLoading: isSendingEmail } = useEmail();
 
   const [subject, setSubject] = useState("");
@@ -23,6 +29,7 @@ const EmailTemplates: React.FC = () => {
   const [testEmail, setTestEmail] = useState("");
   const [emailReminders, setEmailReminders] = useState(true);
   const [submissionTime, setSubmissionTime] = useState("17:00");
+  const [autoReminders, setAutoReminders] = useState("17:00");
 
   // Initialize form with settings data
   useEffect(() => {
@@ -31,6 +38,7 @@ const EmailTemplates: React.FC = () => {
       setBody(settings.reminder_template.body);
       setEmailReminders(settings.email_reminders);
       setSubmissionTime(settings.submission_deadline);
+      setAutoReminders(settings.send_reminders_at);
     }
   }, [settings]);
 
@@ -46,6 +54,7 @@ const EmailTemplates: React.FC = () => {
         },
         email_reminders: emailReminders,
         submission_deadline: submissionTime,
+        send_reminders_at: autoReminders,
       },
       {
         onSuccess: () => {
@@ -81,17 +90,7 @@ const EmailTemplates: React.FC = () => {
     );
   };
 
-  // Generate time options for the dropdown
-  const generateTimeOptions = () => {
-    const options = [];
-    for (let i = 0; i < 24; i++) {
-      options.push(`${i.toString().padStart(2, "0")}:00`);
-      options.push(`${i.toString().padStart(2, "0")}:30`);
-    }
-    return options;
-  };
-
-  const hourOptions = generateTimeOptions();
+  const timeOptions = generateTimeOptions();
   if (settingsLoading) {
     return (
       <DashboardLayout>
@@ -213,7 +212,7 @@ const EmailTemplates: React.FC = () => {
                       onChange={(e) => setEmailReminders(e.target.checked)}
                     />
                     <span className="ml-2 text-sm text-gray-900">
-                    Send automatic reminders
+                      Send automatic reminders
                     </span>
                   </label>
                   <p className="mt-1 text-xs text-gray-500 ml-6">
@@ -243,13 +242,14 @@ const EmailTemplates: React.FC = () => {
                     <select
                       id="reminder-time"
                       className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                      defaultValue="4:00 PM"
+                      value={autoReminders}
+                      onChange={(e) => setAutoReminders(e.target.value)}
                     >
-                      {hourOptions.map((time) => (
-                        <option key={time} value={time}>
-                          {time}
-                        </option>
-                      ))}
+                      {timeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
                     </select>
                   </div>
 
@@ -275,7 +275,13 @@ const EmailTemplates: React.FC = () => {
                 </div>
               </CardBody>
               <CardFooter>
-                <Button variant="outline" size="sm" fullWidth>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  fullWidth
+                  onClick={handleSave}
+                  isLoading={isUpdating}
+                >
                   Update Schedule
                 </Button>
               </CardFooter>
