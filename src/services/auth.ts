@@ -52,13 +52,14 @@ export class AuthService {
     });
     const { data } = await supabase
       .from("users")
-      .select("role,name,avatar_url")
+      .select("role,name,avatar_url,invited_by")
       .eq("id", user?.id)
       .single();
     const role = data?.role;
     const name = data?.name;
     const avatar_url = data?.avatar_url;
-    const userWithRole = { ...user, role, name, avatar_url } as ExtendedUser;
+    const invited_by=data?.invited_by;
+    const userWithRole = { ...user, role, name, avatar_url,invited_by } as ExtendedUser;
     return { user: userWithRole, error };
   }
 
