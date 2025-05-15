@@ -11,6 +11,7 @@ export interface ExtendedUser extends User {
   role: string;
   name: string;
   avatar_url: string | null;
+  invited_by?: string;
 }
 
 const settingService = new SettingsService();
@@ -84,7 +85,7 @@ export class AuthService {
 
       const { data, error: roleError } = await supabase
         .from("users")
-        .select("role,name,avatar_url")
+        .select("role,name,avatar_url,invited_by")
         .eq("id", user.id)
         .single();
 
@@ -98,6 +99,7 @@ export class AuthService {
         role: data.role,
         name: data.name,
         avatar_url: data.avatar_url,
+        invited_by: data.invited_by
       } as ExtendedUser;
     } catch (error) {
       console.error("Error in getCurrentUser:", error);

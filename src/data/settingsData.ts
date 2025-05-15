@@ -1,10 +1,14 @@
-export const defaultSettings = {
+import { WorkspaceSettings } from "../types/settingTypes";
+
+export const defaultSettings:Partial<WorkspaceSettings> = {
+  name:"My Team Workspace",
   questions: {
     blockers: "Any blockers or challenges you would like to share?",
     priorities: "What are your priorities for tomorrow?",
     accomplishments: "What have you worked on today?",
   },
   submission_deadline: "17:00:00",
+  send_reminders_at:"16:00:00",
   email_reminders: true,
   reminder_template: {
     subject: "Reminder: Submit your daily brief!",

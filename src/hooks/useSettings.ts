@@ -7,11 +7,14 @@ const settingsService = new SettingsService();
 
 export const useSettings = () => {
   const {currentUser}=useAuth();
+  let id=currentUser?.id || ""
+  if(currentUser?.role==="member")
+    id=currentUser?.invited_by || "";
   const queryClient = useQueryClient();
 
   const settingsQuery = useQuery({
     queryKey: ['workspace-settings'],
-    queryFn: () => settingsService.getSettings(currentUser?.id || ""),
+    queryFn: () => settingsService.getSettings(id),
     select: (response) => response.data
   });
 
