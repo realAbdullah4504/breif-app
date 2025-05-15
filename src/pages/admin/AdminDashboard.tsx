@@ -29,6 +29,7 @@ import toast from "react-hot-toast";
 import EmptyState from "../../components/EmptyState";
 import { BriefWithUser, FilterOptions } from "../../types/briefTypes";
 import { useAdminBriefs } from "../../hooks/useAdminBriefs";
+import { UserAvatar } from "../../components/UI/UserAvatar";
 
 const AdminDashboard: React.FC = () => {
   const { settings, isLoading: isLoadingSettings } = useSettings();
@@ -182,7 +183,7 @@ const AdminDashboard: React.FC = () => {
     sendNextReminder();
   };
 
-  const handleMarkAsReviewed = (briefId: string,userId:string) => {
+  const handleMarkAsReviewed = (briefId: string, userId: string) => {
     reviewBrief({
       briefId,
       userId,
@@ -708,10 +709,10 @@ const AdminDashboard: React.FC = () => {
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center">
-                          <img
+                          <UserAvatar
                             src={member?.avatar_url}
-                            alt={member?.name}
-                            className="h-10 w-10 rounded-full mr-3"
+                            name={member?.name || "User"}
+                            size="h-10 w-10 mr-3"
                           />
                           <div>
                             <h3
@@ -1009,10 +1010,10 @@ const AdminDashboard: React.FC = () => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <img
+                  <UserAvatar
                     src={selectedBrief.users?.avatar_url}
-                    alt={selectedBrief.users?.name}
-                    className="h-10 w-10 rounded-full mr-3"
+                    name={selectedBrief.users?.name || "User"}
+                    size="h-10 w-10 mr-3"
                   />
                   <div>
                     <h3
@@ -1180,7 +1181,10 @@ const AdminDashboard: React.FC = () => {
                   {!selectedBrief?.reviewed_by && (
                     <Button
                       onClick={() => {
-                        handleMarkAsReviewed(selectedBrief.id,selectedBrief.user_id);
+                        handleMarkAsReviewed(
+                          selectedBrief.id,
+                          selectedBrief.user_id
+                        );
                         setIsModalOpen(false);
                       }}
                     >
