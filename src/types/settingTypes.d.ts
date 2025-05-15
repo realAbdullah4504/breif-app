@@ -22,6 +22,8 @@ export interface WorkspaceSettings {
   submission_deadline: string;
   email_reminders: boolean;
   reminder_template: ReminderTemplate;
+  admin_id:string;
+  name:string;
   created_at: string;
   updated_at: string;
 }

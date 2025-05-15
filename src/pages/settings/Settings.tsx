@@ -83,6 +83,7 @@ const Settings: React.FC = () => {
         },
         submission_deadline: "17:00:00",
         email_reminders: true,
+        name:"My Team Workspace",
       }
   );
 
@@ -115,6 +116,13 @@ const Settings: React.FC = () => {
       };
     });
   };
+
+  const handleNameChange=(e)=>{
+    setFormData((prev) => ({
+      ...prev,
+      name: e.target.value,
+    }));
+  }
 
   const handleDeadlineChange = (value: string) => {
     setFormData((prev) => ({
@@ -460,7 +468,7 @@ const Settings: React.FC = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handleUpdate}
-                  isLoading={isUploading || isUpdating || isUpdatingPassword}
+                  isLoading={isUploading || isUpdating || isUpdatingPassword || isUpdatingUser}
                 >
                   Update Account
                 </Button>
@@ -489,10 +497,12 @@ const Settings: React.FC = () => {
                       id="workspace-name"
                       placeholder="My Team Workspace"
                       defaultValue="My Team Workspace"
+                      value={formData?.name}
+                      onChange={handleNameChange}
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Timezone
                     </label>
@@ -509,11 +519,11 @@ const Settings: React.FC = () => {
                         Pacific Time (PT)
                       </option>
                     </select>
-                  </div>
+                  </div> */}
                 </div>
               </CardBody>
               <CardFooter>
-                <Button variant="outline" size="sm" fullWidth>
+                <Button variant="outline" size="sm" fullWidth onClick={handleSave} isLoading={isUpdating}>
                   Update Workspace
                 </Button>
               </CardFooter>
