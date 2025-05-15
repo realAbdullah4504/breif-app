@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import { AuthError, User } from "@supabase/supabase-js";
+import { SettingsService } from "./settingsService";
 
 interface AuthResponse {
   user: ExtendedUser | null;
@@ -12,6 +13,7 @@ export interface ExtendedUser extends User {
   avatar_url: string | null;
 }
 
+const settingService = new SettingsService();
 export class AuthService {
   async signUp(
     name: string,
@@ -27,15 +29,16 @@ export class AuthService {
       password,
     });
     if (user) {
-        await supabase.from("users").insert({
+      await supabase.from("users").insert({
         id: user.id,
         name,
         email: user.email,
         role,
       });
+      await settingService.insertDefaultSettings(user.id);
     }
-    const extendedUser={...user, role, name} as ExtendedUser;
-    return { user:extendedUser, error };
+    const extendedUser = { ...user, role, name } as ExtendedUser;
+    return { user: extendedUser, error };
   }
 
   async signIn(email: string, password: string): Promise<AuthResponse> {
