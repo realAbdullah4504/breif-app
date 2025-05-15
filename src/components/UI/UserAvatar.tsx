@@ -1,5 +1,5 @@
 export const UserAvatar: React.FC<{
-  src?: string;
+  src?: string | undefined | null;
   name: string;
   size?: string;
   className?: string;
