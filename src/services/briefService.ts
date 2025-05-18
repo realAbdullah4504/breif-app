@@ -165,17 +165,11 @@ export class BriefService {
           endDate = today;
           break;
         }
-        case "week": {
-          startDate = new Date(today);
-          startDate.setDate(startDate.getDate() - 7);
-          endDate = tomorrow;
-          break;
-        }
         case "custom": {
-          if (filters.customRange?.start && filters.customRange?.end) {
-            startDate = new Date(filters.customRange.start);
+          if (filters.customRange) {
+            startDate = new Date(filters.customRange);
             startDate.setHours(0, 0, 0, 0);
-            endDate = new Date(filters.customRange.end);
+            endDate = new Date(filters.customRange);
             endDate.setHours(23, 59, 59, 999);
           }
           break;
