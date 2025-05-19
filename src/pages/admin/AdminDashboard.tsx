@@ -118,7 +118,7 @@ const AdminDashboard: React.FC = () => {
           settings?.reminder_template?.body
             ?.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
             .replace("{{name}}", member.name)
-            .replace("{{deadline}}", deadlineTime) || // Convert Date to string
+            .replace("{{deadline}}", format(deadline, "h:mm a")) || // Convert Date to string
           "Please submit your brief.",
       },
       {
@@ -161,7 +161,7 @@ const AdminDashboard: React.FC = () => {
             settings?.reminder_template?.body
               ?.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
               .replace("{{name}}", member.name)
-              .replace("{{deadline}}", deadlineTime) || // Convert Date to string
+              .replace("{{deadline}}", format(deadline, "h:mm a")) || // Convert Date to string
             "Please submit your brief.",
         },
         {
