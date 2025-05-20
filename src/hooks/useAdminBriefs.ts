@@ -7,11 +7,7 @@ import { useNotificationSender } from "./useNotifications";
 const briefService = new BriefService();
 
 export const useAdminBriefs = (filters: FilterOptions) => {
-  const queryClient = useQueryClient();
   const { currentUser } = useAuth();
-  const { createNotification } = useNotificationSender();
-  const sender_id = currentUser?.id || "";
-
 
   const statsQuery = useQuery({
     queryKey: ["brief-stats", filters],
@@ -23,27 +19,6 @@ export const useAdminBriefs = (filters: FilterOptions) => {
     queryKey: ["admin-briefs", filters],
     queryFn: () => briefService.getAllBriefs(currentUser!.id, filters),
     enabled: !!currentUser,
-  });
-
-  const reviewBriefMutation = useMutation({
-    mutationFn: ({
-      briefId,
-      userId,
-      adminNotes,
-    }: {
-      briefId: string;
-      userId: string;
-      adminNotes: string;
-    }) => briefService.reviewBrief(currentUser!.id, briefId, adminNotes),
-    onSuccess: (_, variables) => {
-      createNotification({
-        sender_id,
-        receiver_id:variables.userId,
-        message: `${currentUser?.name} has reviewed your brief`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["admin-briefs"] });
-      queryClient.invalidateQueries({ queryKey: ["brief-stats"] });
-    },
   });
 
   return {
@@ -58,6 +33,36 @@ export const useAdminBriefs = (filters: FilterOptions) => {
       pendingCount: 0,
     },
     isLoadingStats: statsQuery.isLoading,
+  };
+};
+
+export const useReviewBriefs = () => {
+  const queryClient = useQueryClient();
+  const { createNotification } = useNotificationSender();
+  const { currentUser } = useAuth();
+  const sender_id = currentUser?.id || "";
+
+  const reviewBriefMutation = useMutation({
+    mutationFn: ({
+      briefId,
+      userId,
+      adminNotes,
+    }: {
+      briefId: string;
+      userId: string;
+      adminNotes: string;
+    }) => briefService.reviewBrief(currentUser!.id, briefId, adminNotes),
+    onSuccess: (_, variables) => {
+      createNotification({
+        sender_id,
+        receiver_id: variables.userId,
+        message: `${currentUser?.name} has reviewed your brief`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-briefs"] });
+      queryClient.invalidateQueries({ queryKey: ["brief-stats"] });
+    },
+  });
+  return {
     reviewBrief: reviewBriefMutation.mutate,
     isReviewing: reviewBriefMutation.isPending,
   };
