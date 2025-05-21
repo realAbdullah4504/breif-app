@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { SettingsService } from "../services/settingsService";
 import { WorkspaceSettings } from "../types/settingTypes";
 import { useAuth } from "../context/AuthContext";
@@ -12,11 +12,11 @@ export const useSettings = () => {
   console.log(currentUser?.role,id,"hello")
   const queryClient = useQueryClient();
 
-  const settingsQuery = useQuery({
+  const settingsQuery = useSuspenseQuery({
     queryKey: ["workspace-settings", id],
     queryFn: () => settingsService.getSettings(id),
     select: (response) => response.data,
-    enabled: !!id,
+    // enabled: !!id,
   });
 
   const updateSettingsMutation = useMutation({

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { BriefService } from "../services/briefService";
 import { useAuth } from "../context/AuthContext";
 import { FilterOptions } from "../types/briefTypes";
@@ -9,16 +9,16 @@ const briefService = new BriefService();
 export const useAdminBriefs = (filters: FilterOptions) => {
   const { currentUser } = useAuth();
 
-  const statsQuery = useQuery({
+  const statsQuery = useSuspenseQuery({
     queryKey: ["brief-stats", filters],
     queryFn: () => briefService.getBriefStats(currentUser!.id, filters),
-    enabled: !!currentUser,
+    // enabled: !!currentUser,
   });
 
-  const briefsQuery = useQuery({
+  const briefsQuery = useSuspenseQuery({
     queryKey: ["admin-briefs", filters],
     queryFn: () => briefService.getAllBriefs(currentUser!.id, filters),
-    enabled: !!currentUser,
+    // enabled: !!currentUser,
   });
 
   return {

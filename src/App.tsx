@@ -13,7 +13,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Login from "./pages/auth/Login";
 
 // Admin Pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
 import EmailTemplates from "./pages/admin/EmailTemplates";
 import TeamManagement from "./pages/admin/TeamManagement";
 
@@ -29,6 +28,7 @@ import Signup from "./pages/auth/Signup";
 import { queryClient } from "./lib/queryClient";
 import { SetPassword } from "./pages/auth/SetPassword";
 import { Toaster } from "react-hot-toast";
+import AdminDashboardPage from "./pages/admin/AdminDashboard";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
@@ -84,7 +84,7 @@ const App: React.FC = () => {
                 path="/admin"
                 element={
                   <ProtectedRoute
-                    element={<AdminDashboard />}
+                    element={<AdminDashboardPage />}
                     requiredRole="admin"
                   />
                 }
