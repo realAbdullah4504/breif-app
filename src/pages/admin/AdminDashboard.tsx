@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import AdminDashboard from "../../components/admin-dashboard";
 import { DashboardLayout } from "../../components/Layout";
 import ErrorBoundary from "../../components/ErrorBoundary"; // import your ErrorBoundary
+import { DashboardProvider } from "../../context/DashboardContext";
 
 const AdminDashboardPage = () => {
   return (
@@ -23,7 +24,9 @@ const AdminDashboardPage = () => {
           </DashboardLayout>
         }
       >
-        <AdminDashboard />
+        <DashboardProvider>
+          <AdminDashboard />
+        </DashboardProvider>
       </Suspense>
     </ErrorBoundary>
   );

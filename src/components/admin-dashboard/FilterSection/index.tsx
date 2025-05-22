@@ -1,17 +1,17 @@
 import { format } from 'date-fns';
 import { ChevronDown, Filter, LayoutGrid, List, Search } from 'lucide-react';
 import React, { useState } from 'react'
-import { FilterOptions } from '../../../types/briefTypes';
 import Button from '../../UI/Button';
+import { useDashboardContext } from '../../../context/DashboardContext';
 
 
 type FilterProps = {
     isDarkMode: boolean;
-    handleFiltersQuery: (filter: FilterOptions) => void;
     handleViewMode: (option: "card" | "list") => void;
     viewMode: string
 }
-const FilterSection = ({ isDarkMode, handleFiltersQuery, handleViewMode, viewMode }: FilterProps) => {
+const FilterSection = ({ isDarkMode, handleViewMode, viewMode }: FilterProps) => {
+    const { handleFiltersQuery } = useDashboardContext()
     const todayDate = format(new Date(), "yyyy-MM-dd");
     const [searchTerm, setSearchTerm] = useState("");
     const [dateError, setDateError] = useState<string>("");

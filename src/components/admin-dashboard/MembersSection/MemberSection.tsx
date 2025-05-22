@@ -7,23 +7,20 @@ import ReminderButton from "./ReminderButton";
 import Button from "../../UI/Button";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { BriefWithUser, TeamMember } from "../../../types/briefTypes";
+import { BriefWithUser } from "../../../types/briefTypes";
 import { useState } from "react";
-import { WorkspaceSettings } from "../../../types/settingTypes";
 import MemberModal from "./Modal";
+import { useDashboardContext } from "../../../context/DashboardContext";
 
 
 type MemberSectionProps = {
     isDarkMode: boolean;
     viewMode: string;
-    teamMembers: TeamMember[];
-    filteredTeamMembers: TeamMember[];
-    settings: WorkspaceSettings;
-    briefs: BriefWithUser[];
 }
 
-const MemberSection = ({ isDarkMode, viewMode, settings, briefs, teamMembers, filteredTeamMembers }: MemberSectionProps) => {
+const MemberSection = ({ isDarkMode, viewMode }: MemberSectionProps) => {
 
+    const { settings, briefs, teamMembers, filteredTeamMembers } = useDashboardContext();
     const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(
         null
     );

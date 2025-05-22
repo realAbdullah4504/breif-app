@@ -6,23 +6,15 @@ import { format } from 'date-fns';
 import Button from '../../UI/Button';
 import { useEmail } from '../../../hooks/useEmail';
 import toast from 'react-hot-toast';
-import { Brief, TeamMember } from '../../../types/briefTypes';
-import { WorkspaceSettings } from '../../../types/settingTypes';
+import { useDashboardContext } from '../../../context/DashboardContext';
 
 type StatsProps = {
     isDarkMode: boolean;
-    teamMembers: TeamMember[];
-    settings: Partial<WorkspaceSettings>;
-    briefs: Brief[];
-    totalBriefs: number;
-    submittedBriefs: number;
-    submissionRate: number;
-    pendingBriefs: number;
-    deadline: Date;
-    timeUntilDeadline: string;
 }
 
-const StatsSection = ({ isDarkMode, settings, teamMembers, briefs, totalBriefs, submittedBriefs, submissionRate, pendingBriefs, deadline, timeUntilDeadline }: StatsProps) => {
+const StatsSection = ({ isDarkMode }: StatsProps) => {
+    const { settings, teamMembers, briefs, stats } = useDashboardContext();
+    const { totalBriefs, submittedBriefs, submissionRate, pendingBriefs, deadline, timeUntilDeadline } = stats;
     const { sendEmail, isLoading: isSendingEmail } = useEmail();
     const [reminderSent, setReminderSent] = useState<Record<string, boolean>>({});
 
