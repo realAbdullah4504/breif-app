@@ -12,6 +12,6 @@ export const defaultSettings:Partial<WorkspaceSettings> = {
   email_reminders: true,
   reminder_template: {
     subject: "Reminder: Submit your daily brief!",
-    body: `Hi {{name}},\n\nThis is a friendly reminder to submit your daily brief for today. the deadline is {{deadline}}\n\nIt only takes a minute!\n\nhttps://breifly-app.netlify.app/email-templates\n\nBest regards,\nTelehunt`,
+    body: `Hi {{name}},\n\nThis is a friendly reminder to submit your daily brief for today. the deadline is {{deadline}}\n\nIt only takes a minute!\n\nhttps://breifly-app.netlify.app/email-templates\n\nBest regards,\nBriefly`,
   },
 };
