@@ -4,33 +4,36 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   fullWidth?: boolean;
+  variant?: 'default' | 'monday';
 }
 
 const Input: React.FC<InputProps> = ({
   label,
   error,
   fullWidth = true,
+  variant = 'default',
   className = '',
   ...props
 }) => {
   const widthClass = fullWidth ? 'w-full' : '';
-  const errorClass = error ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500';
+  const inputClass = variant === 'monday' ? 'input-monday' : 'input';
+  const errorClass = error ? 'input-error' : '';
   
   return (
     <div className={widthClass}>
       {label && (
-        <label htmlFor={props.id} className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={props.id} className="block text-sm font-semibold text-gray-700 mb-2">
           {label}
         </label>
       )}
       <div className="relative rounded-md shadow-sm">
         <input
-          className={`${widthClass} ${errorClass} shadow-sm block sm:text-sm rounded-md ${className}`}
+          className={`${inputClass} ${errorClass} ${widthClass} ${className}`}
           {...props}
         />
       </div>
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-2 text-sm text-danger-600">{error}</p>
       )}
     </div>
   );

@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Script to repair multiple Supabase migrations by marking them as reverted
+
+migrations=(
+  "20250417002142"
+  "20250417002146"
+  "20250417002152"
+  "20250421062303"
+  "20250421062500"
+  "20250421063236"
+  "20250421063416"
+  "20250421065757"
+  "20250421072629"
+  "20250421080635"
+  "20250427070349"
+  "20250427070602"
+  "20250427070729"
+  "20250427070758"
+  "20250427071022"
+  "20250427071414"
+  "20250427071454"
+  "20250427074212"
+  "20250427181558"
+  "20250427181607"
+  "20250427181657"
+  "20250427181735"
+  "20250427181856"
+  "20250427182029"
+  "20250427182208"
+  "20250427183946"
+  "20250528232929"
+  "20250610224032"
+  "20250720050356"
+  "20250812031054"
+  "20250812034111"
+  "20250814191358"
+  "20250814193044"
+  "20250814215646"
+  "20250818015250"
+  "20250818015516"
+)
+
+for migration in "${migrations[@]}"; do
+  echo "Repairing migration: $migration"
+  npx supabase migration repair --status reverted "$migration"
+  if [ $? -eq 0 ]; then
+    echo "Successfully marked $migration as reverted"
+  else
+    echo "Error repairing migration $migration"
+    exit 1
+  fi
+done
+
+echo "All migrations processed"

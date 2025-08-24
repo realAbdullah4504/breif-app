@@ -1,41 +1,63 @@
 import React, { useEffect, useRef, useState } from "react";
 import DashboardLayout from "../../components/Layout/DashboardLayout";
-import Card, {
-  CardHeader,
-  CardBody,
-  CardFooter,
-} from "../../components/UI/Card";
+import Card, { CardHeader, CardBody, CardFooter } from "../../components/UI/Card";
 import Button from "../../components/UI/Button";
 import Input from "../../components/UI/Input";
-import TextArea from "../../components/UI/TextArea";
 import { useAuth } from "../../context/AuthContext";
-import { useSettings } from "../../hooks/useSettings";
-import { Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Camera, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { generateTimeOptions } from "../../utils/timeUtils";
-import { BriefQuestions, WorkspaceSettings } from "../../types/settingTypes";
 import { useProfile } from "../../hooks/useProfile";
 import { UserAvatar } from "../../components/UI/UserAvatar";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Common timezones for user selection
+const userTimezones = [
+  { value: '', label: 'Use workspace timezone (recommended)' },
+  { value: 'America/New_York', label: 'Eastern Time (ET)' },
+  { value: 'America/Chicago', label: 'Central Time (CT)' },
+  { value: 'America/Denver', label: 'Mountain Time (MT)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+  { value: 'America/Phoenix', label: 'Arizona Time (MST)' },
+  { value: 'America/Anchorage', label: 'Alaska Time (AKST)' },
+  { value: 'Pacific/Honolulu', label: 'Hawaii Time (HST)' },
+  { value: 'UTC', label: 'UTC' },
+  { value: 'Europe/London', label: 'London (GMT/BST)' },
+  { value: 'Europe/Paris', label: 'Paris (CET/CEST)' },
+  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)' },
+];
 
 const Settings: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
+  const [accountSectionOpen, setAccountSectionOpen] = useState(true);
+  const [notificationSectionOpen, setNotificationSectionOpen] = useState(false);
+  const [dangerSectionOpen, setDangerSectionOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  
   const [profileData, setProfileData] = useState({
     name: currentUser?.name || "",
+    timezone: currentUser?.timezone || "",
     password: "",
     confirmPassword: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [avatar, setAvatar] = useState<File | undefined>(undefined);
-  const { settings, isLoading, error, updateSettings, isUpdating } =
-    useSettings();
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const {
     uploadAvatar,
     deleteAvatar,
     updateProfile,
     updatePassword,
+    deleteAccount,
     isUploading,
     isUpdating: isUpdatingUser,
     isUpdatingPassword,
+    isDeletingAccount,
   } = useProfile();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,19 +66,32 @@ const Settings: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       setAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
       e.target.value = "";
     }
   };
+
   const handleUpdate = () => {
-    if (profileData.name !== currentUser?.name) {
-      updateProfile({ name: profileData.name });
+    const hasNameChange = profileData.name !== currentUser?.name;
+    const hasTimezoneChange = profileData.timezone !== currentUser?.timezone;
+    
+    if (hasNameChange || hasTimezoneChange) {
+      const updateData: any = {};
+      if (hasNameChange) updateData.name = profileData.name;
+      if (hasTimezoneChange) updateData.timezone = profileData.timezone || null;
+      
+      updateProfile(updateData);
     }
+    
     if (profileData.password) {
+      if (profileData.password !== profileData.confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
       updatePassword({
         password: profileData.password,
         confirmPassword: profileData.confirmPassword,
       });
-      // Clear password fields after update
       setProfileData((prev) => ({
         ...prev,
         password: "",
@@ -66,511 +101,366 @@ const Settings: React.FC = () => {
     if (avatar) {
       uploadAvatar(avatar);
       setAvatar(undefined);
+      setAvatarPreview(null);
     }
   };
-  const isAdmin = currentUser?.role === "admin";
-  const timeOptions = generateTimeOptions();
 
-  const [formData, setFormData] = useState<Partial<WorkspaceSettings>>(
-    () =>
-      settings || {
-        questions: {
-          accomplishments: "",
-          blockers: "",
-          priorities: "",
-          question4: "",
-          question5: "",
-        },
-        submission_deadline: "17:00:00",
-        email_reminders: true,
-        name: "My Team Workspace",
-      }
-  );
-
-  useEffect(() => {
-    if (settings) {
-      setFormData(settings);
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      toast.error('Please type DELETE to confirm');
+      return;
     }
-  }, [settings]);
-  // Update handlers to modify local state instead of calling updateSettings
-  const handleQuestionChange = (field: keyof BriefQuestions, value: string) => {
-    setFormData((prev) => {
-      if (!prev?.questions) {
-        return {
-          ...prev,
-          questions: {
-            accomplishments: "",
-            blockers: "",
-            priorities: "",
-            [field]: value,
-          },
-        };
-      }
-
-      return {
-        ...prev,
-        questions: {
-          ...prev.questions,
-          [field]: value,
-        },
-      };
-    });
-  };
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value || "";
-    setFormData((prev) => ({
-      ...prev,
-      name: value,
-    }));
-  };
-  const handleDeadlineChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      submission_deadline: value,
-    }));
-  };
-
-  const handleEmailRemindersChange = (checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      email_reminders: checked,
-    }));
-  };
-
-  const addQuestion = (questionNumber: number) => {
-    const field = `question${questionNumber}` as keyof BriefQuestions;
-    handleQuestionChange(field, `Question ${questionNumber}`);
-  };
-
-  const removeQuestion = (questionNumber: number) => {
-    const field = `question${questionNumber}` as keyof BriefQuestions;
-
-    setFormData((prev) => {
-      if (!prev.questions) return prev;
-
-      const updatedQuestions = { ...prev.questions };
-      delete updatedQuestions[field];
-
-      return {
-        ...prev,
-        questions: updatedQuestions,
-      };
-    });
-  };
-
-  // Update save handler to save all changes at once
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!settings) return;
-    const hasChanges = JSON.stringify(settings) !== JSON.stringify(formData);
-    if (!hasChanges) return;
 
     try {
-      await updateSettings({
-        ...settings,
-        ...formData,
-      });
-      toast.success("Settings saved successfully");
+      deleteAccount();
+      // The deleteAccount function will handle the success/error feedback
     } catch (error) {
-      toast.error("Failed to save settings");
+      toast.error('Failed to delete account');
     }
   };
-
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-screen">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (error || !settings) {
-    return (
-      <DashboardLayout>
-        <div className="text-center text-red-500">
-          Failed to load settings. Please try again.
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Settings
-        </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Manage your account and workspace settings.
+        <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Manage your personal account settings and preferences.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          {isAdmin && (
-            <Card className="mb-6">
-              <CardHeader>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                  Brief Questions
+      <div className="max-w-2xl mx-auto space-y-6">
+          {/* Account Settings Section */}
+          <Card>
+            <CardHeader>
+              <button
+                onClick={() => setAccountSectionOpen(!accountSectionOpen)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h2 className="text-lg font-medium text-gray-900">
+                  Account Settings
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Customize the questions your team members will answer in their
-                  daily briefs.
-                </p>
-              </CardHeader>
-              <CardBody>
-                <form onSubmit={handleSave}>
-                  <div className="space-y-4">
-                    <TextArea
-                      id="accomplishments"
-                      label="Question 1 (Accomplishments)"
-                      value={formData?.questions?.accomplishments}
-                      onChange={(e) =>
-                        handleQuestionChange("accomplishments", e.target.value)
-                      }
-                      required
-                    />
+                {accountSectionOpen ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+            </CardHeader>
+            <AnimatePresence>
+              {accountSectionOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <CardBody>
+                    <div className="space-y-6">
+                      <div className="flex flex-col items-center">
+                        <div className="relative group">
+                          <div className="relative">
+                            <UserAvatar
+                              src={avatarPreview || currentUser?.avatar_url}
+                              name={currentUser?.name || "User"}
+                              size="h-24 w-24"
+                              className="ring-4 ring-white"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-full">
+                              {currentUser?.avatar_url ? (
+                                <button
+                                  onClick={deleteAvatar}
+                                  className="p-2 text-white hover:text-red-500 transition-colors"
+                                >
+                                  <Trash2 className="h-6 w-6" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => fileInputRef.current?.click()}
+                                  className="p-2 text-white hover:text-blue-500 transition-colors"
+                                >
+                                  <Camera className="h-6 w-6" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                          />
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Click to {currentUser?.avatar_url ? "change" : "upload"} avatar
+                        </p>
+                      </div>
 
-                    <TextArea
-                      id="blockers"
-                      label="Question 2 (Blockers)"
-                      value={formData?.questions?.blockers}
-                      onChange={(e) =>
-                        handleQuestionChange("blockers", e.target.value)
-                      }
-                      required
-                    />
-
-                    <TextArea
-                      id="priorities"
-                      label="Question 3 (Priorities)"
-                      value={formData?.questions?.priorities}
-                      onChange={(e) =>
-                        handleQuestionChange("priorities", e.target.value)
-                      }
-                      required
-                    />
-
-                    {formData?.questions?.question4 && (
-                      <div className="relative">
-                        <TextArea
-                          id="question4"
-                          label="Question 4 (Optional)"
-                          value={formData?.questions?.question4}
+                      <div>
+                        <Input
+                          id="name"
+                          label="Full name"
+                          value={profileData.name}
                           onChange={(e) =>
-                            handleQuestionChange("question4", e.target.value)
+                            setProfileData((prev) => ({
+                              ...prev,
+                              name: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+
+                      <div>
+                        <Input
+                          id="email"
+                          label="Email address"
+                          type="email"
+                          disabled
+                          value={currentUser?.email || ""}
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-2">
+                          Timezone Preference
+                        </label>
+                        <select
+                          id="timezone"
+                          value={profileData.timezone}
+                          onChange={(e) =>
+                            setProfileData((prev) => ({
+                              ...prev,
+                              timezone: e.target.value,
+                            }))
+                          }
+                          className="input py-3 px-4"
+                        >
+                          {userTimezones.map((tz) => (
+                            <option key={tz.value} value={tz.value}>
+                              {tz.label}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Personal timezone preference. Leave blank to use workspace timezone.
+                        </p>
+                      </div>
+
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          label="New password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={profileData.password}
+                          onChange={(e) =>
+                            setProfileData((prev) => ({
+                              ...prev,
+                              password: e.target.value,
+                            }))
                           }
                         />
                         <button
                           type="button"
-                          className="absolute top-0 right-0 text-gray-400 hover:text-red-500"
-                          onClick={() => removeQuestion(4)}
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-8 text-gray-400 hover:text-gray-600"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          {showPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
-                    )}
 
-                    {formData?.questions?.question5 && (
                       <div className="relative">
-                        <TextArea
-                          id="question5"
-                          label="Question 5 (Optional)"
-                          value={formData.questions.question5}
+                        <Input
+                          id="confirm-password"
+                          label="Confirm password"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={profileData.confirmPassword}
                           onChange={(e) =>
-                            handleQuestionChange("question5", e.target.value)
+                            setProfileData((prev) => ({
+                              ...prev,
+                              confirmPassword: e.target.value,
+                            }))
                           }
                         />
                         <button
                           type="button"
-                          className="absolute top-0 right-0 text-gray-400 hover:text-red-500"
-                          onClick={() => removeQuestion(5)}
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-2 top-8 text-gray-400 hover:text-gray-600"
                         >
-                          <Trash2 className="h-5 w-5" />
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
                         </button>
                       </div>
-                    )}
-
-                    {(!settings.questions.question4 ||
-                      !settings.questions.question5) && (
-                      <div className="mt-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (!settings.questions.question4) {
-                              addQuestion(4);
-                            } else if (!settings.questions.question5) {
-                              addQuestion(5);
-                            }
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Question
-                        </Button>
-                      </div>
-                    )}
-
-                    <div className="mt-4">
-                      <label
-                        htmlFor="deadline"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                      >
-                        Submission Deadline
-                      </label>
-                      <select
-                        id="deadline"
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        value={settings.submission_deadline}
-                        onChange={(e) => handleDeadlineChange(e.target.value)}
-                      >
-                        {timeOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
                     </div>
+                  </CardBody>
+                  <CardFooter>
+                    <Button
+                      fullWidth
+                      onClick={handleUpdate}
+                      isLoading={isUploading || isUpdatingUser || isUpdatingPassword}
+                    >
+                      Save Changes
+                    </Button>
+                  </CardFooter>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
 
+          {/* Danger Zone Section */}
+          <Card>
+            <CardHeader>
+              <button
+                onClick={() => setDangerSectionOpen(!dangerSectionOpen)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h2 className="text-lg font-medium text-red-600">
+                  Danger Zone
+                </h2>
+                {dangerSectionOpen ? (
+                  <ChevronUp className="h-5 w-5 text-red-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-red-500" />
+                )}
+              </button>
+            </CardHeader>
+            <AnimatePresence>
+              {dangerSectionOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <CardBody>
+                    <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <AlertTriangle className="h-5 w-5 text-red-400" />
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <h3 className="text-sm font-medium text-red-800">
+                            Delete Account
+                          </h3>
+                          <div className="mt-2 text-sm text-red-700">
+                            <p>
+                              Once you delete your account, there is no going back. This action cannot be undone.
+                              All your data, including briefs and settings, will be permanently deleted.
+                            </p>
+                          </div>
+                          
+                          {!showDeleteConfirm ? (
+                            <div className="mt-4">
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => setShowDeleteConfirm(true)}
+                              >
+                                Delete Account
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="mt-4 space-y-3">
+                              <div>
+                                <label className="block text-sm font-medium text-red-800 mb-2">
+                                  Type "DELETE" to confirm:
+                                </label>
+                                <input
+                                  type="text"
+                                  value={deleteConfirmText}
+                                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                  className="input border-red-300 focus:ring-red-500 focus:border-red-500"
+                                  placeholder="Type DELETE to confirm"
+                                />
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="danger"
+                                  size="sm"
+                                  onClick={handleDeleteAccount}
+                                  isLoading={isDeletingAccount}
+                                  disabled={deleteConfirmText !== 'DELETE'}
+                                >
+                                  Permanently Delete Account
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setShowDeleteConfirm(false);
+                                    setDeleteConfirmText('');
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardBody>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
+          {/* Notification Preferences Section */}
+          <Card>
+            <CardHeader>
+              <button
+                onClick={() => setNotificationSectionOpen(!notificationSectionOpen)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <h2 className="text-lg font-medium text-gray-900">
+                  Notification Preferences
+                </h2>
+                {notificationSectionOpen ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+            </CardHeader>
+            <AnimatePresence>
+              {notificationSectionOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <CardBody>
                     <div>
                       <label className="flex items-center">
                         <input
                           type="checkbox"
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
-                          checked={settings.email_reminders}
-                          onChange={(e) =>
-                            handleEmailRemindersChange(e.target.checked)
-                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border-gray-300 rounded transition-all duration-200"
+                          defaultChecked
                         />
-                        <span className="ml-2 text-sm text-gray-900 dark:text-white">
-                          Send automatic reminders
+                        <span className="ml-2 text-sm text-gray-900">
+                          Email notifications
                         </span>
                       </label>
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 ml-6">
-                        Automatically send reminders to team members who haven't
-                        submitted their brief by the deadline.
+                      <p className="mt-1 text-xs text-gray-500 ml-6">
+                        Receive email notifications for reminders and updates.
                       </p>
                     </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-end">
-                    <Button type="submit" isLoading={isUpdating}>
-                      Save Changes
-                    </Button>
-                  </div>
-                </form>
-              </CardBody>
-            </Card>
-          )}
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                Account Settings
-              </h2>
-            </CardHeader>
-            <CardBody>
-              <div className="space-y-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 relative group">
-                    <UserAvatar
-                      src={currentUser?.avatar_url}
-                      name={currentUser?.name || "User"}
-                      size="h-16 w-16"
-                    />
-                    {currentUser?.avatar_url && (
-                      <button
-                        onClick={deleteAvatar}
-                        className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="h-6 w-6 text-white" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="ml-4">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={currentUser?.avatar_url ? true : false}
-                    >
-                      Change avatar
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                  <div className="sm:col-span-3">
-                    <Input
-                      id="name"
-                      label="Full name"
-                      defaultValue={currentUser?.name || ""}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="sm:col-span-3">
-                    <Input
-                      id="email"
-                      label="Email address"
-                      type="email"
-                      disabled
-                      defaultValue={currentUser?.email || ""}
-                    />
-                  </div>
-
-                  <div className="sm:col-span-3">
-                    <Input
-                      id="password"
-                      label="New password"
-                      type="password"
-                      placeholder="••••••••"
-                      onChange={(e) =>
-                        setProfileData((prev) => ({
-                          ...prev,
-                          password: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  <div className="sm:col-span-3">
-                    <Input
-                      id="confirm-password"
-                      label="Confirm password"
-                      type="password"
-                      placeholder="••••••••"
-                      onChange={(e) =>
-                        setProfileData((prev) => ({
-                          ...prev,
-                          confirmPassword: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardBody>
-            <CardFooter>
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleUpdate}
-                  isLoading={
-                    isUploading || isUpdatingUser || isUpdatingPassword
-                  }
-                >
-                  Update Account
-                </Button>
-              </div>
-            </CardFooter>
+                  </CardBody>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Card>
         </div>
-        <div>
-          {isAdmin && (
-            <Card className="mb-6">
-              <CardHeader>
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                  Workspace Settings
-                </h2>
-              </CardHeader>
-              <CardBody>
-                <div className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="workspace-name"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Workspace Name
-                    </label>
-                    <Input
-                      id="workspace-name"
-                      placeholder="My Team Workspace"
-                      defaultValue="My Team Workspace"
-                      value={formData?.name}
-                      onChange={handleNameChange}
-                    />
-                  </div>
-
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Timezone
-                    </label>
-                    <select
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      defaultValue="America/New_York"
-                    >
-                      <option value="America/New_York">
-                        Eastern Time (ET)
-                      </option>
-                      <option value="America/Chicago">Central Time (CT)</option>
-                      <option value="America/Denver">Mountain Time (MT)</option>
-                      <option value="America/Los_Angeles">
-                        Pacific Time (PT)
-                      </option>
-                    </select>
-                  </div> */}
-                </div>
-              </CardBody>
-              <CardFooter>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  fullWidth
-                  onClick={handleSave}
-                  isLoading={isUpdating}
-                >
-                  Update Workspace
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                Notification Preferences
-              </h2>
-            </CardHeader>
-            <CardBody>
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
-                    defaultChecked
-                  />
-                  <span className="ml-2 text-sm text-gray-900 dark:text-white">
-                    Email notifications
-                  </span>
-                </label>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 ml-6">
-                  Receive email notifications for reminders and updates.
-                </p>
-              </div>
-            </CardBody>
-            <CardFooter>
-              <Button variant="outline" size="sm" fullWidth>
-                Update Preferences
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
     </DashboardLayout>
   );
 };

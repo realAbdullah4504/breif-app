@@ -27,6 +27,15 @@ export class InviteService {
     error: Error | null;
   }> {
     try {
+      // Get admin's workspace to filter invitations
+      const { data: workspaceData, error: workspaceError } = await supabase
+        .from('workspace_settings')
+        .select('id')
+        .eq('admin_id', id)
+        .single();
+
+      if (workspaceError) throw workspaceError;
+
       // First get all invitations
       const { data: invitations, error } = await supabase
         .from("invitations")
@@ -44,6 +53,7 @@ export class InviteService {
               .from("users")
               .select("name, avatar_url")
               .eq("email", invitation.email)
+              .eq("workspace_id", workspaceData.id)
               .single();
 
             if (userError && userError.code !== "PGRST116") {
@@ -126,6 +136,15 @@ export class InviteService {
 
       if (inviteError) throw inviteError;
 
+      // Get workspace_id from the admin who invited them
+      const { data: workspaceData, error: workspaceError } = await supabase
+        .from('workspace_settings')
+        .select('id')
+        .eq('admin_id', invitation.invited_by)
+        .single();
+
+      if (workspaceError) throw workspaceError;
+
       const { error: updateError } = await supabase
         .from("invitations")
         .update({ status: "accepted" })
@@ -140,6 +159,7 @@ export class InviteService {
         email,
         role,
         invited_by: invitation.invited_by,
+        workspace_id: workspaceData.id,
       });
 
       if (updateError) throw updateError;

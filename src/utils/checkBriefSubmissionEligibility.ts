@@ -1,8 +1,10 @@
 import { Brief } from "../types/briefTypes";
+import { DEFAULT_WORKSPACE_TIMEZONE } from "./workspaceTimeUtils";
 
 export const checkBriefSubmissionEligibility = (
   briefs: Brief[],
-  deadline: string
+  deadline: string,
+  workspaceTimezone?: string,
 ): { canSubmit: boolean; message: string } => {
   // Check if already submitted today
   const today = new Date();
@@ -21,11 +23,11 @@ export const checkBriefSubmissionEligibility = (
     };
   }
 
-  // Check if past deadline
+  // Check if past deadline (simple time comparison without timezone conversion)
   const now = new Date();
-  const [deadlineHours, deadlineMinutes] = deadline.split(':').map(Number);
-  const deadlineTime = new Date(now);
-  deadlineTime.setHours(deadlineHours, deadlineMinutes, 0, 0);
+  const [hours, minutes] = deadline.split(':').map(Number);
+  const deadlineTime = new Date();
+  deadlineTime.setHours(hours, minutes, 0, 0);
 
   if (now > deadlineTime) {
     return {

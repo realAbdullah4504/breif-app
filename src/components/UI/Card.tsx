@@ -3,11 +3,13 @@ import React, { ReactNode } from 'react';
 interface CardProps {
   children: ReactNode;
   className?: string;
+  variant?: 'default' | 'monday';
 }
 
-const Card: React.FC<CardProps> = ({ children, className = '' }) => {
+const Card: React.FC<CardProps> = ({ children, className = '', variant = 'default' }) => {
+  const baseClass = variant === 'monday' ? 'card-monday' : 'card';
   return (
-    <div className={`bg-white overflow-hidden shadow rounded-lg ${className}`}>
+    <div className={`${baseClass} ${className}`}>
       {children}
     </div>
   );
@@ -18,7 +20,7 @@ export const CardHeader: React.FC<{ children: ReactNode; className?: string }> =
   className = '' 
 }) => {
   return (
-    <div className={`px-4 py-5 sm:px-6 border-b border-gray-200 ${className}`}>
+    <div className={`card-header ${className}`}>
       {children}
     </div>
   );
@@ -29,7 +31,7 @@ export const CardBody: React.FC<{ children: ReactNode; className?: string }> = (
   className = '' 
 }) => {
   return (
-    <div className={`px-4 py-5 sm:p-6 ${className}`}>
+    <div className={`card-body ${className}`}>
       {children}
     </div>
   );
@@ -40,7 +42,7 @@ export const CardFooter: React.FC<{ children: ReactNode; className?: string }> =
   className = '' 
 }) => {
   return (
-    <div className={`px-4 py-4 sm:px-6 border-t border-gray-200 ${className}`}>
+    <div className={`card-footer ${className}`}>
       {children}
     </div>
   );

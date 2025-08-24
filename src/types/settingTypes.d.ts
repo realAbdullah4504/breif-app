@@ -25,6 +25,8 @@ export interface WorkspaceSettings {
   admin_id:string;
   name:string;
   send_reminders_at:string;
+  send_on_weekdays: number[];
+  timezone?: string;
   created_at: string;
   updated_at: string;
 }

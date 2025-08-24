@@ -2,49 +2,81 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import Card, { CardHeader, CardBody } from '../components/UI/Card';
+import { useAuth } from '../context/AuthContext';
 
 interface FAQItem {
   question: string;
   answer: string;
 }
 
-const faqItems: FAQItem[] = [
+const commonFAQs: FAQItem[] = [
   {
     question: 'What is Briefly?',
-    answer: 'Briefly is a lightweight team check-in tool that helps teams stay aligned by submitting quick daily updates. Instead of long reports or endless meetings, Briefly allows team members to submit a brief summary of their work that day.'
+    answer: 'Briefly is a streamlined daily check-in platform that transforms how teams communicate their progress. Here\'s how it works:\n\n1. Team members receive a daily reminder before the customizable deadline\n2. They submit a brief update covering their accomplishments, challenges, and priorities\n3. Admins can review submissions, provide feedback, and track team progress\n4. All updates are archived and easily accessible for future reference\n\nThis approach eliminates the need for lengthy status meetings while ensuring everyone stays aligned and informed. Briefly adapts to your team\'s workflow with customizable questions, flexible deadlines, and automated reminders.'
+  }
+];
+
+const adminFAQs: FAQItem[] = [
+  ...commonFAQs,
+  {
+    question: 'How do I customize brief questions?',
+    answer: 'You can customize brief questions in Settings. Navigate to the Brief Questions section where you can modify existing questions or add up to two additional custom questions to better suit your team\'s needs.'
   },
   {
-    question: 'How do I invite team members?',
-    answer: 'As an admin, you can invite team members from the Team Management page. Simply enter their email address and click "Send Invitation". They will receive an email with instructions to join your workspace.'
+    question: 'How do automatic reminders work?',
+    answer: 'When enabled, reminders are automatically sent to team members who haven\'t submitted their brief before the deadline.'
   },
+  {
+    question: 'Can I export brief data?',
+    answer: 'Yes! When viewing a brief, click the "Download PDF" button to generate a formatted PDF report of that brief. This is useful for record-keeping or sharing updates with stakeholders.'
+  },
+  {
+    question: 'How do I manage team members?',
+    answer: 'Use the Team Management page to invite new members, manage existing ones, and handle invitations. You can send reminders directly from the dashboard to members who haven\'t submitted their briefs.'
+  },
+  {
+    question: 'What are the different brief statuses?',
+    answer: 'Briefs can be marked as "Submitted" (when a member completes it), "Pending" (not yet submitted), "Reviewed" (when you\'ve reviewed it), or "Pending Review" (submitted but not yet reviewed by you).'
+  },
+  {
+    question: 'How can I filter and search briefs?',
+    answer: 'Use the filters on the dashboard to sort by submission status, review status, and date range. You can also search for specific team members using the search bar.'
+  }
+];
+
+const memberFAQs: FAQItem[] = [
+  ...commonFAQs,
   {
     question: 'When should I submit my brief?',
-    answer: 'You should submit your brief at the end of your workday, before the submission deadline set by your admin. This helps keep the team updated on your progress and any challenges you might be facing.'
+    answer: 'Submit your brief before the daily deadline set by your admin. You\'ll receive a reminder if you haven\'t submitted, but it\'s best to complete it while your day\'s work is fresh in your mind.'
   },
   {
     question: 'Can I edit my brief after submitting?',
-    answer: 'Currently, briefs cannot be edited after submission. Please make sure to review your brief before submitting it.'
+    answer: 'No, briefs cannot be edited after submission. Please review your responses carefully before submitting. If you need to make corrections, contact your admin.'
   },
   {
-    question: 'How do reminders work?',
-    answer: 'If enabled by your admin, automatic reminders will be sent to team members who haven\'t submitted their brief by the deadline. Admins can also manually send reminders from the dashboard.'
+    question: 'What should I include in my brief?',
+    answer: 'Focus on key accomplishments, any blockers you\'ve encountered, and your priorities for the next day. Be specific but concise. Include relevant details that would be helpful for your team to know.'
   },
   {
-    question: 'Can I customize the brief questions?',
-    answer: 'Yes, admins can customize the brief questions from the Settings page. You can modify the wording of the questions to better suit your team\'s needs.'
+    question: 'How can I view my previous briefs?',
+    answer: 'Access your brief history by clicking "View All History" on your dashboard. This shows all your past submissions, including when they were reviewed and any admin notes.'
   },
   {
-    question: 'Is there a mobile app?',
-    answer: 'Not yet, but Briefly is fully responsive and works well on mobile browsers. We\'re considering developing native mobile apps in the future.'
+    question: 'What happens after I submit my brief?',
+    answer: 'Your admin will review your brief and may add notes. You\'ll be able to see when your brief has been reviewed in your brief history.'
   },
   {
-    question: 'How can I view past briefs?',
-    answer: 'Team members can view their own past briefs from their dashboard. Admins can view all team members\' briefs from the admin dashboard.'
+    question: 'What if I miss the deadline?',
+    answer: 'While it\'s best to submit before the deadline, you can still submit your brief after it passes. However, consistent late submissions may be flagged to your admin.'
   }
 ];
 
 const FAQ: React.FC = () => {
   const [openItems, setOpenItems] = useState<Record<number, boolean>>({});
+  const { currentUser } = useAuth();
+  const isAdmin = currentUser?.role === 'admin';
+  const faqItems = isAdmin ? adminFAQs : memberFAQs;
 
   const toggleItem = (index: number) => {
     setOpenItems(prev => ({
@@ -58,7 +90,7 @@ const FAQ: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Frequently Asked Questions</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Find answers to common questions about using Briefly.
+          Find answers to common questions about {isAdmin ? 'managing' : 'using'} Briefly.
         </p>
       </div>
 
@@ -72,21 +104,30 @@ const FAQ: React.FC = () => {
         <CardBody>
           <div className="divide-y divide-gray-200">
             {faqItems.map((item, index) => (
-              <div key={index} className="py-4">
+              <div 
+                key={index} 
+                className={`py-4 transition-all duration-200 ${
+                  openItems[index] ? 'bg-gray-50 rounded-lg px-4 -mx-4' : ''
+                }`}
+              >
                 <button
-                  className="flex w-full justify-between items-center text-left focus:outline-none"
+                  className="flex w-full justify-between items-center text-left focus:outline-none group"
                   onClick={() => toggleItem(index)}
                 >
-                  <span className="text-base font-medium text-gray-900">{item.question}</span>
+                  <span className={`text-base font-medium ${
+                    openItems[index] ? 'text-blue-600' : 'text-gray-900 group-hover:text-blue-600'
+                  } transition-colors duration-200`}>
+                    {item.question}
+                  </span>
                   {openItems[index] ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
+                    <ChevronUp className="h-5 w-5 text-blue-500" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                    <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-blue-500" />
                   )}
                 </button>
                 {openItems[index] && (
-                  <div className="mt-2 text-sm text-gray-500">
-                    <p>{item.answer}</p>
+                  <div className="mt-2 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                    {item.answer}
                   </div>
                 )}
               </div>
@@ -94,26 +135,6 @@ const FAQ: React.FC = () => {
           </div>
         </CardBody>
       </Card>
-
-      <div className="mt-6">
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-medium text-gray-900">Still have questions?</h2>
-          </CardHeader>
-          <CardBody>
-            <p className="text-sm text-gray-500 mb-4">
-              If you couldn't find the answer to your question, feel free to contact our support team.
-            </p>
-            <div className="bg-gray-50 p-4 rounded-md">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Contact Support</h3>
-              <p className="text-sm text-gray-500">
-                Email: support@briefly.com<br />
-                Hours: Monday to Friday, 9am - 5pm EST
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
     </DashboardLayout>
   );
 };

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useSettings } from "../hooks/useSettings";
 import { useAdminBriefs } from "../hooks/useAdminBriefs";
-import { formatDeadlineTime } from "../utils/formatDeadlineTime";
-import { formatDistanceToNow } from "date-fns";
+import { createWorkspaceDeadline, getTimeUntilDeadline, DEFAULT_WORKSPACE_TIMEZONE } from "../utils/workspaceTimeUtils";
 import { Brief, FilterOptions, TeamMember } from "../types/briefTypes";
 import { WorkspaceSettings } from "../types/settingTypes";
+import { useAuth } from "./AuthContext";
 
 // Define context type
 type DashboardContextType = {
@@ -33,6 +33,7 @@ type DashboardProviderProps = {
 };
 
 export const DashboardProvider = ({ children }: DashboardProviderProps) => {
+    const { currentUser } = useAuth();
     const [filters, setFilters] = useState<FilterOptions>({
         status: "all",
         review: "all",
@@ -53,10 +54,13 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     const pendingBriefs = totalBriefs - submittedBriefs;
     const submissionRate = totalBriefs > 0 ? (submittedBriefs / totalBriefs) * 100 : 0;
 
-    const deadline =
-        formatDeadlineTime(settings?.submission_deadline) || new Date();
-    const timeUntilDeadline = settings?.submission_deadline
-        ? formatDistanceToNow(deadline, { addSuffix: true })
+    const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
+    const deadline = settings?.submission_deadline
+        ? createWorkspaceDeadline(settings.submission_deadline, workspaceTimezone)
+        : new Date();
+        
+    const timeUntilDeadline = settings?.submission_deadline && settings?.timezone
+        ? getTimeUntilDeadline(settings.submission_deadline, workspaceTimezone)
         : "No deadline set";
 
     const handleFiltersQuery = (filter: FilterOptions) => {

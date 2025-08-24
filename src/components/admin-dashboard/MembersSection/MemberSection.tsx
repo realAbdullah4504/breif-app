@@ -1,263 +1,290 @@
-import { CheckCircle, Clock, Eye, Search, UserPlus, XCircle, XCircleIcon } from "lucide-react";
+import { CheckCircle, Clock, Eye, Search, UserPlus, XCircle, XCircleIcon, MessageSquare, Calendar } from "lucide-react";
 import EmptyState from "../../EmptyState";
 import Card, { CardBody } from "../../UI/Card";
 import { UserAvatar } from "../../UI/UserAvatar";
 import Badge from "../../UI/Badge";
 import ReminderButton from "./ReminderButton";
 import Button from "../../UI/Button";
-import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
+import { formatWorkspaceTime, DEFAULT_WORKSPACE_TIMEZONE } from "../../../utils/workspaceTimeUtils";
 import { BriefWithUser } from "../../../types/briefTypes";
 import { useState } from "react";
 import MemberModal from "./Modal";
 import { useDashboardContext } from "../../../context/DashboardContext";
-
+import { useAllUserStreaks } from "../../../hooks/useRecognition";
+import { Flame } from "lucide-react";
 
 type MemberSectionProps = {
-    isDarkMode: boolean;
     viewMode: string;
 }
 
-const MemberSection = ({ isDarkMode, viewMode }: MemberSectionProps) => {
-
+const MemberSection = ({ viewMode }: MemberSectionProps) => {
     const { settings, briefs, teamMembers, filteredTeamMembers } = useDashboardContext();
-    const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(
-        null
-    );
-
+    const { data: userStreaks } = useAllUserStreaks();
+    const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleViewBrief = (brief: BriefWithUser) => {
         setSelectedBrief(brief);
-        // setAdminNotes("");
         setIsModalOpen(true);
     };
 
+    const cardVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 },
+        hover: { 
+            y: -2, 
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            transition: { duration: 0.2 }
+        }
+    };
+
     return (
-        <div className="mb-6" >
+        <div className="mb-8">
+            {/* Section Header */}
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h2 className="text-xl font-bold text-gray-900">Team Members</h2>
+                    <p className="text-gray-600 mt-1">
+                        {filteredTeamMembers?.length || 0} of {teamMembers?.length || 0} members shown
+                    </p>
+                </div>
+            </div>
+
             {!teamMembers?.length ? (
-                <Card>
-                    <CardBody>
-                        <EmptyState
-                            title="No Team Members"
-                            message="You haven't added any team members yet. Start by inviting team members to join."
-                            icon={<UserPlus className="h-6 w-6" />}
-                            isDarkMode={isDarkMode}
-                        />
-                    </CardBody>
-                </Card >
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8 lg:p-12">
+                    <EmptyState
+                        title="No Team Members"
+                        message="You haven't added any team members yet. Start by inviting team members to join your workspace."
+                        icon={<UserPlus className="h-8 w-8" />}
+                    />
+                </div>
             ) : !filteredTeamMembers?.length ? (
-                <Card>
-                    <CardBody>
-                        <EmptyState
-                            title="No Results Found"
-                            message="No team members match your current filters. Try adjusting your search or filter criteria."
-                            icon={<Search className="h-6 w-6" />}
-                            isDarkMode={isDarkMode}
-                        />
-                    </CardBody>
-                </Card>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8 lg:p-12">
+                    <EmptyState
+                        title="No Results Found"
+                        message="No team members match your current filters. Try adjusting your search or filter criteria."
+                        icon={<Search className="h-8 w-8" />}
+                    />
+                </div>
             ) : viewMode === "card" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredTeamMembers?.map((member) => {
-                        const memberBrief = briefs.find(
-                            (brief) => brief?.user_id === member?.id
-                        );
-                        const submittedAt = memberBrief?.submitted_at
-                            ? format(new Date(memberBrief.submitted_at), "h:mm a")
-                            : "";
-                        return (
-                            <motion.div
-                                key={member?.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                                whileHover={{ y: -5 }}
-                                className={`${isDarkMode ? "bg-gray-800" : "bg-white"
-                                    } rounded-lg shadow-md overflow-hidden`}
-                            >
-                                <div className="p-4">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center">
-                                            <UserAvatar
-                                                src={member?.avatar_url}
-                                                name={member?.name || "User"}
-                                                size="h-10 w-10 mr-3"
-                                            />
-                                            <div>
-                                                <h3
-                                                    className={`text-lg font-medium ${isDarkMode ? "text-white" : "text-gray-900"
-                                                        }`}
-                                                >
-                                                    {member?.name}
-                                                </h3>
-                                                {memberBrief && (
-                                                    <p
-                                                        className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"
-                                                            }`}
-                                                    >
-                                                        Submitted at {submittedAt}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <AnimatePresence>
+                        {filteredTeamMembers?.map((member, index) => {
+                            const memberBrief = briefs.find(
+                                (brief) => brief?.user_id === member?.id
+                            );
+                            const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
+                            const submittedAt = memberBrief?.submitted_at
+                                ? formatWorkspaceTime(memberBrief.submitted_at, workspaceTimezone)
+                                : "";
+                            const memberStreak = userStreaks?.find(
+                                (streak) => streak.user_id === member?.id
+                            );
+                            return (
+                                <motion.div
+                                    key={member?.id}
+                                    variants={cardVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    whileHover="hover"
+                                    transition={{ delay: index * 0.05 }}
+                                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+                                >
+                                    <div className="p-4 sm:p-6">
+                                        {/* Member Header */}
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center">
+                                                <UserAvatar
+                                                    src={member?.avatar_url}
+                                                    name={member?.name || "User"}
+                                                    size="h-10 w-10 sm:h-12 sm:w-12 mr-3 sm:mr-4"
+                                                />
+                                                <div>
+                                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                                                        {member?.name}
+                                                    </h3>
+                                                    <p className="text-xs sm:text-sm text-gray-500 truncate">
+                                                        {member?.email}
                                                     </p>
+                                                    {memberStreak && memberStreak.current_streak > 0 && (
+                                                        <div className="flex items-center mt-1">
+                                                            <Flame className="h-3 w-3 text-orange-500 mr-1" />
+                                                            <span className="text-xs text-orange-600 font-medium">
+                                                                {memberStreak.current_streak} day streak
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {memberBrief ? (
+                                                    <Badge
+                                                        variant="success"
+                                                        className="flex items-center px-3 py-1"
+                                                    >
+                                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                                        Submitted
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge
+                                                        variant="danger"
+                                                        className="flex items-center px-3 py-1"
+                                                    >
+                                                        <XCircleIcon className="h-3 w-3 mr-1" />
+                                                        Pending
+                                                    </Badge>
                                                 )}
                                             </div>
                                         </div>
-                                        <div>
-                                            {memberBrief ? (
-                                                <Badge
-                                                    variant="success"
-                                                    className="flex items-center"
-                                                >
-                                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                                    Submitted
-                                                </Badge>
-                                            ) : (
-                                                <Badge
-                                                    variant="danger"
-                                                    className="flex items-center"
-                                                >
-                                                    <XCircleIcon className="h-3 w-3 mr-1" />
-                                                    Pending
-                                                </Badge>
-                                            )}
-                                        </div>
-                                    </div>
 
-                                    {memberBrief && (
-                                        <div className="mb-4">
-                                            <p
-                                                className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"
-                                                    } line-clamp-2`}
-                                            >
-                                                {memberBrief?.accomplishments}
-                                            </p>
-                                        </div>
-                                    )}
+                                        {/* Brief Preview */}
+                                        {memberBrief ? (
+                                            <div className="mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                                                <div className="flex items-center mb-2">
+                                                    <Calendar className="h-4 w-4 text-gray-400 mr-2" />
+                                                    <span className="text-xs sm:text-sm text-gray-600">
+                                                        Submitted at {submittedAt}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs sm:text-sm text-gray-700 line-clamp-2">
+                                                    {memberBrief?.accomplishments}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="mb-4 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-100">
+                                                <div className="flex items-center">
+                                                    <XCircleIcon className="h-4 w-4 text-red-500 mr-2" />
+                                                    <span className="text-xs sm:text-sm text-red-700 font-medium">
+                                                        Brief not submitted yet
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            {memberBrief && memberBrief?.reviewed_by ? (
-                                                <Badge variant="info" className="flex items-center">
-                                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                                    Reviewed
-                                                </Badge>
-                                            ) : memberBrief ? (
-                                                <Badge
-                                                    variant="warning"
-                                                    className="flex items-center"
-                                                >
-                                                    <Clock className="h-3 w-3 mr-1" />
-                                                    Pending Review
-                                                </Badge>
-                                            ) : null}
+                                        {/* Review Status */}
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div>
+                                                {memberBrief && memberBrief?.reviewed_by ? (
+                                                    <Badge variant="info" className="flex items-center">
+                                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                                        Reviewed
+                                                    </Badge>
+                                                ) : memberBrief ? (
+                                                    <Badge
+                                                        variant="warning"
+                                                        className="flex items-center"
+                                                    >
+                                                        <Clock className="h-3 w-3 mr-1" />
+                                                        Needs Review
+                                                    </Badge>
+                                                ) : (
+                                                    <span className="text-xs sm:text-sm text-gray-500">
+                                                        No submission to review
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex space-x-2">
+
+                                        {/* Actions */}
+                                        <div className="flex space-x-1 sm:space-x-2">
                                             {memberBrief ? (
                                                 <Button
                                                     variant="outline"
-                                                    size="sm"
+                                                    size="xs"
                                                     onClick={() => handleViewBrief(memberBrief)}
+                                                    className="flex-1"
                                                 >
-                                                    <Eye className="h-4 w-4 mr-1" />
-                                                    View
+                                                    <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                                    <span className="text-xs sm:text-sm">View</span>
                                                 </Button>
                                             ) : (
-                                                <ReminderButton member={member} teamMembers={teamMembers} settings={settings!} />
+                                                <div className="flex-1">
+                                                    <ReminderButton 
+                                                        member={member} 
+                                                        teamMembers={teamMembers} 
+                                                        settings={settings!} 
+                                                    />
+                                                </div>
                                             )}
                                         </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
+                                </motion.div>
+                            );
+                        })}
+                    </AnimatePresence>
                 </div>
             ) : (
-                <div
-                    className={`${isDarkMode ? "bg-gray-800" : "bg-white"
-                        } rounded-lg shadow-md overflow-hidden`}
-                >
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
-                            <thead className={isDarkMode ? "bg-gray-700" : "bg-gray-50"}>
+                            <thead className="bg-gray-50">
                                 <tr>
-                                    <th
-                                        scope="col"
-                                        className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-500"
-                                            } uppercase tracking-wider`}
-                                    >
+                                    <th scope="col" className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Team Member
                                     </th>
-                                    <th
-                                        scope="col"
-                                        className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-500"
-                                            } uppercase tracking-wider`}
-                                    >
-                                        Status
+                                    <th scope="col" className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                                        Submission Status
                                     </th>
-                                    <th
-                                        scope="col"
-                                        className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-500"
-                                            } uppercase tracking-wider`}
-                                    >
+                                    <th scope="col" className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                                         Review Status
                                     </th>
-                                    <th
-                                        scope="col"
-                                        className={`px-6 py-3 text-left text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-500"
-                                            } uppercase tracking-wider`}
-                                    >
+                                    <th scope="col" className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                                         Submitted At
                                     </th>
-                                    <th
-                                        scope="col"
-                                        className={`px-6 py-3 text-right text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-500"
-                                            } uppercase tracking-wider`}
-                                    >
+                                    <th scope="col" className="px-3 sm:px-6 py-3 sm:py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody
-                                className={`${isDarkMode
-                                    ? "bg-gray-800 divide-gray-700"
-                                    : "bg-white divide-gray-200"
-                                    }`}
-                            >
-                                {filteredTeamMembers?.map((member) => {
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {filteredTeamMembers?.map((member, index) => {
                                     const memberBrief = briefs.find(
                                         (brief) => brief?.user_id === member?.id
                                     );
+                                    const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
                                     const submittedAt = memberBrief?.submitted_at
-                                        ? format(new Date(memberBrief.submitted_at), "h:mm a")
+                                        ? formatWorkspaceTime(memberBrief.submitted_at, workspaceTimezone)
                                         : "";
+                                    const memberStreak = userStreaks?.find(
+                                        (streak) => streak.user_id === member?.id
+                                    );
                                     return (
-                                        <tr
+                                        <motion.tr
                                             key={member.id}
-                                            className={
-                                                isDarkMode
-                                                    ? "hover:bg-gray-700"
-                                                    : "hover:bg-gray-50"
-                                            }
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            className="hover:bg-gray-50 transition-colors duration-150"
                                         >
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <div className="flex-shrink-0 h-10 w-10">
-                                                        <img
-                                                            className="h-10 w-10 rounded-full"
+                                                    <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
+                                                        <UserAvatar
                                                             src={member.avatar_url}
-                                                            alt=""
+                                                            name={member.name || "User"}
+                                                            size="h-8 w-8 sm:h-10 sm:w-10"
                                                         />
                                                     </div>
-                                                    <div className="ml-4">
-                                                        <div
-                                                            className={`text-sm font-medium ${isDarkMode ? "text-white" : "text-gray-900"
-                                                                }`}
-                                                        >
+                                                    <div className="ml-2 sm:ml-4">
+                                                        <div className="text-xs sm:text-sm font-medium text-gray-900">
                                                             {member.name}
                                                         </div>
+                                                        <div className="text-xs sm:text-sm text-gray-500 truncate max-w-32 sm:max-w-none">
+                                                            {member.email}
+                                                        </div>
+                                                        {memberStreak && memberStreak.current_streak > 0 && (
+                                                            <div className="flex items-center mt-1">
+                                                                <Flame className="h-3 w-3 text-orange-500 mr-1" />
+                                                                <span className="text-xs text-orange-600 font-medium">
+                                                                    {memberStreak.current_streak} day streak
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
                                                 {memberBrief ? (
                                                     <Badge
                                                         variant="success"
@@ -276,7 +303,7 @@ const MemberSection = ({ isDarkMode, viewMode }: MemberSectionProps) => {
                                                     </Badge>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
                                                 {memberBrief && memberBrief?.reviewed_by ? (
                                                     <Badge
                                                         variant="info"
@@ -291,39 +318,45 @@ const MemberSection = ({ isDarkMode, viewMode }: MemberSectionProps) => {
                                                         className="flex items-center"
                                                     >
                                                         <Clock className="h-3 w-3 mr-1" />
-                                                        Pending Review
+                                                        Needs Review
                                                     </Badge>
                                                 ) : (
-                                                    <span
-                                                        className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"
-                                                            }`}
-                                                    >
+                                                    <span className="text-sm text-gray-500">
                                                         -
                                                     </span>
                                                 )}
                                             </td>
-                                            <td
-                                                className={`px-6 py-4 whitespace-nowrap text-sm ${isDarkMode ? "text-gray-300" : "text-gray-500"
-                                                    }`}
-                                            >
-                                                {memberBrief ? submittedAt : "-"}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden lg:table-cell">
                                                 {memberBrief ? (
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleViewBrief(memberBrief)}
-                                                        className="mr-2"
-                                                    >
-                                                        <Eye className="h-4 w-4 mr-1" />
-                                                        View
-                                                    </Button>
+                                                    <div className="flex items-center">
+                                                        <Calendar className="h-4 w-4 mr-1" />
+                                                        {submittedAt}
+                                                    </div>
                                                 ) : (
-                                                    <ReminderButton member={member} teamMembers={teamMembers} settings={settings!} />
+                                                    "-"
                                                 )}
                                             </td>
-                                        </tr>
+                                            <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
+                                                <div className="flex justify-end space-x-1 sm:space-x-2">
+                                                    {memberBrief ? (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="xs"
+                                                            onClick={() => handleViewBrief(memberBrief)}
+                                                        >
+                                                            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                                            <span className="hidden sm:inline">View</span>
+                                                        </Button>
+                                                    ) : (
+                                                        <ReminderButton 
+                                                            member={member}
+                                                            teamMembers={teamMembers} 
+                                                            settings={settings!} 
+                                                        />
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </motion.tr>
                                     );
                                 })}
                             </tbody>
@@ -331,8 +364,15 @@ const MemberSection = ({ isDarkMode, viewMode }: MemberSectionProps) => {
                     </div>
                 </div>
             )}
-            <MemberModal isDarkMode={isDarkMode} settings={settings} selectedBrief={selectedBrief!} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-        </div >
+            
+            <MemberModal 
+                isDarkMode={false} 
+                settings={settings} 
+                selectedBrief={selectedBrief!} 
+                isModalOpen={isModalOpen} 
+                setIsModalOpen={setIsModalOpen} 
+            />
+        </div>
     );
 };
 

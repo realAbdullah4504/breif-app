@@ -5,9 +5,11 @@ import Button from "../../components/UI/Button";
 import { useAuth } from "../../context/AuthContext";
 import { useTeamInvitations } from "../../hooks/useTeamInvitations";
 import { validatePassword } from "../../utils/passwordValidation";
+import { useNavigate } from "react-router-dom";
 
 export const SetPassword: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser,isLoading } = useAuth();
+  const navigate = useNavigate();
   const { setPassword, isSettingPassword } = useTeamInvitations();
   const [formData, setFormData] = useState({
     username: "",
@@ -50,9 +52,23 @@ export const SetPassword: React.FC = () => {
       return;
     }
 
-    setPassword({username:formData.username,password:formData.password});
+    setPassword(
+      {username:formData.username,password:formData.password},
+      {
+        onSuccess: () => {
+          // Redirect to onboarding instead of login
+          navigate('/onboarding');
+        }
+      }
+    );
   };
 
+  if(isLoading){
+    return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  )}
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

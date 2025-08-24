@@ -36,6 +36,25 @@ export const useAdminBriefs = (filters: FilterOptions) => {
   };
 };
 
+export const useSampleData = () => {
+  const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
+
+  const deleteSampleDataMutation = useMutation({
+    mutationFn: () => briefService.deleteSampleData(currentUser!.id),
+    onSuccess: () => {
+      // Invalidate all related queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ["admin-briefs"] });
+      queryClient.invalidateQueries({ queryKey: ["brief-stats"] });
+    },
+  });
+
+  return {
+    deleteSampleData: deleteSampleDataMutation.mutate,
+    isDeletingSampleData: deleteSampleDataMutation.isPending,
+  };
+};
+
 export const useReviewBriefs = () => {
   const queryClient = useQueryClient();
   const { createNotification } = useNotificationSender();

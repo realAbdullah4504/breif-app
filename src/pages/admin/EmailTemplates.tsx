@@ -78,8 +78,9 @@ const EmailTemplates: React.FC = () => {
         html:
           settings?.reminder_template?.body
             ?.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
-            .replace("{{name}}", "abdullah")
-            .replace("{{deadline}}", "17:00:00") || // Convert Date to string
+            .replace("{{name}}", "Test User")
+            .replace("{{deadline}}", "5:00 PM")
+            .replace("{{organizationName}}", settings?.name || "Your Organization") || // Convert Date to string
           "Please submit your brief.",
       },
       {
@@ -153,6 +154,9 @@ const EmailTemplates: React.FC = () => {
                       <li>
                         <code>{"{{deadline}}"}</code> - Submission deadline
                       </li>
+                      <li>
+                        <code>{"{{organizationName}}"}</code> - Your organization name
+                      </li>
                     </ul>
                   </div>
 
@@ -207,7 +211,7 @@ const EmailTemplates: React.FC = () => {
               </h2>
             </CardHeader>
             <CardBody>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <label className="flex items-center">
                     <input
@@ -257,26 +261,6 @@ const EmailTemplates: React.FC = () => {
                         ))}
                     </select>
                   </div>
-
-                  {/* <div>
-                    <label
-                      htmlFor="digest-time"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Send daily digest at
-                    </label>
-                    <select
-                      id="digest-time"
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                      defaultValue="6:00 PM"
-                    >
-                      {hourOptions.map((time) => (
-                        <option key={time} value={time}>
-                          {time}
-                        </option>
-                      ))}
-                    </select>
-                  </div> */}
                 </div>
               </CardBody>
               <CardFooter>
@@ -309,7 +293,10 @@ const EmailTemplates: React.FC = () => {
             </div>
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="text-sm whitespace-pre-wrap">
-                {body.replace("{{name}}", "Test User")}
+                {body
+                  .replace("{{name}}", "Test User")
+                  .replace("{{deadline}}", "5:00 PM")
+                  .replace("{{organizationName}}", settings?.name || "Your Organization")}
               </div>
             </div>
           </div>

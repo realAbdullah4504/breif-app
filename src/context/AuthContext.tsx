@@ -4,14 +4,18 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useMemo,
+  useCallback,
 } from "react";
 import { AuthService, ExtendedUser } from "../services/auth";
+import { toast } from "react-hot-toast";
 
 interface AuthContextType {
   currentUser: ExtendedUser | null;
   setCurrentUser: React.Dispatch<React.SetStateAction<ExtendedUser | null>>;
   isAuthenticated: boolean;
-  signUp: (name:string,email: string, password: string, role: string) => Promise<ExtendedUser>;
+  isLoading: boolean;
+  signUp: (name: string, email: string, password: string, role: string, organizationName?: string) => Promise<ExtendedUser>;
   login: (email: string, password: string) => Promise<ExtendedUser>;
   logout: () => Promise<void>;
 }
@@ -28,41 +32,61 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const initAuth = async () => {
       try {
+        console.log('🔄 Initializing authentication...');
         const user = await authService.getCurrentUser();
+        console.log('👤 Current user from auth service:', user);
         setCurrentUser(user);
+        
+        if (user) {
+          console.log('✅ User authenticated successfully:', user.email, 'Role:', user.role);
+        } else {
+          console.log('❌ No authenticated user found');
+        }
       } catch (error) {
         console.error("Error initializing auth:", error);
         setCurrentUser(null);
       } finally {
+        console.log('🏁 Auth initialization complete');
         setIsLoading(false);
       }
     };
-
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<ExtendedUser> => {
+  const login = useCallback(async (email: string, password: string): Promise<ExtendedUser> => {
+    console.log('Login attempt for email:', email);
     const { user, error } = await authService.signIn(email, password);
 
     if (error) {
+      console.error('Login error:', error);
+      
+      // Handle specific error cases
+      if (error.message?.includes('Invalid login credentials')) {
+        throw new Error('Invalid email or password. Please check your credentials and try again.');
+      }
+      
       throw error;
     }
 
     if (!user) {
+      console.error('Login failed - no user returned');
       throw new Error("Login failed");
     }
 
+    console.log('Login successful, user:', user);
     setCurrentUser(user);
+    toast.success(`Welcome back, ${user.name}!`);
     return user;
-  };
+  }, [setCurrentUser]);
 
-  const signUp = async (
-    name:string,
+  const signUp = useCallback(async (
+    name: string,
     email: string,
     password: string,
-    role: string
+    role: string,
+    organizationName?: string
   ): Promise<ExtendedUser> => {
-    const { user, error } = await authService.signUp(name,email, password, role);
+    const { user, error } = await authService.signUp(name, email, password, role, organizationName);
 
     if (error) {
       throw error;
@@ -73,35 +97,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     setCurrentUser(user);
+    
+    // Don't show success toast for members as they'll go through onboarding
+    if (user.role === 'admin') {
+      toast.success(`Welcome to Briefly, ${user.name}!`);
+    }
+    
     return user;
-  };
+  }, [setCurrentUser]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     const { error } = await authService.signOut();
     if (error) {
       throw error;
     }
     setCurrentUser(null);
-  };
+    toast.success('You have been signed out successfully.');
+  }, [setCurrentUser]);
 
-  if (isLoading) {
-    return null;
-  }
-
-  return (
-    <AuthContext.Provider
-      value={{
-        currentUser,
-        setCurrentUser,
+  const value = useMemo(() => ({
+    currentUser,
+    setCurrentUser,
         isAuthenticated: !!currentUser,
+        isLoading,
         signUp,
         login,
         logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+      }),
+    [currentUser, isLoading, signUp, login, logout],
+    );
+
+    return (
+      <AuthContext.Provider value={value}>
+        {children}
+      </AuthContext.Provider>
+    );
 };
 
 export const useAuth = (): AuthContextType => {

@@ -1,7 +1,12 @@
 import { supabase } from '../lib/supabase';
 import { Brief, CreateBriefDTO, FilterOptions} from '../types/briefTypes';
 import { getFilteredMembers } from '../utils/filters';
+import { sendEmail } from './emailService';
+import { format } from 'date-fns';
+import { RecognitionService } from './recognitionService';
+import { mockDemoBriefs, mockDemoTeamMembers, isSampleDataDeleted } from '../data/mockData';
 
+const recognitionService = new RecognitionService();
 
 export class BriefService {
   async submitBrief(brief: CreateBriefDTO): Promise<{ data: Brief | null; error: Error | null }> {
@@ -21,6 +26,13 @@ export class BriefService {
 
       if (error) throw error;
 
+      // Update user streak after successful submission
+      try {
+        await recognitionService.updateUserStreak(userData.user.id);
+      } catch (streakError) {
+        console.error('Error updating user streak:', streakError);
+        // Don't fail the brief submission if streak update fails
+      }
       return { data, error: null };
     } catch (error) {
       console.error('Error submitting brief:', error);
@@ -28,6 +40,188 @@ export class BriefService {
     }
   }
 
+  async sendBriefNotificationToAdmin(brief: Brief, user: any): Promise<void> {
+    try {
+      // Get admin details
+      const { data: adminData, error: adminError } = await supabase
+        .from('users')
+        .select('email, name')
+        .eq('id', user.invited_by)
+        .eq('role', 'admin')
+        .single();
+
+      if (adminError || !adminData) {
+        console.error('Admin not found:', adminError);
+        return;
+      }
+
+      // Get workspace settings for organization name
+      const { data: settings, error: settingsError } = await supabase
+        .from('workspace_settings')
+        .select('name, questions')
+        .eq('admin_id', user.invited_by)
+        .single();
+
+      const organizationName = settings?.name || 'Your Organization';
+      const questions = settings?.questions || {
+        accomplishments: 'What did you accomplish today?',
+        blockers: 'Any blockers or challenges?',
+        priorities: 'What are your priorities for tomorrow?'
+      };
+
+      // Create clean, professional email content
+      const emailSubject = `📋 New Brief from ${user.name} - ${organizationName}`;
+      
+      const emailBody = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Brief Submitted</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 32px 24px; text-align: center;">
+              <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 12px; padding: 16px 20px; border: 1px solid rgba(255,255,255,0.2);">
+                <span style="font-size: 24px; margin-right: 8px;">✨</span>
+                <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 700;">Briefly</h1>
+              </div>
+              <h2 style="color: white; margin: 16px 0 8px 0; font-size: 20px; font-weight: 600;">New Brief Submitted</h2>
+              <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 16px;">${organizationName}</p>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 32px 24px;">
+              
+              <!-- Team Member Info -->
+              <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; align-items: center;">
+                  <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px;">
+                    <span style="color: white; font-size: 20px; font-weight: 600;">${user.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <h3 style="color: #1e293b; margin: 0; font-size: 18px; font-weight: 600;">${user.name}</h3>
+                    <p style="color: #64748b; margin: 4px 0 0 0; font-size: 14px;">Submitted ${format(new Date(brief.submitted_at), 'EEEE, MMMM d')} at ${format(new Date(brief.submitted_at), 'h:mm a')}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Brief Content -->
+              <div style="margin-bottom: 32px;">
+                
+                <!-- Accomplishments -->
+                <div style="margin-bottom: 20px;">
+                  <div style="background: #10b981; padding: 12px 16px; border-radius: 8px 8px 0 0;">
+                    <h4 style="color: white; margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center;">
+                      <span style="margin-right: 6px;">🎯</span>
+                      ${questions.accomplishments}
+                    </h4>
+                  </div>
+                  <div style="background: #f0fdf4; padding: 16px; border-radius: 0 0 8px 8px; border: 1px solid #bbf7d0; border-top: none;">
+                    <p style="color: #166534; margin: 0; line-height: 1.5; font-size: 14px;">${brief.accomplishments}</p>
+                  </div>
+                </div>
+                
+                <!-- Blockers -->
+                <div style="margin-bottom: 20px;">
+                  <div style="background: #ef4444; padding: 12px 16px; border-radius: 8px 8px 0 0;">
+                    <h4 style="color: white; margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center;">
+                      <span style="margin-right: 6px;">🚧</span>
+                      ${questions.blockers}
+                    </h4>
+                  </div>
+                  <div style="background: #fef2f2; padding: 16px; border-radius: 0 0 8px 8px; border: 1px solid #fecaca; border-top: none;">
+                    <p style="color: #991b1b; margin: 0; line-height: 1.5; font-size: 14px;">${brief.blockers || 'No blockers reported'}</p>
+                  </div>
+                </div>
+                
+                <!-- Priorities -->
+                <div style="margin-bottom: 20px;">
+                  <div style="background: #3b82f6; padding: 12px 16px; border-radius: 8px 8px 0 0;">
+                    <h4 style="color: white; margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center;">
+                      <span style="margin-right: 6px;">⭐</span>
+                      ${questions.priorities}
+                    </h4>
+                  </div>
+                  <div style="background: #eff6ff; padding: 16px; border-radius: 0 0 8px 8px; border: 1px solid #bfdbfe; border-top: none;">
+                    <p style="color: #1e40af; margin: 0; line-height: 1.5; font-size: 14px;">${brief.priorities}</p>
+                  </div>
+                </div>
+                
+                ${brief.question4_response && questions.question4 ? `
+                  <div style="margin-bottom: 20px;">
+                    <div style="background: #8b5cf6; padding: 12px 16px; border-radius: 8px 8px 0 0;">
+                      <h4 style="color: white; margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center;">
+                        <span style="margin-right: 6px;">💡</span>
+                        ${questions.question4}
+                      </h4>
+                    </div>
+                    <div style="background: #faf5ff; padding: 16px; border-radius: 0 0 8px 8px; border: 1px solid #d8b4fe; border-top: none;">
+                      <p style="color: #6b21a8; margin: 0; line-height: 1.5; font-size: 14px;">${brief.question4_response}</p>
+                    </div>
+                  </div>
+                ` : ''}
+                
+                ${brief.question5_response && questions.question5 ? `
+                  <div style="margin-bottom: 20px;">
+                    <div style="background: #f59e0b; padding: 12px 16px; border-radius: 8px 8px 0 0;">
+                      <h4 style="color: white; margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center;">
+                        <span style="margin-right: 6px;">🔥</span>
+                        ${questions.question5}
+                      </h4>
+                    </div>
+                    <div style="background: #fffbeb; padding: 16px; border-radius: 0 0 8px 8px; border: 1px solid #fed7aa; border-top: none;">
+                      <p style="color: #92400e; margin: 0; line-height: 1.5; font-size: 14px;">${brief.question5_response}</p>
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+              
+              <!-- Call to Action -->
+              <div style="text-align: center; margin: 24px 0;">
+                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0;">
+                  <h3 style="color: #1e293b; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">Review Dashboard</h3>
+                  <p style="color: #64748b; margin: 0 0 16px 0; font-size: 14px;">View and review this brief in your admin dashboard</p>
+                  <a href="https://my.brieflyapp.co/admin" 
+                     style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                    📊 Open Dashboard
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background: #f8fafc; padding: 20px 24px; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="color: #64748b; margin: 0; font-size: 12px; line-height: 1.4;">
+                This email was sent when <strong>${user.name}</strong> submitted their daily brief.<br>
+                You're receiving this as an admin of <strong>${organizationName}</strong>.
+              </p>
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                <p style="color: #94a3b8; margin: 0; font-size: 11px;">
+                  Powered by <strong style="color: #6366f1;">Briefly</strong> • <a href="https://my.brieflyapp.co" style="color: #6366f1; text-decoration: none;">my.brieflyapp.co</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Send email
+      await sendEmail({
+        to: adminData.email,
+        subject: emailSubject,
+        html: emailBody
+      });
+
+    } catch (error) {
+      console.error('Error sending brief notification to admin:', error);
+      throw error;
+    }
+  }
   async getUserBriefs(userId: string): Promise<{ data: Brief[]; error: Error | null }> {
     try {
       const { data, error } = await supabase
@@ -46,6 +240,15 @@ export class BriefService {
   }
   async getAllBriefs(adminId: string,filters:FilterOptions) {
     try {
+      // Get admin's workspace_id
+      const { data: workspaceData, error: workspaceError } = await supabase
+        .from('workspace_settings')
+        .select('id')
+        .eq('admin_id', adminId)
+        .single();
+
+      if (workspaceError) throw workspaceError;
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
   
@@ -80,13 +283,29 @@ export class BriefService {
       const { data: teamMembers, error: teamError } = await supabase
         .from('users')
         .select('*')
-        .eq('invited_by', adminId)
+        .eq('workspace_id', workspaceData.id)
         .eq('role', 'member');
   
       if (teamError) throw teamError;
   
       if (!teamMembers?.length) {
-        return { teamMembers: [], data: [], error: null };
+        // Check if sample data has been deleted
+        if (isSampleDataDeleted(adminId)) {
+          return { 
+            teamMembers: [], 
+            filteredTeamMembers: [],
+            data: [], 
+            error: null 
+          };
+        }
+        
+        // Return sample data when no real team members exist and sample data hasn't been deleted
+        return { 
+          teamMembers: mockDemoTeamMembers, 
+          filteredTeamMembers: mockDemoTeamMembers,
+          data: mockDemoBriefs, 
+          error: null 
+        };
       }
   
       const teamMemberIds = teamMembers.map(member => member.id);
@@ -145,6 +364,15 @@ export class BriefService {
   }
   async getBriefStats(adminId: string, filters: FilterOptions) {
     try {
+      // Get admin's workspace_id
+      const { data: workspaceData, error: workspaceError } = await supabase
+        .from('workspace_settings')
+        .select('id')
+        .eq('admin_id', adminId)
+        .single();
+
+      if (workspaceError) throw workspaceError;
+
       // Set up date range based on filters
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -181,28 +409,49 @@ export class BriefService {
         .from('users')
         .select('count')
         .eq('role', 'member')
-        .eq('invited_by', adminId);
+        .eq('workspace_id', workspaceData.id);
   
       if (membersError) throw membersError;
   
       // Get submitted briefs within date range
+      const { data: teamMembers, error: teamError } = await supabase
+        .from('users')
+        .select('count')
+        .eq('role', 'member')
+        .eq('workspace_id', workspaceData.id);
+
+      if (teamError) throw teamError;
+
+      // If no real team members, return mock stats
+      if (teamMembers[0].count === 0 && !isSampleDataDeleted(adminId)) {
+        return {
+          data: {
+            totalMembers: 3,
+            submittedCount: 3,
+            pendingCount: 0
+          },
+          error: null
+        };
+      }
+
+      // Get real submitted briefs within date range
       const { data: submitted, error: submittedError } = await supabase
         .from('briefs')
-        .select('*, users:user_id (invited_by)')
+        .select('*, users:user_id (workspace_id)')
         .gte('submitted_at', startDate.toISOString())
         .lt('submitted_at', endDate.toISOString());
-  
+
       if (submittedError) throw submittedError;
       
       const filteredSubmittedCount = submitted?.filter(
-        (brief) => brief?.users?.invited_by === adminId
+        (brief) => brief?.users?.workspace_id === workspaceData.id
       ).length || 0;
   
       return {
         data: {
-          totalMembers: members[0].count,
+          totalMembers: teamMembers[0].count,
           submittedCount: filteredSubmittedCount,
-          pendingCount: members[0].count - filteredSubmittedCount
+          pendingCount: teamMembers[0].count - filteredSubmittedCount
         },
         error: null
       };
@@ -212,6 +461,18 @@ export class BriefService {
         data: null, 
         error: error as Error 
       };
+    }
+  }
+
+  async deleteSampleData(adminId: string): Promise<{ error: Error | null }> {
+    try {
+      // Mark sample data as deleted in localStorage
+      const { markSampleDataAsDeleted } = await import('../data/mockData');
+      markSampleDataAsDeleted(adminId);
+      return { error: null };
+    } catch (error) {
+      console.error('Error deleting sample data:', error);
+      return { error: error as Error };
     }
   }
 }

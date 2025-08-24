@@ -73,13 +73,29 @@ export const useProfile = () => {
     }
   });
 
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser) throw new Error('No user authenticated');
+      return await profileService.deleteAccount(currentUser.id);
+    },
+    onSuccess: () => {
+      toast.success('Account deleted successfully');
+      // The user will be signed out automatically by the service
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete account');
+    }
+  });
+
   return {
     updatePassword: updatePasswordMutation.mutate,
     isUpdatingPassword: updatePasswordMutation.isPending,
     updateProfile: updateProfileMutation.mutate,
     uploadAvatar: uploadAvatarMutation.mutate,
     deleteAvatar: deleteAvatarMutation.mutate,
+    deleteAccount: deleteAccountMutation.mutate,
     isUploading: uploadAvatarMutation.isPending || deleteAvatarMutation.isPending,
-    isUpdating: updateProfileMutation.isPending
+    isUpdating: updateProfileMutation.isPending,
+    isDeletingAccount: deleteAccountMutation.isPending
   };
 };

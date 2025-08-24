@@ -46,10 +46,6 @@ export const useTeamInvitations = () => {
         password
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["invitations"] });
-      navigate("/login");
-    },
   });
 
   const deleteInvite = useMutation({

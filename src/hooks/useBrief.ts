@@ -3,12 +3,14 @@ import { BriefService } from "../services/briefService";
 import { useAuth } from "../context/AuthContext";
 import { CreateBriefDTO } from "../types/briefTypes";
 import { useNotificationSender } from "./useNotifications";
+import { useEmail } from "./useEmail";
 
 const briefService = new BriefService();
 
 export const useBrief = () => {
   const queryClient = useQueryClient();
   const { createNotification } = useNotificationSender();
+  const { sendEmail } = useEmail();
   const { currentUser } = useAuth();
   const sender_id = currentUser?.id || "";
   const invited_by = currentUser?.user_metadata?.invited_by || "";
@@ -22,12 +24,22 @@ export const useBrief = () => {
   const submitBriefMutation = useMutation({
     mutationFn: async (brief: CreateBriefDTO) =>
       briefService.submitBrief(brief),
-    onSuccess: () => {
+    onSuccess: async (result) => {
       createNotification({
         sender_id,
         receiver_id: invited_by,
         message: `${currentUser?.name} has submitted a brief`,
       });
+      
+      // Send email notification to admin
+      if (result.data && invited_by) {
+        try {
+          await briefService.sendBriefNotificationToAdmin(result.data, currentUser);
+        } catch (error) {
+          console.error('Failed to send email notification to admin:', error);
+        }
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["briefs", currentUser?.id] });
     },
   });

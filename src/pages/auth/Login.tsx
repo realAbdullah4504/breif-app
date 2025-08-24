@@ -1,19 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, Mail, Lock, AlertTriangle } from 'lucide-react';
+import { Mail, Lock, AlertTriangle, CheckCircle, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
 import Button from '../../components/UI/Button';
 import { useAuth } from '../../context/AuthContext';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
+    email: location.state?.email || '',
     password: ''
   });
+
+  // Check for success message from navigation state
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Clear the state to prevent showing the message on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -26,12 +38,15 @@ const Login: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
     
     try {
       const user = await login(formData.email, formData.password);
       
       if (user.role === 'admin') {
         navigate('/admin');
+      } else if (user.role === 'member') {
+        navigate('/dashboard');
       } else {
         navigate('/dashboard');
       }
@@ -48,123 +63,216 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center">
-            <CheckCircle className="h-8 w-8 text-white" />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex">
+      {/* Left side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-monday"></div>
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Decorative elements */}
+        <div className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+        <div className="absolute bottom-40 right-20 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-white/10 rounded-full blur-lg"></div>
+        
+        <div className="relative z-10 flex flex-col justify-center px-20 text-white">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <div className="flex items-center mb-8">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mr-4">
+                <Sparkles className="w-7 h-7 text-white" />
+              </div>
+              <span className="text-3xl font-bold">Briefly</span>
+            </div>
+            
+            <h1 className="text-5xl font-bold mb-6 leading-tight">
+              Transform your team's
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white to-white/80">
+                daily communication
+              </span>
+            </h1>
+            
+            <p className="text-xl text-white/90 mb-8 leading-relaxed">
+              Streamline daily check-ins, track progress, and keep your team aligned with beautiful, intuitive brief management.
+            </p>
+            
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-white rounded-full mr-4"></div>
+                <span className="text-white/90">Real-time team collaboration</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-white rounded-full mr-4"></div>
+                <span className="text-white/90">Automated progress tracking</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-white rounded-full mr-4"></div>
+                <span className="text-white/90">Beautiful insights & analytics</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to account</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Enter your credentials to access the application
-        </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10"
-        >
-          {error && (
-            <div className="mb-4 rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <AlertTriangle className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-red-800">{error}</p>
-                </div>
+      {/* Right side - Login form */}
+      <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20">
+        <div className="mx-auto w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-gradient-monday rounded-xl flex items-center justify-center mr-3">
+                <Sparkles className="w-6 h-6 text-white" />
               </div>
+              <span className="text-2xl font-bold text-gradient-monday">Briefly</span>
             </div>
-          )}
+          </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your email"
-                />
-              </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+              <p className="text-gray-600">Sign in to your account to continue</p>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+            {successMessage && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-6 rounded-2xl bg-success-50 p-4 border border-success-200"
+              >
+                <div className="flex">
+                  <CheckCircle className="h-5 w-5 text-success-500" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-success-800">{successMessage}</p>
+                  </div>
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter your password"
-                />
-              </div>
-            </div>
+              </motion.div>
+            )}
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-6 rounded-2xl bg-danger-50 p-4 border border-danger-200"
+              >
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-danger-500" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-danger-800">{error}</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email address
                 </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="input-monday pl-12 pr-4 py-4 text-base"
+                    placeholder="Enter your email"
+                  />
+                </div>
               </div>
 
-              <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                  Forgot your password?
-                </a>
+              <div>
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="input-monday pl-12 pr-12 py-4 text-base"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              fullWidth
-              isLoading={isLoading}
-            >
-              Sign in
-            </Button>
-            <div className="mt-6 text-center">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="text-sm">
+                  <Link 
+                    to="/forgot-password" 
+                    className="font-semibold text-primary-600 hover:text-primary-500 transition-colors duration-200"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                fullWidth
+                size="lg"
+                isLoading={isLoading}
+                className="py-4 text-base font-semibold"
+                icon={<ArrowRight className="h-5 w-5" />}
+              >
+                Sign in
+              </Button>
+            </form>
+
+            <div className="mt-8 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  onClick={() => navigate('/auth/register')}
-                  className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline transition ease-in-out duration-150"
+                <Link
+                  to="/auth/register"
+                  className="font-semibold text-primary-600 hover:text-primary-500 transition-colors duration-200"
                 >
-                  Sign up here
-                </motion.button>
+                  Sign up for free
+                </Link>
               </p>
             </div>
-          </form>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

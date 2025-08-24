@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "npm:resend@3.2.0": "npm:resend@3.2.0",
+    "npm:@supabase/supabase-js@2": "npm:@supabase/supabase-js@2",
+    "npm:luxon@3": "npm:luxon@3"
+  }
+}

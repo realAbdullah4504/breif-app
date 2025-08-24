@@ -1,14 +1,17 @@
 import React from 'react';
-import { format } from 'date-fns';
 import { Clock, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/Layout/DashboardLayout';
 import Card, { CardHeader, CardBody } from '../../components/UI/Card';
 import Badge from '../../components/UI/Badge';
 import { useBrief } from '../../hooks/useBrief';
+import { useSettings } from '../../hooks/useSettings';
+import { formatWorkspaceDate, formatWorkspaceTime, DEFAULT_WORKSPACE_TIMEZONE } from '../../utils/workspaceTimeUtils';
 
 const BriefHistory: React.FC = () => {
   const { briefs, isLoading } = useBrief();
+  const { settings } = useSettings();
+  const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
 
   if (isLoading) {
     return (
@@ -23,40 +26,41 @@ const BriefHistory: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Brief History</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Brief History</h1>
+            <p className="mt-1 text-sm sm:text-base text-gray-500">
               View all your previous brief submissions
             </p>
           </div>
           <Link
             to="/dashboard"
-            className="flex items-center text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+            className="flex items-center text-sm sm:text-base text-blue-600 hover:text-blue-500"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Dashboard
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Link>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white">All Submissions</h2>
+          <h2 className="text-base sm:text-lg font-medium text-gray-900">All Submissions</h2>
         </CardHeader>
         <CardBody className="p-0">
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-200">
             {briefs.length > 0 ? (
               briefs.map((brief) => (
-                <div key={brief.id} className="p-6">
-                  <div className="flex justify-between items-start mb-4">
+                <div key={brief.id} className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0 mb-4">
                     <div>
-                      <p className="text-lg font-medium text-gray-900 dark:text-white">
-                        {format(new Date(brief.submitted_at), 'MMMM d, yyyy')}
+                      <p className="text-base sm:text-lg font-medium text-gray-900">
+                        {formatWorkspaceDate(brief.submitted_at, workspaceTimezone)}
                       </p>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                      <p className="mt-1 text-sm text-gray-500 flex items-center">
                         <Clock className="h-4 w-4 mr-1" />
-                        Submitted at {format(new Date(brief.submitted_at), 'h:mm a')}
+                        Submitted at {formatWorkspaceTime(brief.submitted_at, workspaceTimezone)}
                       </p>
                     </div>
                     <Badge variant="success">
@@ -64,72 +68,72 @@ const BriefHistory: React.FC = () => {
                     </Badge>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      <h3 className="text-sm font-medium text-gray-500">
                         Accomplishments
                       </h3>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                      <div className="mt-1 text-xs sm:text-sm text-gray-900 max-h-24 sm:max-h-32 overflow-y-auto p-2 sm:p-3 bg-gray-50 rounded border break-words whitespace-pre-wrap">
                         {brief.accomplishments}
-                      </p>
+                      </div>
                     </div>
                     
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      <h3 className="text-sm font-medium text-gray-500">
                         Blockers
                       </h3>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                      <div className="mt-1 text-xs sm:text-sm text-gray-900 max-h-24 sm:max-h-32 overflow-y-auto p-2 sm:p-3 bg-gray-50 rounded border break-words whitespace-pre-wrap">
                         {brief.blockers}
-                      </p>
+                      </div>
                     </div>
                     
                     <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      <h3 className="text-sm font-medium text-gray-500">
                         Priorities
                       </h3>
-                      <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                      <div className="mt-1 text-xs sm:text-sm text-gray-900 max-h-24 sm:max-h-32 overflow-y-auto p-2 sm:p-3 bg-gray-50 rounded border break-words whitespace-pre-wrap">
                         {brief.priorities}
-                      </p>
+                      </div>
                     </div>
 
                     {brief.question4_response && (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <h3 className="text-sm font-medium text-gray-500">
                           Additional Question 4
                         </h3>
-                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        <div className="mt-1 text-xs sm:text-sm text-gray-900 max-h-24 sm:max-h-32 overflow-y-auto p-2 sm:p-3 bg-gray-50 rounded border break-words whitespace-pre-wrap">
                           {brief.question4_response}
-                        </p>
+                        </div>
                       </div>
                     )}
 
                     {brief.question5_response && (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <h3 className="text-sm font-medium text-gray-500">
                           Additional Question 5
                         </h3>
-                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        <div className="mt-1 text-xs sm:text-sm text-gray-900 max-h-24 sm:max-h-32 overflow-y-auto p-2 sm:p-3 bg-gray-50 rounded border break-words whitespace-pre-wrap">
                           {brief.question5_response}
-                        </p>
+                        </div>
                       </div>
                     )}
 
                     {brief.admin_notes && (
-                      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                        <h3 className="text-sm font-medium text-gray-500">
                           Admin Notes
                         </h3>
-                        <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                        <div className="mt-1 text-xs sm:text-sm text-gray-900 max-h-24 sm:max-h-32 overflow-y-auto p-2 sm:p-3 bg-white rounded border break-words whitespace-pre-wrap">
                           {brief.admin_notes}
-                        </p>
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-                No brief submissions found
+              <div className="p-4 sm:p-6 text-center text-gray-500">
+                <span className="text-sm sm:text-base">No brief submissions found</span>
               </div>
             )}
           </div>

@@ -6,8 +6,10 @@ export interface User {
   email: string;
   role: UserRole;
   avatar_url?: string;
+  timezone?: string;
   created_at?: string;
   updated_at?: string;
+  workspace_id?: string;
 }
 
 

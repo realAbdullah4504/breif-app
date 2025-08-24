@@ -1,4 +1,5 @@
 import { Brief, Invitation, User, WorkspaceSettings } from '../types';
+import { BriefWithUser } from '../types/briefTypes';
 import { format } from 'date-fns';
 
 // Mock Users
@@ -152,3 +153,109 @@ export const mockSettings: WorkspaceSettings = {
     body: 'Hi {{name}},\n\nThis is a friendly reminder to submit your daily brief for today. It only takes a minute!\n\nBest regards,\nThe Briefly Team'
   }
 };
+
+// Mock briefs for demo purposes (when no real team members exist)
+export const mockDemoBriefs: BriefWithUser[] = [
+  {
+    id: 'demo-1',
+    user_id: 'demo-user-1',
+    accomplishments: 'Completed the quarterly planning presentation and finalized the project roadmap. Successfully launched the new feature that increased user engagement by 15%. Conducted three client meetings and secured two new partnerships.',
+    blockers: 'Waiting for legal approval on the new contract terms. The staging environment is experiencing some performance issues that need to be addressed.',
+    priorities: 'Review and approve the marketing campaign materials. Start working on the Q2 budget planning. Schedule follow-up meetings with potential clients.',
+    question4_response: null,
+    question5_response: null,
+    submitted_at: new Date().toISOString(),
+    reviewed_at: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    reviewed_by: 'admin-demo',
+    admin_notes: 'Great work on the presentation! The client feedback was excellent.',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    users: {
+      id: 'demo-user-1',
+      name: 'Sarah Johnson',
+      email: 'sarah@example.com',
+      avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+      invited_by: 'current-admin'
+    }
+  },
+  {
+    id: 'demo-2',
+    user_id: 'demo-user-2',
+    accomplishments: 'Fixed three critical bugs in the payment system and improved the checkout flow. Completed code reviews for the mobile app updates. Optimized database queries resulting in 30% faster load times.',
+    blockers: 'Need design approval for the new user interface mockups. The third-party API we depend on has been experiencing intermittent outages.',
+    priorities: 'Deploy the bug fixes to production. Start implementing the new authentication system. Coordinate with the design team on the UI updates.',
+    question4_response: null,
+    question5_response: null,
+    submitted_at: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
+    reviewed_at: null,
+    reviewed_by: null,
+    admin_notes: null,
+    created_at: new Date(Date.now() - 1800000).toISOString(),
+    updated_at: new Date(Date.now() - 1800000).toISOString(),
+    users: {
+      id: 'demo-user-2',
+      name: 'Michael Chen',
+      email: 'michael@example.com',
+      avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+      invited_by: 'current-admin'
+    }
+  },
+  {
+    id: 'demo-3',
+    user_id: 'demo-user-3',
+    accomplishments: 'Launched the new marketing campaign across all social media platforms. Analyzed user feedback from the latest product release and compiled insights. Created content calendar for the next month.',
+    blockers: 'The analytics dashboard is showing inconsistent data. Need approval from management for the increased advertising budget.',
+    priorities: 'Prepare the monthly marketing report. Schedule interviews with potential influencer partners. Review and optimize the current ad campaigns.',
+    question4_response: null,
+    question5_response: null,
+    submitted_at: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    reviewed_at: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
+    reviewed_by: 'admin-demo',
+    admin_notes: 'Excellent campaign results! Let\'s discuss the budget increase in our next meeting.',
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 1800000).toISOString(),
+    users: {
+      id: 'demo-user-3',
+      name: 'Emily Rodriguez',
+      email: 'emily@example.com',
+      avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+      invited_by: 'current-admin'
+    }
+  }
+];
+
+// Sample data management
+export const getSampleDataKey = (adminId: string) => `sample_data_deleted_${adminId}`;
+
+export const isSampleDataDeleted = (adminId: string): boolean => {
+  return localStorage.getItem(getSampleDataKey(adminId)) === 'true';
+};
+
+export const markSampleDataAsDeleted = (adminId: string): void => {
+  localStorage.setItem(getSampleDataKey(adminId), 'true');
+};
+
+// Mock team members for demo purposes
+export const mockDemoTeamMembers = [
+  {
+    id: 'demo-user-1',
+    name: 'Sarah Johnson',
+    email: 'sarah@example.com',
+    avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    role: 'member'
+  },
+  {
+    id: 'demo-user-2',
+    name: 'Michael Chen',
+    email: 'michael@example.com',
+    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    role: 'member'
+  },
+  {
+    id: 'demo-user-3',
+    name: 'Emily Rodriguez',
+    email: 'emily@example.com',
+    avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    role: 'member'
+  }
+];

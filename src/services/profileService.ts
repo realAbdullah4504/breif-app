@@ -121,4 +121,25 @@ export class ProfileService {
       return { error: error as Error };
     }
   }
+
+  async deleteAccount(userId: string): Promise<{ error: Error | null }> {
+    try {
+      // Delete user profile from users table (this will cascade to related data)
+      const { error: profileError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+
+      // Sign out the user
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+
+      return { error: null };
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      return { error: error as Error };
+    }
+  }
 }

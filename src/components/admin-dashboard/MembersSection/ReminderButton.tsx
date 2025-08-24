@@ -3,7 +3,7 @@ import Button from '../../UI/Button'
 import { useEmail } from '../../../hooks/useEmail';
 import { WorkspaceSettings } from '../../../types/settingTypes';
 import { TeamMember } from '../../../types/briefTypes';
-import { format } from 'date-fns';
+import { formatWorkspaceTime, getWorkspaceTimezoneAbbr, DEFAULT_WORKSPACE_TIMEZONE } from '../../../utils/workspaceTimeUtils';
 import toast from 'react-hot-toast';
 import { Bell } from 'lucide-react';
 
@@ -16,26 +16,30 @@ type ReminderButtonProps = {
 const ReminderButton = ({ member, teamMembers, settings }: ReminderButtonProps) => {
     const { sendEmail, isLoading: isSendingEmail } = useEmail();
     const [reminderSent, setReminderSent] = useState<Record<string, boolean>>({});
-
-     const formatDeadlineTime = (timeString: string | undefined | null) => {
-        if (!timeString) return new Date();
-        try {
-          // Parse time string in 24-hour format "18:00:00"
-          const [hours, minutes, seconds] = timeString.split(":").map(Number);
-          const date = new Date();
-          date.setHours(hours, minutes, seconds);
-          return date;
-        } catch (error) {
-          console.error("Error parsing time:", error);
-          return new Date();
-        }
-      };
-    
-      // The rest of the deadline calculations remain the same
-      const deadline =
-        formatDeadlineTime(settings?.submission_deadline) || new Date();
+    const formatDeadlineForEmail = () => {
+      if (!settings?.submission_deadline) return "5:00 PM ET";
+      
+      try {
+        const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
+        const time = formatWorkspaceTime(
+          new Date(`2000-01-01T${settings.submission_deadline}`),
+          workspaceTimezone
+        );
+        const timezoneAbbr = getWorkspaceTimezoneAbbr(workspaceTimezone);
+        
+        return `${time} ${timezoneAbbr}`;
+      } catch (error) {
+        return "5:00 PM ET";
+      }
+    };
 
     const handleSendReminder = (userId: string) => {
+        // Don't send reminders to demo users
+        if (userId.startsWith('demo-')) {
+            toast.error("This is demo data. Invite real team members to send reminders!");
+            return;
+        }
+
         const member = teamMembers.find((m) => m.id === userId);
         if (!member) return;
 
@@ -46,9 +50,11 @@ const ReminderButton = ({ member, teamMembers, settings }: ReminderButtonProps) 
                     settings?.reminder_template?.subject || "Reminder: Brief Submission",
                 html:
                     settings?.reminder_template?.body
-                        ?.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
                         .replace("{{name}}", member.name)
-                        .replace("{{deadline}}", format(deadline, "h:mm a")) || // Convert Date to string
+                        .replace("{{deadline}}", formatDeadlineForEmail())
+                        .replace("{{organizationName}}", settings?.name || "Your Organization")
+                        .replace("{{dashboardUrl}}", "https://my.brieflyapp.co/dashboard")
+                        .replace(/\n/g, "<br>") ||
                     "Please submit your brief.",
             },
             {
