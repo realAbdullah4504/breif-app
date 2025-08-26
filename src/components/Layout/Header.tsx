@@ -5,7 +5,8 @@ import { useSettings } from '../../hooks/useSettings';
 
 const Header = () => {
     const { currentUser } = useAuth();
-    const { settings } = useSettings();
+    const adminId=currentUser?.id?.trim() || ""
+    const { settings } = useSettings(adminId);
     const today = format(new Date(), "EEEE, MMMM d, yyyy");
     
     return (

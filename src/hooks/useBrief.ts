@@ -23,7 +23,7 @@ export const useBrief = () => {
 
   const submitBriefMutation = useMutation({
     mutationFn: async (brief: CreateBriefDTO) =>
-      briefService.submitBrief(brief),
+      briefService.submitBrief(brief,currentUser?.id || ""),
     onSuccess: async (result) => {
       createNotification({
         sender_id,

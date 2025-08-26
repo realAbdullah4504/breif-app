@@ -41,7 +41,9 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
         customRange: "",
     });
 
-    const { settings } = useSettings();
+    const adminId = currentUser?.id || "";
+
+    const { settings } = useSettings(adminId);
     const {
         briefs,
         teamMembers,

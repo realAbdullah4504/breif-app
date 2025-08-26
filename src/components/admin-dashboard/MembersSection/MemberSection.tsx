@@ -20,6 +20,7 @@ type MemberSectionProps = {
 
 const MemberSection = ({ viewMode }: MemberSectionProps) => {
     const { settings, briefs, teamMembers, filteredTeamMembers } = useDashboardContext();
+    console.log(briefs,"[briefs] ",teamMembers,"[teamMembers] ",filteredTeamMembers,"[filteredTeamMembers]");
     const { data: userStreaks } = useAllUserStreaks();
     const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -72,18 +73,18 @@ const MemberSection = ({ viewMode }: MemberSectionProps) => {
                     <AnimatePresence>
                         {filteredTeamMembers?.map((member, index) => {
                             const memberBrief = briefs.find(
-                                (brief) => brief?.user_id === member?.id
+                                (brief) => brief?.user_id === member?.user_id
                             );
                             const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
                             const submittedAt = memberBrief?.submitted_at
                                 ? formatWorkspaceTime(memberBrief.submitted_at, workspaceTimezone)
                                 : "";
                             const memberStreak = userStreaks?.find(
-                                (streak) => streak.user_id === member?.id
+                                (streak) => streak.user_id === member?.user_id
                             );
                             return (
                                 <motion.div
-                                    key={member?.id}
+                                    key={member?.user_id}
                                     variants={cardVariants}
                                     initial="hidden"
                                     animate="visible"

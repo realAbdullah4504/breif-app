@@ -40,7 +40,7 @@ const ReminderButton = ({ member, teamMembers, settings }: ReminderButtonProps) 
             return;
         }
 
-        const member = teamMembers.find((m) => m.id === userId);
+        const member = teamMembers.find((m) => m.user_id === userId);
         if (!member) return;
 
         sendEmail(
@@ -73,12 +73,12 @@ const ReminderButton = ({ member, teamMembers, settings }: ReminderButtonProps) 
         <Button
             variant="outline"
             size="sm"
-            onClick={() => handleSendReminder(member?.id)}
-            disabled={reminderSent[member?.id]}
+            onClick={() => handleSendReminder(member?.user_id)}
+            disabled={reminderSent[member?.user_id]}
             isLoading={isSendingEmail}
         >
             <Bell className="h-4 w-4 mr-1" />
-            {reminderSent[member?.id] ? "Sent" : "Remind"}
+            {reminderSent[member?.user_id] ? "Sent" : "Remind"}
         </Button>
     )
 }

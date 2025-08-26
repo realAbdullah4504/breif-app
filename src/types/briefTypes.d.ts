@@ -41,10 +41,11 @@ export interface FilterOptions {
 
 export interface TeamMember {
   id: string;
-  name: string;
-  email: string;
-  avatar_url?: string;
   role: string;
+  invited_by: string;
+  status: string;
+  workspace_id: string;
+  user_id: string;
 }
 
 export interface BriefStats {

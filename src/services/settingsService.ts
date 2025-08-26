@@ -7,7 +7,7 @@ export class SettingsService {
     adminId: string
   ): Promise<{ data: WorkspaceSettings | null; error: Error | null }> {
     // Validate adminId before making the query
-    if (!adminId || adminId.trim() === '') {
+    if (!adminId || adminId.trim() === "") {
       console.error("Invalid or empty adminId provided to getSettings");
       return { data: null, error: new Error("Invalid admin ID provided") };
     }
@@ -26,21 +26,24 @@ export class SettingsService {
 
       // If no settings found, create default settings
       if (!data) {
-        console.log("No settings found, creating default settings for admin:", adminId);
+        console.log(
+          "No settings found, creating default settings for admin:",
+          adminId
+        );
         await this.insertDefaultSettings(adminId);
-        
+
         // Fetch the newly created settings
         const { data: newData, error: newError } = await supabase
           .from("workspace_settings")
           .select("*")
           .eq("admin_id", adminId)
           .single();
-          
+
         if (newError) {
           console.error("Error fetching newly created settings:", newError);
           return { data: null, error: newError as Error };
         }
-        
+
         return { data: newData, error: null };
       }
 
@@ -55,7 +58,7 @@ export class SettingsService {
     const settings = {
       ...defaultSettings,
       admin_id,
-      name: organizationName || defaultSettings.name || 'My Team Workspace'
+      name: organizationName || defaultSettings.name || "My Team Workspace",
     };
 
     const { data, error } = await supabase

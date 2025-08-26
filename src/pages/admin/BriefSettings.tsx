@@ -10,6 +10,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { generateTimeOptions } from "../../utils/timeUtils";
 import { BriefQuestions, WorkspaceSettings } from "../../types/settingTypes";
+import { useAuth } from "../../context/AuthContext";
 
 // Common timezones for selection
 const timezones = [
@@ -28,7 +29,9 @@ const timezones = [
 ];
 
 const BriefSettings: React.FC = () => {
-  const { settings, isLoading, error, updateSettings, isUpdating } = useSettings();
+  const {currentUser}=useAuth()
+  const adminId=currentUser?.id?.trim() || ""
+  const { settings, isLoading, error, updateSettings, isUpdating } = useSettings(adminId);
   const timeOptions = generateTimeOptions();
 
   const [formData, setFormData] = useState<Partial<WorkspaceSettings>>(

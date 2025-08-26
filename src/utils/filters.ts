@@ -2,7 +2,7 @@ import { TeamMember,Brief } from "../types/briefTypes";
 
 export const getFilteredMembers = (teamMembers:TeamMember[],briefs:Brief[],filterStatus:string,filterReview:string) => {
     return teamMembers.filter(member => {
-      const memberBrief = briefs.find(brief => brief.user_id === member.id);
+      const memberBrief = briefs.find(brief => brief.user_id === member.user_id);
       
       // Search filter
     //   const matchesSearch = member?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase());

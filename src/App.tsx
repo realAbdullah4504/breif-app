@@ -36,6 +36,7 @@ import FAQ from "./pages/FAQ";
 import ErrorPage from "./pages/ErrorPage";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "react-hot-toast";
+import AcceptInvitation from "./pages/auth/AcceptInvitation";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
@@ -129,6 +130,7 @@ const App: React.FC = () => {
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/auth/update-password" element={<ResetPassword />} />
                 <Route path="/auth/set-password" element={<SetPassword />} />
+                <Route path="/auth/accept-invite" element={<AcceptInvitation />} />
                 <Route path="/onboarding" element={<Onboarding />} />
 
                 {/* Admin Routes */}

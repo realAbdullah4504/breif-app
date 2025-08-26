@@ -9,16 +9,14 @@ import { mockDemoBriefs, mockDemoTeamMembers, isSampleDataDeleted } from '../dat
 const recognitionService = new RecognitionService();
 
 export class BriefService {
-  async submitBrief(brief: CreateBriefDTO): Promise<{ data: Brief | null; error: Error | null }> {
+  async submitBrief(brief: CreateBriefDTO, user_id: string): Promise<{ data: Brief | null; error: Error | null }> {
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
       const { data, error } = await supabase
         .from('briefs')
         .insert({
           ...brief,
-          user_id: userData.user.id,
+          user_id,
+          workspace_id: "9fa4b333-83ab-4ef4-ad29-800ed4f5ea1f",
           submitted_at: new Date().toISOString()
         })
         .select()
@@ -28,7 +26,7 @@ export class BriefService {
 
       // Update user streak after successful submission
       try {
-        await recognitionService.updateUserStreak(userData.user.id);
+        await recognitionService.updateUserStreak(user_id);
       } catch (streakError) {
         console.error('Error updating user streak:', streakError);
         // Don't fail the brief submission if streak update fails
@@ -281,10 +279,12 @@ export class BriefService {
   
       // Get team members
       const { data: teamMembers, error: teamError } = await supabase
-        .from('users')
+        .from('workspace_members')
         .select('*')
         .eq('workspace_id', workspaceData.id)
         .eq('role', 'member');
+
+        console.log("teamMembers",teamMembers)
   
       if (teamError) throw teamError;
   
@@ -308,7 +308,7 @@ export class BriefService {
         };
       }
   
-      const teamMemberIds = teamMembers.map(member => member.id);
+      const teamMemberIds = teamMembers.map(member => member.user_id);
   
       // Fetch briefs with date filter
       const { data, error } = await supabase
@@ -324,6 +324,7 @@ export class BriefService {
           )
         `)
         .in('user_id', teamMemberIds)
+        .eq('workspace_id', workspaceData.id)
         .gte('submitted_at', startDate.toISOString())
         .lt('submitted_at', endDate.toISOString())
         .order('submitted_at', { ascending: false });

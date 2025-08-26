@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { CheckCircle, Clock, FileText, TrendingUp, Calendar, AlertCircle, Sparkles, Target, ArrowRight, Zap, History, Award, ChevronRight } from "lucide-react";
+import { CheckCircle, Clock, FileText,Calendar, AlertCircle, Sparkles, Target, ArrowRight, Zap, History, Award, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Confetti from "react-confetti";
 import DashboardLayout from "../../components/Layout/DashboardLayout";
@@ -15,7 +15,6 @@ import Badge from "../../components/UI/Badge";
 import { useAuth } from "../../context/AuthContext";
 import { useSettings } from "../../hooks/useSettings";
 import { useBrief } from "../../hooks/useBrief";
-import { getTimeUntilDeadline, formatWorkspaceTime, DEFAULT_WORKSPACE_TIMEZONE } from "../../utils/workspaceTimeUtils";
 import toast from "react-hot-toast";
 import { checkBriefSubmissionEligibility } from "../../utils/checkBriefSubmissionEligibility";
 import { motion } from "framer-motion";
@@ -24,7 +23,8 @@ import { useNavigate } from "react-router-dom";
 const MemberDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { settings, isLoading: isLoadingSettings } = useSettings();
+  const adminId=currentUser?.invited_by?.trim() || ""
+  const { settings, isLoading: isLoadingSettings } = useSettings(adminId);
   const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief();
   const [submissionStatus, setSubmissionStatus] = useState<{
     canSubmit: boolean;

@@ -7,10 +7,13 @@ import Badge from '../../components/UI/Badge';
 import { useBrief } from '../../hooks/useBrief';
 import { useSettings } from '../../hooks/useSettings';
 import { formatWorkspaceDate, formatWorkspaceTime, DEFAULT_WORKSPACE_TIMEZONE } from '../../utils/workspaceTimeUtils';
+import { useAuth } from '../../context/AuthContext';
 
 const BriefHistory: React.FC = () => {
   const { briefs, isLoading } = useBrief();
-  const { settings } = useSettings();
+  const {currentUser}=useAuth()
+  const adminId=currentUser?.invited_by?.trim() || ""
+  const { settings } = useSettings(adminId);
   const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
 
   if (isLoading) {

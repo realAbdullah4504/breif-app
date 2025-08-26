@@ -13,14 +13,17 @@ import { useSettings } from "../../hooks/useSettings";
 import { useEmail } from "../../hooks/useEmail";
 import toast from "react-hot-toast";
 import { generateTimeOptions } from "../../utils/timeUtils";
+import { useAuth } from "../../context/AuthContext";
 
 const EmailTemplates: React.FC = () => {
+  const {currentUser}=useAuth()
+  const adminId=currentUser?.id?.trim() || ""
   const {
     settings,
     updateSettings,
     isUpdating,
     isLoading: settingsLoading,
-  } = useSettings();
+  } = useSettings(adminId);
   const { sendEmail, isLoading: isSendingEmail } = useEmail();
 
   const [subject, setSubject] = useState("");
