@@ -280,7 +280,7 @@ export class BriefService {
       // Get team members
       const { data: teamMembers, error: teamError } = await supabase
         .from('workspace_members')
-        .select('*')
+        .select('*,users:user_id (id,name,email,avatar_url)')
         .eq('workspace_id', workspaceData.id)
         .eq('role', 'member');
 
@@ -319,8 +319,7 @@ export class BriefService {
             id,
             name,
             email,
-            avatar_url,
-            invited_by
+            avatar_url
           )
         `)
         .in('user_id', teamMemberIds)
@@ -405,18 +404,11 @@ export class BriefService {
         }
       }
   
-      // Get total team members
-      const { data: members, error: membersError } = await supabase
-        .from('users')
-        .select('count')
-        .eq('role', 'member')
-        .eq('workspace_id', workspaceData.id);
-  
-      if (membersError) throw membersError;
-  
       // Get submitted briefs within date range
+      // Get total team members
+  
       const { data: teamMembers, error: teamError } = await supabase
-        .from('users')
+        .from('workspace_members')
         .select('count')
         .eq('role', 'member')
         .eq('workspace_id', workspaceData.id);
@@ -438,14 +430,14 @@ export class BriefService {
       // Get real submitted briefs within date range
       const { data: submitted, error: submittedError } = await supabase
         .from('briefs')
-        .select('*, users:user_id (workspace_id)')
+        .select('*')
         .gte('submitted_at', startDate.toISOString())
         .lt('submitted_at', endDate.toISOString());
 
       if (submittedError) throw submittedError;
       
       const filteredSubmittedCount = submitted?.filter(
-        (brief) => brief?.users?.workspace_id === workspaceData.id
+        (brief) => brief?.workspace_id === workspaceData.id
       ).length || 0;
   
       return {

@@ -20,7 +20,6 @@ type MemberSectionProps = {
 
 const MemberSection = ({ viewMode }: MemberSectionProps) => {
     const { settings, briefs, teamMembers, filteredTeamMembers } = useDashboardContext();
-    console.log(briefs,"[briefs] ",teamMembers,"[teamMembers] ",filteredTeamMembers,"[filteredTeamMembers]");
     const { data: userStreaks } = useAllUserStreaks();
     const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -97,16 +96,16 @@ const MemberSection = ({ viewMode }: MemberSectionProps) => {
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center">
                                                 <UserAvatar
-                                                    src={member?.avatar_url}
-                                                    name={member?.name || "User"}
+                                                    src={member?.users?.avatar_url}
+                                                    name={member?.users?.name || "User"}
                                                     size="h-10 w-10 sm:h-12 sm:w-12 mr-3 sm:mr-4"
                                                 />
                                                 <div>
                                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                                                        {member?.name}
+                                                        {member?.users?.name}
                                                     </h3>
                                                     <p className="text-xs sm:text-sm text-gray-500 truncate">
-                                                        {member?.email}
+                                                        {member?.users?.email}
                                                     </p>
                                                     {memberStreak && memberStreak.current_streak > 0 && (
                                                         <div className="flex items-center mt-1">

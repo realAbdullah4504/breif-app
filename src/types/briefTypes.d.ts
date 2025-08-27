@@ -46,6 +46,13 @@ export interface TeamMember {
   status: string;
   workspace_id: string;
   user_id: string;
+  users: {
+    id: string;
+    name: string;
+    email: string;
+    avatar_url?: string;
+    invited_by: string;
+  };
 }
 
 export interface BriefStats {

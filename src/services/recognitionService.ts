@@ -55,8 +55,8 @@ export class RecognitionService {
 
       // Get team members first
       const { data: teamMembers, error: teamError } = await supabase
-        .from('users')
-        .select('id')
+        .from('workspace_members')
+        .select('user_id')
         .eq('workspace_id', workspaceData.id)
         .eq('role', 'member');
 
@@ -66,7 +66,7 @@ export class RecognitionService {
         return { data: [], error: null };
       }
 
-      const teamMemberIds = teamMembers.map(member => member.id);
+      const teamMemberIds = teamMembers.map(member => member.user_id);
 
       const { data, error } = await supabase
         .from('user_streaks')

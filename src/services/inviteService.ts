@@ -53,7 +53,6 @@ export class InviteService {
               .from("users")
               .select("name, avatar_url")
               .eq("email", invitation.email)
-              .eq("workspace_id", workspaceData.id)
               .single();
 
             if (userError && userError.code !== "PGRST116") {
@@ -158,8 +157,6 @@ export class InviteService {
         name,
         email,
         role,
-        invited_by: invitation.invited_by,
-        workspace_id: workspaceData.id,
       });
       await supabase.from("workspace_members").insert({
         workspace_id: workspaceData?.id,

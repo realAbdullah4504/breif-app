@@ -11,7 +11,6 @@ export interface ExtendedUser extends User {
   role: string;
   name: string;
   avatar_url: string | null;
-  invited_by?: string;
 }
 
 
@@ -119,7 +118,7 @@ export class AuthService {
 
       const { data } = await supabase
         .from("users")
-        .select("role,name,avatar_url,invited_by")
+        .select("role,name,avatar_url")
         .eq("id", user?.id)
         .maybeSingle();
 
@@ -132,7 +131,6 @@ export class AuthService {
           email: user?.email,
           role: 'admin', // Default role for new signups
           avatar_url: null,
-          invited_by: null
         };
         
         // Try to insert the basic profile
@@ -152,7 +150,6 @@ export class AuthService {
         role: data.role, 
         name: data.name, 
         avatar_url: data.avatar_url, 
-        invited_by: data.invited_by 
       } as ExtendedUser;
       return { user: userWithRole, error };
     } catch (networkError) {
@@ -229,7 +226,7 @@ export class AuthService {
 
       const { data, error: roleError } = await supabase
         .from("users")
-        .select("role,name,avatar_url,invited_by")
+        .select("role,name,avatar_url")
         .eq("id", session.user.id)
         .maybeSingle();
 
@@ -245,7 +242,6 @@ export class AuthService {
           role,
           name,
           avatar_url: null,
-          invited_by: userMetadata.invited_by || null
         } as ExtendedUser;
         return basicUser;
       }
@@ -255,7 +251,6 @@ export class AuthService {
         role: data.role,
         name: data.name,
         avatar_url: data.avatar_url,
-        invited_by: data.invited_by
       } as ExtendedUser;
     } catch (error) {
       console.error('Error getting current user:', error);

@@ -45,12 +45,12 @@ const ReminderButton = ({ member, teamMembers, settings }: ReminderButtonProps) 
 
         sendEmail(
             {
-                to: member.email,
+                to: member.users.email,
                 subject:
                     settings?.reminder_template?.subject || "Reminder: Brief Submission",
                 html:
                     settings?.reminder_template?.body
-                        .replace("{{name}}", member.name)
+                        .replace("{{name}}", member.users.name)
                         .replace("{{deadline}}", formatDeadlineForEmail())
                         .replace("{{organizationName}}", settings?.name || "Your Organization")
                         .replace("{{dashboardUrl}}", "https://my.brieflyapp.co/dashboard")
@@ -60,11 +60,11 @@ const ReminderButton = ({ member, teamMembers, settings }: ReminderButtonProps) 
             {
                 onSuccess: () => {
                     setReminderSent((prev) => ({ ...prev, [userId]: true }));
-                    toast.success(`Reminder sent to ${member.name}`);
+                    toast.success(`Reminder sent to ${member.users.name}`);
                 },
                 onError: (error) => {
                     console.error("Error sending reminder:", error);
-                    toast.error(`Failed to send reminder to ${member.name}`);
+                    toast.error(`Failed to send reminder to ${member.users.name}`);
                 },
             }
         );
