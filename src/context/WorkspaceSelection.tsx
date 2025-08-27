@@ -2,9 +2,16 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { useWorkspaces } from "../hooks/useWorkspaces";
 
+
+
+type WorkspacesType={
+  id: string;
+  name: string;
+}
 interface WorkspaceContextType {
   selectedWorkspace: string;
   setSelectedWorkspace: (workspaceId: string) => void;
+  workspaces: WorkspacesType[];
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -15,7 +22,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const {currentUser}=useAuth()
-  const {workspaces}=useWorkspaces(currentUser?.id || "");
+  const {workspaces,isLoading: isLoadingWorkspaces}=useWorkspaces(currentUser?.id || "");
   const [selectedWorkspace, setSelectedWorkspace] = useState<string>();
 
   useEffect(() => {
@@ -32,7 +39,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <WorkspaceContext.Provider
-      value={{ selectedWorkspace, setSelectedWorkspace }}
+      value={{ selectedWorkspace, setSelectedWorkspace, workspaces:workspaces || [] }}
     >
       {children}
     </WorkspaceContext.Provider>

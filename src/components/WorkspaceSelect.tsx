@@ -1,15 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Building2, ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "../context/AuthContext";
-import { useWorkspaces } from "../hooks/useWorkspaces";
+import { motion } from "framer-motion";
 import { useWorkspaceSelection } from "../context/WorkspaceSelection";
 
 const WorkspaceSelect: React.FC = () => {
-  const { currentUser } = useAuth();
-  const { workspaces, isLoading, error } = useWorkspaces(currentUser?.id || "");
-  const { selectedWorkspace, setSelectedWorkspace } = useWorkspaceSelection(workspaces?.[0]?.id || "");
+  const { selectedWorkspace, setSelectedWorkspace, workspaces, isLoadingWorkspaces } = useWorkspaceSelection();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -56,7 +52,7 @@ const WorkspaceSelect: React.FC = () => {
     setIsOpen(false);
   };
 
-  if (isLoading) {
+  if (isLoadingWorkspaces) {
     return (
       <div className="animate-pulse flex items-center space-x-2 p-2 rounded-full bg-gray-50 w-full max-w-xs">
         <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
@@ -65,10 +61,10 @@ const WorkspaceSelect: React.FC = () => {
     );
   }
 
-  if (error || !workspaces || workspaces.length === 0) {
+  if (!workspaces || workspaces.length === 0) {
     return (
       <div className="p-2 text-center text-sm text-red-500 bg-red-50 rounded-full max-w-xs">
-        {error ? "Error loading workspaces" : "No workspaces available"}
+        "No workspaces available"
       </div>
     );
   }
