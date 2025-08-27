@@ -4,12 +4,13 @@ export class WorkspaceService {
   async getAllWorkspaces(user_id: string) {
     const { data, error } = await supabase
       .from("workspace_members")
-      .select("*,workspace_settings(name, id)")
+      .select("*,workspace_settings(name, id, admin_id)")
       .eq("user_id", user_id);
 
       const workspaces=data?.map((workspace)=>({
         name:workspace.workspace_settings.name,
-        id:workspace.workspace_settings.id
+        id:workspace.workspace_settings.id,
+        admin_id:workspace.workspace_settings.admin_id
     }))
     if (error) {
       console.error("Error fetching workspaces:", error);

@@ -43,10 +43,9 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     });
 
     const adminId = currentUser?.id || "";
-
     const {workspaces}=useWorkspaces(adminId)
-    const workspaceId=workspaces?.[0]?.id
-    const { settings } = useSettings(workspaceId || "");
+    const workspaceId=workspaces?.find((workspace) => workspace.admin_id === adminId)?.id;
+    const { settings } = useSettings(workspaceId);
     const {
         briefs,
         teamMembers,

@@ -19,11 +19,13 @@ import toast from "react-hot-toast";
 import { checkBriefSubmissionEligibility } from "../../utils/checkBriefSubmissionEligibility";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useWorkspaces } from "../../hooks/useWorkspaces";
 
 const MemberDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const workspaceId="9fa4b333-83ab-4ef4-ad29-800ed4f5ea1f"
+  const {workspaces, isLoading: isLoadingWorkspaces}=useWorkspaces(currentUser?.id?.trim() || "")
+  const workspaceId=workspaces?.[0]?.id || ""
   const { settings, isLoading: isLoadingSettings } = useSettings(workspaceId);
   const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief();
   const [submissionStatus, setSubmissionStatus] = useState<{
@@ -132,7 +134,7 @@ const MemberDashboard: React.FC = () => {
 
   const recentBriefs = briefs.slice(0, 3);
 
-  if (isLoadingSettings) {
+  if (isLoadingSettings || isLoadingWorkspaces) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">

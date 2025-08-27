@@ -2,7 +2,6 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-  useSuspenseQuery,
 } from "@tanstack/react-query";
 import { SettingsService } from "../services/settingsService";
 import { WorkspaceSettings } from "../types/settingTypes";

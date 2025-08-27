@@ -13,8 +13,8 @@ import { useWorkspaces } from '../../hooks/useWorkspaces';
 const BriefHistory: React.FC = () => {
   const { briefs, isLoading } = useBrief();
   const {currentUser}=useAuth()
-  const adminId=currentUser?.invited_by?.trim() || ""
-  const {workspaces}=useWorkspaces(adminId)
+  const userId=currentUser?.id?.trim() || ""
+  const {workspaces}=useWorkspaces(userId)
   const workspaceId=workspaces?.[0]?.id || ""
   const { settings } = useSettings(workspaceId);
   const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;

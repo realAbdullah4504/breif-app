@@ -34,10 +34,11 @@ const timezones = [
 
 const BriefSettings: React.FC = () => {
   const { currentUser } = useAuth();
-  const { workspaces, isLoading: workspacesLoading, error: workspacesError } = useWorkspaces(currentUser?.id?.trim() || "");
-  const workspaceId = workspaces?.[0]?.id || "";
+  const adminId = currentUser?.id?.trim() || "";
+  const { workspaces } = useWorkspaces(adminId);
+  const workspaceId = workspaces?.find((workspace) => workspace.admin_id === adminId)?.id;
   const { settings, isLoading, error, updateSettings, isUpdating } =
-    useSettings(workspaceId || "");
+    useSettings(workspaceId);
   const timeOptions = generateTimeOptions();
 
   const [formData, setFormData] = useState<Partial<WorkspaceSettings>>(
@@ -142,7 +143,7 @@ const BriefSettings: React.FC = () => {
     }
   };
 
-  if (isLoading || workspacesLoading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">
