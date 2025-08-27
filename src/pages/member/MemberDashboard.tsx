@@ -19,13 +19,13 @@ import toast from "react-hot-toast";
 import { checkBriefSubmissionEligibility } from "../../utils/checkBriefSubmissionEligibility";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useWorkspaces } from "../../hooks/useWorkspaces";
+import { useWorkspaceSelection } from "../../context/WorkspaceSelection";
 
 const MemberDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const {workspaces, isLoading: isLoadingWorkspaces}=useWorkspaces(currentUser?.id?.trim() || "")
-  const workspaceId=workspaces?.[0]?.id || ""
+  const { selectedWorkspace } = useWorkspaceSelection();
+  const workspaceId = selectedWorkspace || "";
   const { settings, isLoading: isLoadingSettings } = useSettings(workspaceId);
   const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief(workspaceId);
   const [submissionStatus, setSubmissionStatus] = useState<{
@@ -69,10 +69,11 @@ const MemberDashboard: React.FC = () => {
         settings.timezone,
       );
       setSubmissionStatus(status);
-
-      // If user already submitted, show success state
+  
       if (!status.canSubmit && status.message.includes("already submitted")) {
         setIsSubmitted(true);
+      } else {
+        setIsSubmitted(false); // <-- Add this line
       }
     }
   }, [briefs, settings?.submission_deadline, settings?.timezone]);
@@ -134,7 +135,7 @@ const MemberDashboard: React.FC = () => {
 
   const recentBriefs = briefs.slice(0, 3);
 
-  if (isLoadingSettings || isLoadingWorkspaces) {
+  if (isLoadingSettings) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">
