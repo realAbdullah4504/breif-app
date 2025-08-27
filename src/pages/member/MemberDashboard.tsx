@@ -18,11 +18,9 @@ import { useBrief } from "../../hooks/useBrief";
 import toast from "react-hot-toast";
 import { checkBriefSubmissionEligibility } from "../../utils/checkBriefSubmissionEligibility";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { useWorkspaceSelection } from "../../context/WorkspaceSelection";
 
 const MemberDashboard: React.FC = () => {
-  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const { selectedWorkspace } = useWorkspaceSelection();
   const workspaceId = selectedWorkspace || "";
@@ -135,7 +133,7 @@ const MemberDashboard: React.FC = () => {
 
   const recentBriefs = briefs.slice(0, 3);
 
-  if (isLoadingSettings) {
+  if (isLoadingSettings || !selectedWorkspace) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">

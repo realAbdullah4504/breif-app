@@ -9,7 +9,7 @@ import { useWorkspaceSelection } from "../context/WorkspaceSelection";
 const WorkspaceSelect: React.FC = () => {
   const { currentUser } = useAuth();
   const { workspaces, isLoading, error } = useWorkspaces(currentUser?.id || "");
-  const { selectedWorkspace, setSelectedWorkspace } = useWorkspaceSelection();
+  const { selectedWorkspace, setSelectedWorkspace } = useWorkspaceSelection(workspaces?.[0]?.id || "");
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
