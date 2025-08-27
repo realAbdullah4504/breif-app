@@ -25,6 +25,7 @@ const StatsSection = () => {
             (member) => !briefs.some((brief) => brief.user_id === member.user_id) && !member.user_id?.startsWith('demo-')
         );
 
+        console.log(pendingMembers,"pendingMembers");
         // Don't send reminders to demo users
         if (pendingMembers?.length === 0 || pendingMembers?.every(member => member.user_id?.startsWith('demo-'))) {
             toast.error("No real team members to send reminders to. Invite team members first!");
@@ -45,13 +46,13 @@ const StatsSection = () => {
 
             sendEmail(
                 {
-                    to: member.email,
+                    to: member.users.email,
                     subject:
                         settings?.reminder_template?.subject ||
                         "⏰ Reminder: Submit your daily brief",
                     html:
                         settings?.reminder_template?.body
-                            ?.replace("{{name}}", member.name)
+                            ?.replace("{{name}}", member.users.name)
                             .replace("{{deadline}}", (() => {
                               if (!settings?.submission_deadline) return "5:00 PM ET";
                               
@@ -76,13 +77,13 @@ const StatsSection = () => {
                 {
                     onSuccess: () => {
                         setReminderSent((prev) => ({ ...prev, [member.user_id]: true }));
-                        toast.success(`Reminder sent to ${member.name}`);
+                        toast.success(`Reminder sent to ${member.users.name}`);
                         currentIndex++;
                         setTimeout(sendNextReminder, 500);
                     },
                     onError: (error) => {
                         console.error("Error sending reminder:", error);
-                        toast.error(`Failed to send reminder to ${member.name}`);
+                        toast.error(`Failed to send reminder to ${member.users.name}`);
                         currentIndex++;
                         setTimeout(sendNextReminder, 500);
                     },

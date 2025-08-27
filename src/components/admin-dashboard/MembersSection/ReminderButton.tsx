@@ -41,6 +41,8 @@ const ReminderButton = ({ member, teamMembers, settings }: ReminderButtonProps) 
         }
 
         const member = teamMembers.find((m) => m.user_id === userId);
+        console.log(member,userId,"reminder buttons");
+
         if (!member) return;
 
         sendEmail(
