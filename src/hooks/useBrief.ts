@@ -7,7 +7,7 @@ import { useEmail } from "./useEmail";
 
 const briefService = new BriefService();
 
-export const useBrief = () => {
+export const useBrief = (workspaceId: string) => {
   const queryClient = useQueryClient();
   const { createNotification } = useNotificationSender();
   const { sendEmail } = useEmail();
@@ -16,14 +16,14 @@ export const useBrief = () => {
   const invited_by = currentUser?.user_metadata?.invited_by || "";
 
   const briefsQuery = useQuery({
-    queryKey: ["briefs", currentUser?.id],
-    queryFn: () => briefService.getUserBriefs(currentUser?.id || ""),
-    enabled: !!currentUser?.id,
+    queryKey: ["briefs", currentUser?.id,workspaceId],
+    queryFn: () => briefService.getUserBriefs(currentUser?.id || "",workspaceId),
+    enabled: !!currentUser?.id && !!workspaceId,
   });
 
   const submitBriefMutation = useMutation({
     mutationFn: async (brief: CreateBriefDTO) =>
-      briefService.submitBrief(brief,currentUser?.id || ""),
+      briefService.submitBrief(brief,currentUser?.id || "",workspaceId),
     onSuccess: async (result) => {
       createNotification({
         sender_id,

@@ -8,14 +8,14 @@ import { RecognitionService } from './recognitionService';
 const recognitionService = new RecognitionService();
 
 export class BriefService {
-  async submitBrief(brief: CreateBriefDTO, user_id: string): Promise<{ data: Brief | null; error: Error | null }> {
+  async submitBrief(brief: CreateBriefDTO, user_id: string,workspaceId: string): Promise<{ data: Brief | null; error: Error | null }> {
     try {
       const { data, error } = await supabase
         .from('briefs')
         .insert({
           ...brief,
           user_id,
-          workspace_id: "9fa4b333-83ab-4ef4-ad29-800ed4f5ea1f",
+          workspace_id: workspaceId,
           submitted_at: new Date().toISOString()
         })
         .select()
@@ -219,12 +219,13 @@ export class BriefService {
       throw error;
     }
   }
-  async getUserBriefs(userId: string): Promise<{ data: Brief[]; error: Error | null }> {
+  async getUserBriefs(userId: string,workspaceId: string): Promise<{ data: Brief[]; error: Error | null }> {
     try {
       const { data, error } = await supabase
         .from('briefs')
         .select('*')
         .eq('user_id', userId)
+        .eq('workspace_id', workspaceId)
         .order('submitted_at', { ascending: false });
 
       if (error) throw error;

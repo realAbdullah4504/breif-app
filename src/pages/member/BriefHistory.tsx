@@ -11,11 +11,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useWorkspaces } from '../../hooks/useWorkspaces';
 
 const BriefHistory: React.FC = () => {
-  const { briefs, isLoading } = useBrief();
   const {currentUser}=useAuth()
   const userId=currentUser?.id?.trim() || ""
   const {workspaces}=useWorkspaces(userId)
-  const workspaceId=workspaces?.[0]?.id || ""
+  const workspaceId=workspaces?.[1]?.id || ""
+  const { briefs, isLoading } = useBrief(workspaceId);
   const { settings } = useSettings(workspaceId);
   const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
 

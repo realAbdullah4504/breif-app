@@ -27,7 +27,7 @@ const MemberDashboard: React.FC = () => {
   const {workspaces, isLoading: isLoadingWorkspaces}=useWorkspaces(currentUser?.id?.trim() || "")
   const workspaceId=workspaces?.[0]?.id || ""
   const { settings, isLoading: isLoadingSettings } = useSettings(workspaceId);
-  const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief();
+  const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief(workspaceId);
   const [submissionStatus, setSubmissionStatus] = useState<{
     canSubmit: boolean;
     message: string;
