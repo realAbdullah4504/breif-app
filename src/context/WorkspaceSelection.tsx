@@ -12,6 +12,7 @@ interface WorkspaceContextType {
   selectedWorkspace: string;
   setSelectedWorkspace: (workspaceId: string) => void;
   workspaces: WorkspacesType[];
+  isLoadingWorkspaces: boolean;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -39,7 +40,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <WorkspaceContext.Provider
-      value={{ selectedWorkspace, setSelectedWorkspace, workspaces:workspaces || [] }}
+      value={{ selectedWorkspace, setSelectedWorkspace, workspaces:workspaces || [],isLoadingWorkspaces}}
     >
       {children}
     </WorkspaceContext.Provider>
