@@ -18,15 +18,15 @@ const StatsSection = () => {
     const { deleteSampleData, isDeletingSampleData } = useSampleData();
     
     // Check if we're showing sample data
-    const isShowingSampleData = teamMembers.some(member => member.user_id.startsWith('demo-'));
+    const isShowingSampleData = teamMembers?.some(member => member?.user_id?.startsWith('demo-'));
 
     const handleSendAllReminders = () => {
-        const pendingMembers = teamMembers.filter(
-            (member) => !briefs.some((brief) => brief.user_id === member.user_id) && !member.user_id.startsWith('demo-')
+        const pendingMembers = teamMembers?.filter(
+            (member) => !briefs.some((brief) => brief.user_id === member.user_id) && !member.user_id?.startsWith('demo-')
         );
 
         // Don't send reminders to demo users
-        if (pendingMembers.length === 0 || pendingMembers.every(member => member.user_id.startsWith('demo-'))) {
+        if (pendingMembers?.length === 0 || pendingMembers?.every(member => member.user_id?.startsWith('demo-'))) {
             toast.error("No real team members to send reminders to. Invite team members first!");
             return;
         }
@@ -34,9 +34,9 @@ const StatsSection = () => {
         let currentIndex = 0;
 
         const sendNextReminder = () => {
-            if (currentIndex >= pendingMembers.length) {
+            if (currentIndex >= pendingMembers?.length) {
                 toast.success(
-                    `Finished sending reminders to ${pendingMembers.length} members`
+                    `Finished sending reminders to ${pendingMembers?.length} members`
                 );
                 return;
             }

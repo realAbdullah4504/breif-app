@@ -14,16 +14,19 @@ import { useEmail } from "../../hooks/useEmail";
 import toast from "react-hot-toast";
 import { generateTimeOptions } from "../../utils/timeUtils";
 import { useAuth } from "../../context/AuthContext";
+import { useWorkspaces } from "../../hooks/useWorkspaces";
 
 const EmailTemplates: React.FC = () => {
   const {currentUser}=useAuth()
   const adminId=currentUser?.id?.trim() || ""
+  const {workspaces}=useWorkspaces(adminId)
+  const workspaceId=workspaces?.[0]?.id || ""
   const {
     settings,
     updateSettings,
     isUpdating,
     isLoading: settingsLoading,
-  } = useSettings(adminId);
+  } = useSettings(workspaceId);
   const { sendEmail, isLoading: isSendingEmail } = useEmail();
 
   const [subject, setSubject] = useState("");

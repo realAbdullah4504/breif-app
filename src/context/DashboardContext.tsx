@@ -5,6 +5,7 @@ import { createWorkspaceDeadline, getTimeUntilDeadline, DEFAULT_WORKSPACE_TIMEZO
 import { Brief, FilterOptions, TeamMember } from "../types/briefTypes";
 import { WorkspaceSettings } from "../types/settingTypes";
 import { useAuth } from "./AuthContext";
+import { useWorkspaces } from "../hooks/useWorkspaces";
 
 // Define context type
 type DashboardContextType = {
@@ -43,7 +44,9 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
 
     const adminId = currentUser?.id || "";
 
-    const { settings } = useSettings(adminId);
+    const {workspaces}=useWorkspaces(adminId)
+    const workspaceId=workspaces?.[0]?.id
+    const { settings } = useSettings(workspaceId || "");
     const {
         briefs,
         teamMembers,

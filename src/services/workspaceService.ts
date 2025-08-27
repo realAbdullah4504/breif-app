@@ -1,17 +1,22 @@
 import { supabase } from "../lib/supabase";
 
 export class WorkspaceService {
-  async getMemberWorkspaces(userId: string) {
+  async getAllWorkspaces(user_id: string) {
     const { data, error } = await supabase
       .from("workspace_members")
-      .select("*")
-      .eq("user_id", userId);
+      .select("*,workspace_settings(name, id)")
+      .eq("user_id", user_id);
+
+      const workspaces=data?.map((workspace)=>({
+        name:workspace.workspace_settings.name,
+        id:workspace.workspace_settings.id
+    }))
     if (error) {
       console.error("Error fetching workspaces:", error);
     } else {
-      console.log("Workspaces fetched:", data);
+      console.log("Workspaces fetched:", workspaces);
     }
-    return { data: data || [], error: null };
+    return { data: workspaces || [], error: null };
   }
   async acceptInvitation(token: string, email: string) {
     const { data: invitation, error: inviteError } = await supabase

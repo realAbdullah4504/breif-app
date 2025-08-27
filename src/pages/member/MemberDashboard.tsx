@@ -23,8 +23,8 @@ import { useNavigate } from "react-router-dom";
 const MemberDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const adminId=currentUser?.invited_by?.trim() || ""
-  const { settings, isLoading: isLoadingSettings } = useSettings(adminId);
+  const workspaceId="9fa4b333-83ab-4ef4-ad29-800ed4f5ea1f"
+  const { settings, isLoading: isLoadingSettings } = useSettings(workspaceId);
   const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief();
   const [submissionStatus, setSubmissionStatus] = useState<{
     canSubmit: boolean;

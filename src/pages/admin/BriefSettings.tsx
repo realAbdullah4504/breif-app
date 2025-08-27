@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import DashboardLayout from "../../components/Layout/DashboardLayout";
-import Card, { CardHeader, CardBody, CardFooter } from "../../components/UI/Card";
+import Card, {
+  CardHeader,
+  CardBody,
+  CardFooter,
+} from "../../components/UI/Card";
 import Button from "../../components/UI/Button";
 import Input from "../../components/UI/Input";
 import TextArea from "../../components/UI/TextArea";
@@ -11,27 +15,29 @@ import { toast } from "react-hot-toast";
 import { generateTimeOptions } from "../../utils/timeUtils";
 import { BriefQuestions, WorkspaceSettings } from "../../types/settingTypes";
 import { useAuth } from "../../context/AuthContext";
-
+import { useWorkspaces } from "../../hooks/useWorkspaces";
 // Common timezones for selection
 const timezones = [
-  { value: 'America/New_York', label: 'Eastern Time (ET)' },
-  { value: 'America/Chicago', label: 'Central Time (CT)' },
-  { value: 'America/Denver', label: 'Mountain Time (MT)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
-  { value: 'America/Phoenix', label: 'Arizona Time (MST)' },
-  { value: 'America/Anchorage', label: 'Alaska Time (AKST)' },
-  { value: 'Pacific/Honolulu', label: 'Hawaii Time (HST)' },
-  { value: 'UTC', label: 'UTC' },
-  { value: 'Europe/London', label: 'London (GMT/BST)' },
-  { value: 'Europe/Paris', label: 'Paris (CET/CEST)' },
-  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
-  { value: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)' },
+  { value: "America/New_York", label: "Eastern Time (ET)" },
+  { value: "America/Chicago", label: "Central Time (CT)" },
+  { value: "America/Denver", label: "Mountain Time (MT)" },
+  { value: "America/Los_Angeles", label: "Pacific Time (PT)" },
+  { value: "America/Phoenix", label: "Arizona Time (MST)" },
+  { value: "America/Anchorage", label: "Alaska Time (AKST)" },
+  { value: "Pacific/Honolulu", label: "Hawaii Time (HST)" },
+  { value: "UTC", label: "UTC" },
+  { value: "Europe/London", label: "London (GMT/BST)" },
+  { value: "Europe/Paris", label: "Paris (CET/CEST)" },
+  { value: "Asia/Tokyo", label: "Tokyo (JST)" },
+  { value: "Australia/Sydney", label: "Sydney (AEST/AEDT)" },
 ];
 
 const BriefSettings: React.FC = () => {
-  const {currentUser}=useAuth()
-  const adminId=currentUser?.id?.trim() || ""
-  const { settings, isLoading, error, updateSettings, isUpdating } = useSettings(adminId);
+  const { currentUser } = useAuth();
+  const { workspaces, isLoading: workspacesLoading, error: workspacesError } = useWorkspaces(currentUser?.id?.trim() || "");
+  const workspaceId = workspaces?.[0]?.id || "";
+  const { settings, isLoading, error, updateSettings, isUpdating } =
+    useSettings(workspaceId || "");
   const timeOptions = generateTimeOptions();
 
   const [formData, setFormData] = useState<Partial<WorkspaceSettings>>(
@@ -50,14 +56,14 @@ const BriefSettings: React.FC = () => {
         send_on_weekdays: [1, 2, 3, 4, 5],
       }
   );
-  
-  const [selectedTimezone, setSelectedTimezone] = useState('America/New_York');
+
+  const [selectedTimezone, setSelectedTimezone] = useState("America/New_York");
 
   useEffect(() => {
     if (settings) {
       setFormData(settings);
       // Set timezone from settings or default to Eastern Time
-      setSelectedTimezone(settings.timezone || 'America/New_York');
+      setSelectedTimezone(settings.timezone || "America/New_York");
     }
   }, [settings]);
 
@@ -136,7 +142,7 @@ const BriefSettings: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || workspacesLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">
@@ -172,10 +178,7 @@ const BriefSettings: React.FC = () => {
               <h2 className="text-lg font-medium text-gray-900">
                 Workspace Configuration
               </h2>
-              <Button
-                onClick={handleSave}
-                isLoading={isUpdating}
-              >
+              <Button onClick={handleSave} isLoading={isUpdating}>
                 Save Changes
               </Button>
             </div>
@@ -318,7 +321,8 @@ const BriefSettings: React.FC = () => {
                       ))}
                     </select>
                     <p className="mt-1 text-xs text-gray-500">
-                      This deadline applies to all team members in the workspace timezone
+                      This deadline applies to all team members in the workspace
+                      timezone
                     </p>
                   </div>
 
@@ -342,7 +346,8 @@ const BriefSettings: React.FC = () => {
                       ))}
                     </select>
                     <p className="mt-1 text-xs text-gray-500">
-                      All times in the workspace will be displayed in this timezone
+                      All times in the workspace will be displayed in this
+                      timezone
                     </p>
                   </div>
 

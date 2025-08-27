@@ -1,5 +1,6 @@
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
@@ -8,14 +9,15 @@ import { WorkspaceSettings } from "../types/settingTypes";
 
 const settingsService = new SettingsService();
 
-export const useSettings = (adminId:string) => {
+export const useSettings = (workspaceId:string) => {
   
   const queryClient = useQueryClient();
 
-  const settingsQuery = useSuspenseQuery({
-    queryKey: ["workspace-settings", adminId],
-    queryFn: () => settingsService.getSettings(adminId),
+  const settingsQuery = useQuery({
+    queryKey: ["workspace-settings", workspaceId],
+    queryFn: () => settingsService.getSettings(workspaceId),
     select: (response) => response.data,
+    enabled: !!workspaceId,
   });
 
   const updateSettingsMutation = useMutation({
@@ -25,17 +27,17 @@ export const useSettings = (adminId:string) => {
     // Optimistically update the cache before the server responds
     onMutate: async (newSettings) => {
       // Cancel any outgoing refetches to avoid overwriting our optimistic update
-      await queryClient.cancelQueries({ queryKey: ["workspace-settings", adminId] });
+      await queryClient.cancelQueries({ queryKey: ["workspace-settings", workspaceId] });
 
       // Snapshot the previous value
       const previousSettings = queryClient.getQueryData<WorkspaceSettings>([
         "workspace-settings",
-        adminId,
+        workspaceId,
       ]);
 
       // Optimistically update to the new value
       queryClient.setQueryData(
-        ["workspace-settings", adminId],
+        ["workspace-settings", workspaceId],
         (old: WorkspaceSettings | undefined) => ({
           ...old,
           ...newSettings,
@@ -50,7 +52,7 @@ export const useSettings = (adminId:string) => {
     onError: (err, newSettings, context) => {
       if (context?.previousSettings) {
         queryClient.setQueryData(
-          ["workspace-settings", adminId],
+          ["workspace-settings", workspaceId],
           context.previousSettings
         );
       }
@@ -59,7 +61,7 @@ export const useSettings = (adminId:string) => {
 
     // Always refetch after error or success to ensure cache is in sync with server
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-settings", adminId] });
+      queryClient.invalidateQueries({ queryKey: ["workspace-settings", workspaceId] });
     },
   });
 

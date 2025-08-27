@@ -3,9 +3,15 @@ import { WorkspaceService } from "../services/workspaceService";
 
 const workspaceService = new WorkspaceService();
 export const useWorkspaces = (userId: string) => {
+  // const { data, isFetching, error } = useQuery({
+  //   queryKey: ["workspaces", userId],
+  //   queryFn: () => workspaceService.getMemberWorkspaces(userId),
+  //   select: (response) => response.data,
+  //   enabled: !!userId,
+  // });
   const { data, isFetching, error } = useQuery({
     queryKey: ["workspaces", userId],
-    queryFn: () => workspaceService.getMemberWorkspaces(userId),
+    queryFn: () => workspaceService.getAllWorkspaces(userId),
     select: (response) => response.data,
     enabled: !!userId,
   });
@@ -16,7 +22,7 @@ export const useWorkspaces = (userId: string) => {
   });
   return {
     workspaces: data,
-    loading: isFetching,
+    isLoading: isFetching,
     error: error,
     acceptMemberWorkspaceInvitation:
       acceptMemberWorkspaceInvitationMutation.mutate,

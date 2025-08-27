@@ -8,7 +8,6 @@ import {
 } from "../hooks/useNotifications";
 
 const Notifications: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const { notifications, unreadCount } = useNotifications();
   const { markAsRead } = useNotificationSender();
 

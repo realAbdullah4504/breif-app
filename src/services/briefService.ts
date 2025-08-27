@@ -4,7 +4,6 @@ import { getFilteredMembers } from '../utils/filters';
 import { sendEmail } from './emailService';
 import { format } from 'date-fns';
 import { RecognitionService } from './recognitionService';
-import { mockDemoBriefs, mockDemoTeamMembers, isSampleDataDeleted } from '../data/mockData';
 
 const recognitionService = new RecognitionService();
 
@@ -288,27 +287,8 @@ export class BriefService {
   
       if (teamError) throw teamError;
   
-      if (!teamMembers?.length) {
-        // Check if sample data has been deleted
-        if (isSampleDataDeleted(adminId)) {
-          return { 
-            teamMembers: [], 
-            filteredTeamMembers: [],
-            data: [], 
-            error: null 
-          };
-        }
-        
-        // Return sample data when no real team members exist and sample data hasn't been deleted
-        return { 
-          teamMembers: mockDemoTeamMembers, 
-          filteredTeamMembers: mockDemoTeamMembers,
-          data: mockDemoBriefs, 
-          error: null 
-        };
-      }
   
-      const teamMemberIds = teamMembers.map(member => member.user_id);
+      const teamMemberIds = teamMembers?.map(member => member.user_id);
   
       // Fetch briefs with date filter
       const { data, error } = await supabase
@@ -414,18 +394,6 @@ export class BriefService {
         .eq('workspace_id', workspaceData.id);
 
       if (teamError) throw teamError;
-
-      // If no real team members, return mock stats
-      if (teamMembers[0].count === 0 && !isSampleDataDeleted(adminId)) {
-        return {
-          data: {
-            totalMembers: 3,
-            submittedCount: 3,
-            pendingCount: 0
-          },
-          error: null
-        };
-      }
 
       // Get real submitted briefs within date range
       const { data: submitted, error: submittedError } = await supabase

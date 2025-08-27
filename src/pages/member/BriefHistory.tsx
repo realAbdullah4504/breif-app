@@ -8,12 +8,15 @@ import { useBrief } from '../../hooks/useBrief';
 import { useSettings } from '../../hooks/useSettings';
 import { formatWorkspaceDate, formatWorkspaceTime, DEFAULT_WORKSPACE_TIMEZONE } from '../../utils/workspaceTimeUtils';
 import { useAuth } from '../../context/AuthContext';
+import { useWorkspaces } from '../../hooks/useWorkspaces';
 
 const BriefHistory: React.FC = () => {
   const { briefs, isLoading } = useBrief();
   const {currentUser}=useAuth()
   const adminId=currentUser?.invited_by?.trim() || ""
-  const { settings } = useSettings(adminId);
+  const {workspaces}=useWorkspaces(adminId)
+  const workspaceId=workspaces?.[0]?.id || ""
+  const { settings } = useSettings(workspaceId);
   const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
 
   if (isLoading) {

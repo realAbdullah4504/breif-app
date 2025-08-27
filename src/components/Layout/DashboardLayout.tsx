@@ -15,6 +15,7 @@ import {
   ChevronUp,
   Bell,
   Search,
+  Network,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
@@ -22,6 +23,7 @@ import { UserAvatar } from "../UI/UserAvatar";
 import Notifications from "../Notifications";
 import { useNotifications } from "../../hooks/useNotifications";
 import ErrorBoundary from "../ErrorBoundary";
+import WorkspaceSelect from "../WorkspaceSelect";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -36,6 +38,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -320,6 +323,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   </div>
                 )}
               </button>
+
+              {/* Workspace */}
+              <button
+                data-tour="workspace"
+                onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
+                className="relative p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
+              >
+                <Network className="h-5 w-5 text-gray-500 hover:text-gray-700" />
+              </button>
               
               {/* Profile */}
               <button
@@ -394,6 +406,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   >
                     <div className="p-3">
                       <Notifications />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <AnimatePresence>
+                {workspaceDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50 max-h-80"
+                  >
+                    <div className="p-3">
+                      <WorkspaceSelect />
                     </div>
                   </motion.div>
                 )}
