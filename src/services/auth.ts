@@ -11,6 +11,7 @@ export interface ExtendedUser extends User {
   role: string;
   name: string;
   avatar_url: string | null;
+  timezone: string;
 }
 
 
@@ -36,7 +37,8 @@ export class AuthService {
           ...mockResult.user, 
           role, 
           name,
-          avatar_url: null 
+          avatar_url: null,
+          timezone: "UTC" 
         } as ExtendedUser;
         toast.success('Account created successfully! You can now sign in.');
         return { user: extendedUser, error: null };
@@ -200,15 +202,7 @@ export class AuthService {
 
   async getCurrentUser(): Promise<ExtendedUser | null> {
     try {
-      // Check if we're in mock mode first
-      if (isMockMode) {
-        return getMockCurrentUser();
-      }
-      
-      if (!supabase) {
-        return getMockCurrentUser();
-      }
-      
+    
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {

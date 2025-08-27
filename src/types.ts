@@ -1,3 +1,5 @@
+import { Brief } from "./types/briefTypes";
+
 export type UserRole = 'admin' | 'member';
 
 export interface User {

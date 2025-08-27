@@ -65,7 +65,6 @@ const MemberDashboard: React.FC = () => {
         briefs,
         settings.submission_deadline,
         settings.timezone,
-        currentUser?.timezone
       );
       setSubmissionStatus(status);
 
@@ -74,7 +73,7 @@ const MemberDashboard: React.FC = () => {
         setIsSubmitted(true);
       }
     }
-  }, [briefs, settings?.submission_deadline, settings?.timezone, currentUser?.timezone]);
+  }, [briefs, settings?.submission_deadline, settings?.timezone]);
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({
