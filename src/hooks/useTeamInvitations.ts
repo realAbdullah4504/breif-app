@@ -25,7 +25,7 @@ export const useTeamInvitations = () => {
         throw new Error("User ID is undefined");
       }
       return inviteService.createInvite(email, "member", currentUser.id);
-    }
+    },
   });
 
   const setPasswordMutation = useMutation({
@@ -45,6 +45,12 @@ export const useTeamInvitations = () => {
         username,
         password
       );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspaces", currentUser?.id] });
+    },
+    onError: (error) => {
+      console.error("Error setting password:", error);
     },
   });
 

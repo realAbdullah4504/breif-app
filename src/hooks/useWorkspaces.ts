@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { WorkspaceService } from "../services/workspaceService";
+import { queryClient } from "../lib/queryClient";
 
 const workspaceService = new WorkspaceService();
 export const useWorkspaces = (userId: string) => {
@@ -12,6 +13,12 @@ export const useWorkspaces = (userId: string) => {
   const acceptMemberWorkspaceInvitationMutation = useMutation({
     mutationFn: async ({ token, email }: { token: string; email: string }) => {
       await workspaceService.acceptInvitation(token, email);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspaces", userId] });
+    },
+    onError: () => {
+      console.log("error");
     },
   });
   return {

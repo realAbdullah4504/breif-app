@@ -12,7 +12,9 @@ const AcceptInvitation = () => {
   const navigate = useNavigate();
   const { acceptMemberWorkspaceInvitation } = useWorkspaces(currentUser?.id || "");
 
-  const [status, setStatus] = useState<"loading" | "error" | "success">("loading");
+  const [status, setStatus] = useState<"loading" | "error" | "success">(
+    "loading"
+  );
 
   useEffect(() => {
     if (!token || !email) {
@@ -25,14 +27,14 @@ const AcceptInvitation = () => {
       {
         onSuccess: () => {
           setStatus("success");
-          currentUser?.id ? navigate("/dashboard") : navigate("/login");
+          navigate("/dashboard");
         },
         onError: () => {
           setStatus("error");
         },
       }
     );
-  }, [acceptMemberWorkspaceInvitation, email, navigate, token,currentUser?.id]);
+  }, [acceptMemberWorkspaceInvitation, email, token, navigate]);
 
   if (status === "loading") {
     return (
