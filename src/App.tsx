@@ -68,10 +68,28 @@ const ProtectedRoute: React.FC<{
   // If role is required but user doesn't have it, redirect to dashboard or show unauthorized
   if (requiredRole && currentUser?.role !== requiredRole) {
     // You might want to redirect to a "not authorized" page or back to dashboard
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return element;
+};
+
+const DashboardRedirect = () => {
+  const { currentUser } = useAuth();
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (currentUser.role === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (currentUser.role === "member") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
 };
 
 const App: React.FC = () => {
@@ -141,8 +159,7 @@ const App: React.FC = () => {
                     path="/"
                     element={
                       <ProtectedRoute
-                        element={<AdminDashboardPage />}
-                        requiredRole="admin"
+                        element={<DashboardRedirect />}
                       />
                     }
                   />
