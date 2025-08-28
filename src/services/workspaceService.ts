@@ -25,7 +25,7 @@ export class WorkspaceService {
       .update({ status: "accepted" })
       .eq("email", email)
       .eq("token", token)
-      .select("invited_by, role")
+      .select("invited_by, role, workspace_id")
       .single();
 
     if (inviteError) throw inviteError;
@@ -35,17 +35,8 @@ export class WorkspaceService {
       .eq("email", email)
       .single();
 
-    // Get workspace_id from the admin who invited them
-    const { data: workspaceData, error: workspaceError } = await supabase
-      .from("workspace_settings")
-      .select("id")
-      .eq("admin_id", invitation?.invited_by)
-      .single();
-
-    if (workspaceError) throw workspaceError;
-
     await supabase.from("workspace_members").insert({
-      workspace_id: workspaceData?.id,
+      workspace_id: invitation?.workspace_id,
       user_id: user.id,
       role: invitation?.role,
       invited_by: invitation?.invited_by,

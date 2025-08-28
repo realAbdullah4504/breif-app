@@ -27,16 +27,24 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedWorkspace, setSelectedWorkspace] = useState<string>();
 
   useEffect(() => {
-    // Only set the workspace if it's not already set and we have workspaces
-    if (!selectedWorkspace) {
-      setSelectedWorkspace(workspaces?.[0]?.id || "");
+    const stored = localStorage.getItem("selectedWorkspace");
+  
+    // If the stored workspace is no longer in the fetched workspaces → clear it
+    const stillExists = workspaces?.some(ws => ws.id === stored);
+  
+    if (!stillExists) {
+      // reset to first available workspace OR clear
+      const newWorkspace = workspaces?.[0]?.id || "";
+      setSelectedWorkspace(newWorkspace);
+  
+      if (newWorkspace) {
+        localStorage.setItem("selectedWorkspace", newWorkspace);
+      } else {
+        localStorage.removeItem("selectedWorkspace");
+      }
     }
-    
-    // Only save to localStorage when selectedWorkspace changes and it's truthy
-    if (selectedWorkspace) {
-      localStorage.setItem("selectedWorkspace", selectedWorkspace);
-    }
-  }, [selectedWorkspace, workspaces]);
+  }, [workspaces]);
+  
 
   return (
     <WorkspaceContext.Provider

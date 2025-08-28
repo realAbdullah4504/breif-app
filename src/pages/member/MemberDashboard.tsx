@@ -18,11 +18,11 @@ import { useBrief } from "../../hooks/useBrief";
 import toast from "react-hot-toast";
 import { checkBriefSubmissionEligibility } from "../../utils/checkBriefSubmissionEligibility";
 import { motion } from "framer-motion";
-import { useWorkspaceSelection } from "../../context/WorkspaceSelection";
+import { useWorkspaceSelection } from "../../context/WorkspaceSelectionContext";
 
 const MemberDashboard: React.FC = () => {
   const { currentUser } = useAuth();
-  const { selectedWorkspace } = useWorkspaceSelection();
+  const { selectedWorkspace,isLoadingWorkspaces } = useWorkspaceSelection();
   const workspaceId = selectedWorkspace || "";
   const { settings, isLoading: isLoadingSettings } = useSettings(workspaceId);
   const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief(workspaceId);
@@ -133,11 +133,32 @@ const MemberDashboard: React.FC = () => {
 
   const recentBriefs = briefs.slice(0, 3);
 
-  if (isLoadingSettings || !selectedWorkspace) {
+  if (isLoadingSettings || isLoadingWorkspaces) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!selectedWorkspace) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+          <div className="bg-blue-50 p-6 rounded-xl max-w-md w-full">
+            <AlertCircle className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">No Workspace Selected</h2>
+            <p className="text-gray-600 mb-6">You are not a part of any workspace. Please ask your admin to invite you to a workspace.</p>
+            <Button 
+              variant="primary" 
+              className="w-full" 
+              onClick={() => window.location.reload()}
+            >
+              Refresh Page
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );

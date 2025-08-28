@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Building2, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
-import { useWorkspaceSelection } from "../context/WorkspaceSelection";
+import { useWorkspaceSelection } from "../context/WorkspaceSelectionContext";
 
 const WorkspaceSelect: React.FC = () => {
   const { selectedWorkspace, setSelectedWorkspace, workspaces, isLoadingWorkspaces } = useWorkspaceSelection();

@@ -7,7 +7,7 @@ import Badge from '../../components/UI/Badge';
 import { useBrief } from '../../hooks/useBrief';
 import { useSettings } from '../../hooks/useSettings';
 import { formatWorkspaceDate, formatWorkspaceTime, DEFAULT_WORKSPACE_TIMEZONE } from '../../utils/workspaceTimeUtils';
-import { useWorkspaceSelection } from '../../context/WorkspaceSelection';
+import { useWorkspaceSelection } from '../../context/WorkspaceSelectionContext';
 
 const BriefHistory: React.FC = () => {
   const {selectedWorkspace}=useWorkspaceSelection()

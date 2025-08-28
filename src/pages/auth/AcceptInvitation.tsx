@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useWorkspaces } from "../../hooks/useWorkspaces";
 import { AlertTriangle } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 const AcceptInvitation = () => {
   const [searchParams] = useSearchParams();
+  const {currentUser}=useAuth()
   const token = searchParams.get("token");
   const email = searchParams.get("email");
   const navigate = useNavigate();
-  const { acceptMemberWorkspaceInvitation } = useWorkspaces("");
+  const { acceptMemberWorkspaceInvitation } = useWorkspaces(currentUser?.id || "");
 
   const [status, setStatus] = useState<"loading" | "error" | "success">("loading");
 
@@ -23,14 +25,14 @@ const AcceptInvitation = () => {
       {
         onSuccess: () => {
           setStatus("success");
-          navigate("/login");
+          currentUser?.id ? navigate("/dashboard") : navigate("/login");
         },
         onError: () => {
           setStatus("error");
         },
       }
     );
-  }, [acceptMemberWorkspaceInvitation, email, navigate, token]);
+  }, [acceptMemberWorkspaceInvitation, email, navigate, token,currentUser?.id]);
 
   if (status === "loading") {
     return (

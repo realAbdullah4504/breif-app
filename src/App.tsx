@@ -37,7 +37,7 @@ import ErrorPage from "./pages/ErrorPage";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "react-hot-toast";
 import AcceptInvitation from "./pages/auth/AcceptInvitation";
-import { WorkspaceProvider } from "./context/WorkspaceSelection";
+import { WorkspaceProvider } from "./context/WorkspaceSelectionContext";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
