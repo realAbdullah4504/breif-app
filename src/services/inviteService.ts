@@ -127,22 +127,15 @@ export class InviteService {
 
       if (passwordError) throw passwordError;
 
-      const { data: invitation, error: inviteError } = await supabase
-        .from("invitations")
-        .select("workspace_id, invited_by")
-        .eq("email", email)
-        .single();
-
-      if (inviteError) throw inviteError;
-
-      const { error: updateError } = await supabase
+      const { data: invitation, error: invitationError } = await supabase
         .from("invitations")
         .update({ status: "accepted" })
         .eq("email", email)
+        .select("workspace_id, invited_by")
         .single();
 
-      if (updateError) throw updateError;
-            
+      if (invitationError) throw invitationError;
+
       await supabase.from("users").upsert({
         id,
         name,
@@ -156,8 +149,6 @@ export class InviteService {
         invited_by: invitation?.invited_by,
         status: "accepted",
       });
-
-      if (updateError) throw updateError;
 
       return { error: null };
     } catch (error) {
