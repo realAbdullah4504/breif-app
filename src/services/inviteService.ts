@@ -129,20 +129,11 @@ export class InviteService {
 
       const { data: invitation, error: inviteError } = await supabase
         .from("invitations")
-        .select("invited_by")
+        .select("workspace_id, invited_by")
         .eq("email", email)
         .single();
 
       if (inviteError) throw inviteError;
-
-      // Get workspace_id from the admin who invited them
-      const { data: workspaceData, error: workspaceError } = await supabase
-        .from("workspace_settings")
-        .select("id")
-        .eq("admin_id", invitation.invited_by)
-        .single();
-
-      if (workspaceError) throw workspaceError;
 
       const { error: updateError } = await supabase
         .from("invitations")
@@ -159,7 +150,7 @@ export class InviteService {
         role,
       });
       await supabase.from("workspace_members").insert({
-        workspace_id: workspaceData?.id,
+        workspace_id: invitation?.workspace_id,
         user_id: id,
         role,
         invited_by: invitation?.invited_by,
