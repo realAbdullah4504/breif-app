@@ -8,6 +8,7 @@ import Input from "../../components/UI/Input";
 import Badge from "../../components/UI/Badge";
 import { useTeamInvitations } from "../../hooks/useTeamInvitations";
 import { queryClient } from "../../lib/queryClient";
+import DeleteMember from "../../components/TeamManagement/DeleteMember";
 
 const TeamManagement: React.FC = () => {
   const {
@@ -15,8 +16,6 @@ const TeamManagement: React.FC = () => {
     sendInvite,
     isLoading: invitationsLoading,
     isInviting,
-    deleteInvite,
-    isDeleting,
   } = useTeamInvitations();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -51,18 +50,6 @@ const TeamManagement: React.FC = () => {
       },
     });
   };
-
-  const handleDeleteInvitation = (id: string) => {
-    deleteInvite(id);
-  };
-
-  const handleResendInvitation = (id: string) => {
-    // Simulate resending invitation
-    setTimeout(() => {
-      // In a real app, this would call an API
-    }, 500);
-  };
-
   // if (invitationsLoading) {
   //   return (
   //     <DashboardLayout>
@@ -246,44 +233,7 @@ const TeamManagement: React.FC = () => {
                               )}
                             </p>
                           </div>
-                          <div className="flex">
-                            {/* {invitation.status === "pending" ? ( */}
-                            <>
-                              {/* <button
-                                  type="button"
-                                  className="text-gray-400 hover:text-gray-500 mr-2"
-                                  onClick={() =>
-                                    handleResendInvitation(invitation.id)
-                                  }
-                                >
-                                  <Mail className="h-4 w-4" />
-                                </button> */}
-                              <button
-                                type="button"
-                                className="text-gray-400 hover:text-red-500"
-                                onClick={() =>
-                                  handleDeleteInvitation(invitation.id)
-                                }
-                                disabled={isDeleting}
-                              >
-                                {isDeleting ? (
-                                  <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4" />
-                                )}
-                              </button>
-                            </>
-
-                            {/* // : (
-                            //   <Badge
-                            //     variant="success"
-                            //     className="flex items-center"
-                            //   >
-                            //     <CheckCircle className="h-3 w-3 mr-1" />
-                            //     Accepted
-                            //   </Badge>
-                            // )} */}
-                          </div>
+                          <DeleteMember invitationId={invitation?.id}/>
                         </div>
                         <div className="mt-2">
                           <Badge
