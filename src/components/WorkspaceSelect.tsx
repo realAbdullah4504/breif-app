@@ -18,14 +18,28 @@ const WorkspaceSelect: React.FC = () => {
 
   // Update dropdown position based on button
   useEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
+    if (!buttonRef.current) return;
+
+    const updatePosition = () => {
+      const rect = buttonRef.current!.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
+        top: rect.bottom,
+        left: rect.left,
         width: rect.width,
       });
+    };
+
+    // Update position on open and when scrolling/resizing
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
     }
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [isOpen]);
 
   // Close dropdown when clicking outside
@@ -118,6 +132,7 @@ const WorkspaceSelect: React.FC = () => {
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
+              position: 'fixed',
             }}
           >
             <div className="max-h-60 overflow-y-auto py-1">
