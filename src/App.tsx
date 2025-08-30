@@ -45,11 +45,6 @@ const ProtectedRoute: React.FC<{
   requiredRole?: "admin" | "member";
 }> = ({ element, requiredRole }) => {
   const { isAuthenticated, currentUser, isLoading } = useAuth();
-  console.log("Auth state:", {
-    isAuthenticated,
-    role: currentUser?.role,
-    isLoading,
-  });
 
   // Show loading indicator while checking auth state
   if (isLoading) {

@@ -32,21 +32,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const initAuth = async () => {
       try {
-        console.log('🔄 Initializing authentication...');
         const user = await authService.getCurrentUser();
-        console.log('👤 Current user from auth service:', user);
         setCurrentUser(user);
         
         if (user) {
-          console.log('✅ User authenticated successfully:', user.email, 'Role:', user.role);
         } else {
-          console.log('❌ No authenticated user found');
         }
       } catch (error) {
-        console.error("Error initializing auth:", error);
         setCurrentUser(null);
       } finally {
-        console.log('🏁 Auth initialization complete');
         setIsLoading(false);
       }
     };
@@ -54,11 +48,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<ExtendedUser> => {
-    console.log('Login attempt for email:', email);
     const { user, error } = await authService.signIn(email, password);
 
     if (error) {
-      console.error('Login error:', error);
       
       // Handle specific error cases
       if (error.message?.includes('Invalid login credentials')) {
@@ -69,11 +61,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     if (!user) {
-      console.error('Login failed - no user returned');
       throw new Error("Login failed");
     }
 
-    console.log('Login successful, user:', user);
     setCurrentUser(user);
     toast.success(`Welcome back, ${user.name}!`);
     return user;

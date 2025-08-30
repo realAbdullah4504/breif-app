@@ -108,7 +108,6 @@ const Signup: React.FC = () => {
 
     try {
       const user = await signUp(name, email, password, role, companyName);
-      console.log("user====================>", user);
       if (user.role === "admin") {
         navigate("/admin", {
           state: {

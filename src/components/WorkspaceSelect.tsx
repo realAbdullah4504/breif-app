@@ -74,7 +74,6 @@ const WorkspaceSelect: React.FC = () => {
       <motion.button
         ref={buttonRef}
         onClick={() => {
-          console.log("WorkspaceSelect button clicked, isOpen:", isOpen); // Debug
           setIsOpen(!isOpen);
         }}
         onKeyDown={handleKeyDown}

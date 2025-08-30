@@ -17,27 +17,21 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log("it is invoked");
     const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
     // Get all workspace settings with email reminders enabled
     const { data: workspaces, error: settingsError } = await supabaseAdmin.from("workspace_settings").select("*, admin:admin_id(email)").eq("email_reminders", true);
     if (settingsError) throw settingsError;
     const now = DateTime.now().setZone("America/New_York");
-    console.log("now", now);
     const currentHour = now.hour;
     const currentMinute = now.minute;
     const today = now.toISODate(); // Today's date in YYYY-MM-DD
-    console.log("today", today);
     for (const workspace of workspaces){
       // Check if it's time to send reminders based on send_reminders_at
       const [reminderHours, reminderMinutes] = workspace.send_reminders_at.split(":").map(Number);
       // Only proceed if current time is within 5 minutes of the configured reminder time
       if (Math.abs(currentHour - reminderHours) > 0 || Math.abs(currentMinute - reminderMinutes) > 5) {
-        console.log("currentHour", currentHour, "reminderHours", reminderHours, "currentMinute", currentMinute, "reminderMinutes", reminderMinutes);
-        console.log("Not time to send reminders for workspace", workspace.id);
         continue;
       }
-      console.log("Sending reminders for workspace", workspace.id);
       // Get the submission deadline time for comparison
       const [deadlineHours, deadlineMinutes] = workspace.submission_deadline.split(":").map(Number);
       // Get users who are team members
@@ -49,7 +43,6 @@ Deno.serve(async (req) => {
         // Check if the member has submitted a brief today
         const startOfTodayInEST = now.startOf("day");
         const startOfTodayInUTC = startOfTodayInEST.toUTC().toISO();
-        console.log("startOfTodayInUTC", startOfTodayInUTC);
         const { data: todayBriefs, error: briefsError } = await supabaseAdmin.from("briefs").select("submitted_at").eq("user_id", member.id).gte("submitted_at", startOfTodayInUTC);
         if (briefsError) {
           console.error("Error checking briefs:", briefsError);
@@ -65,7 +58,6 @@ Deno.serve(async (req) => {
         });
         // If no briefs found, send a reminder
         if (todayBriefs.length === 0) {
-          console.log("Sending reminder to member", member.email);
           await supabaseAdmin.functions.invoke("send-email", {
             body: {
               to: member.email,

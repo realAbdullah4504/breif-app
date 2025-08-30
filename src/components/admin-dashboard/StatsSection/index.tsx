@@ -25,7 +25,6 @@ const StatsSection = () => {
             (member) => !briefs.some((brief) => brief.user_id === member.user_id) && !member.user_id?.startsWith('demo-')
         );
 
-        console.log(pendingMembers,"pendingMembers");
         // Don't send reminders to demo users
         if (pendingMembers?.length === 0 || pendingMembers?.every(member => member.user_id?.startsWith('demo-'))) {
             toast.error("No real team members to send reminders to. Invite team members first!");

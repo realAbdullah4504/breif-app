@@ -47,7 +47,6 @@ export class BriefService {
         .single();
         
 
-      console.log("memberData",memberData)
       if (memberError || !memberData) {
         console.error('Member not found:', memberError);
         return;
