@@ -40,15 +40,16 @@ export class BriefService {
   async sendBriefNotificationToAdmin(brief: Brief, user: any): Promise<void> {
     try {
       // Get admin details
-      const { data: adminData, error: adminError } = await supabase
-        .from('users')
-        .select('email, name')
-        .eq('id', user.invited_by)
-        .eq('role', 'admin')
+      const { data: memberData, error: memberError } = await supabase
+        .from('workspace_members')
+        .select('workspace_id,invited_by,users:user_id (email, name)')
+        .eq('user_id', user.id)
         .single();
+        
 
-      if (adminError || !adminData) {
-        console.error('Admin not found:', adminError);
+      console.log("memberData",memberData)
+      if (memberError || !memberData) {
+        console.error('Member not found:', memberError);
         return;
       }
 
@@ -56,8 +57,13 @@ export class BriefService {
       const { data: settings, error: settingsError } = await supabase
         .from('workspace_settings')
         .select('name, questions')
-        .eq('admin_id', user.invited_by)
+        .eq('id', memberData.workspace_id)
         .single();
+
+      if (settingsError || !settings) {
+        console.error('Settings not found:', settingsError);
+        return;
+      }
 
       const organizationName = settings?.name || 'Your Organization';
       const questions = settings?.questions || {
@@ -67,7 +73,7 @@ export class BriefService {
       };
 
       // Create clean, professional email content
-      const emailSubject = `📋 New Brief from ${user.name} - ${organizationName}`;
+      const emailSubject = `📋 New Brief from ${memberData.users.name} - ${organizationName}`;
       
       const emailBody = `
         <!DOCTYPE html>
@@ -209,7 +215,7 @@ export class BriefService {
 
       // Send email
       await sendEmail({
-        to: adminData.email,
+        to: memberData.users.email,
         subject: emailSubject,
         html: emailBody
       });

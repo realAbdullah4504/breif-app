@@ -16,7 +16,7 @@ export class SettingsService {
         .from("workspace_settings")
         .select("*")
         .eq("id", workspaceId)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error("Error fetching settings:", error);

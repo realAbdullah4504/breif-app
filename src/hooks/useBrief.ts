@@ -3,43 +3,48 @@ import { BriefService } from "../services/briefService";
 import { useAuth } from "../context/AuthContext";
 import { CreateBriefDTO } from "../types/briefTypes";
 import { useNotificationSender } from "./useNotifications";
-import { useEmail } from "./useEmail";
+import { useWorkspaceSelection } from "../context/WorkspaceSelectionContext";
+import { useSettings } from "./useSettings";
 
 const briefService = new BriefService();
 
 export const useBrief = (workspaceId: string) => {
   const queryClient = useQueryClient();
   const { createNotification } = useNotificationSender();
-  const { sendEmail } = useEmail();
   const { currentUser } = useAuth();
   const sender_id = currentUser?.id || "";
-  const invited_by = currentUser?.user_metadata?.invited_by || "";
+  const { selectedWorkspace } = useWorkspaceSelection();
+  const {settings}=useSettings(selectedWorkspace)
 
   const briefsQuery = useQuery({
-    queryKey: ["briefs", currentUser?.id,workspaceId],
-    queryFn: () => briefService.getUserBriefs(currentUser?.id || "",workspaceId),
+    queryKey: ["briefs", currentUser?.id, workspaceId],
+    queryFn: () =>
+      briefService.getUserBriefs(currentUser?.id || "", workspaceId),
     enabled: !!currentUser?.id && !!workspaceId,
   });
 
   const submitBriefMutation = useMutation({
     mutationFn: async (brief: CreateBriefDTO) =>
-      briefService.submitBrief(brief,currentUser?.id || "",workspaceId),
+      briefService.submitBrief(brief, currentUser?.id || "", workspaceId),
     onSuccess: async (result) => {
       createNotification({
         sender_id,
-        receiver_id: invited_by,
+        receiver_id: settings?.admin_id || "",
         message: `${currentUser?.name} has submitted a brief`,
       });
-      
+
       // Send email notification to admin
-      if (result.data && invited_by) {
+      if (result.data && settings?.admin_id) {
         try {
-          await briefService.sendBriefNotificationToAdmin(result.data, currentUser);
+          await briefService.sendBriefNotificationToAdmin(
+            result.data,
+            currentUser
+          );
         } catch (error) {
-          console.error('Failed to send email notification to admin:', error);
+          console.error("Failed to send email notification to admin:", error);
         }
       }
-      
+
       queryClient.invalidateQueries({ queryKey: ["briefs", currentUser?.id] });
     },
   });
