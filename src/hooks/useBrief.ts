@@ -3,7 +3,6 @@ import { BriefService } from "../services/briefService";
 import { useAuth } from "../context/AuthContext";
 import { CreateBriefDTO } from "../types/briefTypes";
 import { useNotificationSender } from "./useNotifications";
-import { useWorkspaceSelection } from "../context/WorkspaceSelectionContext";
 import { useSettings } from "./useSettings";
 
 const briefService = new BriefService();
@@ -13,8 +12,7 @@ export const useBrief = (workspaceId: string) => {
   const { createNotification } = useNotificationSender();
   const { currentUser } = useAuth();
   const sender_id = currentUser?.id || "";
-  const { selectedWorkspace } = useWorkspaceSelection();
-  const {settings}=useSettings(selectedWorkspace)
+  const { settings } = useSettings(workspaceId);
 
   const briefsQuery = useQuery({
     queryKey: ["briefs", currentUser?.id, workspaceId],
@@ -38,7 +36,8 @@ export const useBrief = (workspaceId: string) => {
         try {
           await briefService.sendBriefNotificationToAdmin(
             result.data,
-            currentUser
+            currentUser,
+            workspaceId
           );
         } catch (error) {
           console.error("Failed to send email notification to admin:", error);
