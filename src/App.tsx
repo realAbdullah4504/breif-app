@@ -145,8 +145,8 @@ const App: React.FC = () => {
           }}
         />
         <ThemeProvider>
-          <AuthProvider>
-            <WorkspaceProvider>
+          <WorkspaceProvider>
+            <AuthProvider>
               <Router>
                 <Routes>
                   {/* Public Routes */}
@@ -269,8 +269,8 @@ const App: React.FC = () => {
                   <Route path="*" element={<ErrorPage />} />
                 </Routes>
               </Router>
-            </WorkspaceProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </WorkspaceProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>

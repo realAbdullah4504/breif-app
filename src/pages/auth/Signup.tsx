@@ -19,7 +19,6 @@ import zxcvbn from "zxcvbn";
 import Button from "../../components/UI/Button";
 import { useAuth } from "../../context/AuthContext";
 import { UserRole } from "../../types";
-import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 const Signup: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -42,7 +41,7 @@ const Signup: React.FC = () => {
 
   const navigate = useNavigate();
   const { signUp } = useAuth();
-  const { setWorkspaceId } = useWorkspaceContext();
+  
 
   // Default to admin unless there's an invite token (then they're a member)
   const role: UserRole = inviteToken ? "member" : "admin";
@@ -111,7 +110,6 @@ const Signup: React.FC = () => {
     try {
       const user = await signUp(name, email, password, role, companyName);
       if (user.role === "admin") {
-        setWorkspaceId(user.workspaceId);
         navigate("/admin", {
           state: {
             message:

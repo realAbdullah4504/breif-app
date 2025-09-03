@@ -126,6 +126,11 @@ export class AuthService {
         password,
       });
 
+      const { data: workspaceData } = await supabase
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", user?.id);
+
       if (error) {
         return { user: null, error };
       }
@@ -159,11 +164,16 @@ export class AuthService {
         return { user: userWithRole, error: null };
       }
 
+      const workspaceId =
+        workspaceData && workspaceData.length > 0
+          ? workspaceData[0].workspace_id
+          : "";
       const userWithRole = {
         ...user,
         role: data.role,
         name: data.name,
         avatar_url: data.avatar_url,
+        workspaceId: workspaceId,
       } as ExtendedUser;
       return { user: userWithRole, error };
     } catch (networkError) {
