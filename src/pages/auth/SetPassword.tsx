@@ -1,24 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, AlertTriangle, CheckCircle, User } from "lucide-react";
 import Button from "../../components/UI/Button";
-import { useAuth } from "../../context/AuthContext";
 import { useTeamInvitations } from "../../hooks/useTeamInvitations";
 import { validatePassword } from "../../utils/passwordValidation";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { ExtendedUser } from "../../services/auth";
 
 export const SetPassword: React.FC = () => {
-  const { currentUser,isLoading } = useAuth();
   const navigate = useNavigate();
-  const { setPassword, isSettingPassword } = useTeamInvitations();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
+  const email = searchParams.get("email");
+  const {setCurrentUser}=useAuth()
+  const { setPassword, isSettingPassword, verifyToken, isVerifyingToken } =
+    useTeamInvitations();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     confirmPassword: "",
   });
 
+  const [isValidToken, setIsValidToken] = useState<boolean>(true);
+
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [error, setError] = useState<string>();
+
+  useEffect(() => {
+    if (token && email) {
+      verifyToken(
+        { token, email },
+        {
+          onSuccess: (error) => {
+            console.log("error", error);
+            setIsValidToken(true);
+          },
+          onError: () => {
+            setIsValidToken(false);
+          },
+        }
+      );
+    }
+  }, [token, email]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -33,7 +57,7 @@ export const SetPassword: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    if (!currentUser) {
+    if (!token || !email) {
       setError("No valid session found");
       return;
     }
@@ -53,23 +77,33 @@ export const SetPassword: React.FC = () => {
     }
 
     setPassword(
-      {username:formData.username,password:formData.password},
       {
-        onSuccess: () => {
+        token,
+        email,
+        username: formData.username,
+        password: formData.password,
+      },
+      {
+        onSuccess: (user: ExtendedUser)=> {
+          setCurrentUser(user)
           // Redirect to onboarding instead of login
-          navigate('/onboarding');
-        }
+          navigate("/onboarding");
+        },
+        onError: () => {
+          setError("Failed to set password");
+        },
       }
     );
   };
 
-  if(isLoading){
+  if (isSettingPassword) {
     return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>
-  )}
-  if (!currentUser) {
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  if (!isValidToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -212,7 +246,7 @@ export const SetPassword: React.FC = () => {
               </div>
             )}
 
-            <Button type="submit" fullWidth isLoading={isSettingPassword}>
+            <Button type="submit" fullWidth isLoading={isSettingPassword || isVerifyingToken}>
               Set Password & Continue
             </Button>
           </form>

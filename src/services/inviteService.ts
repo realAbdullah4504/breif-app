@@ -112,48 +112,94 @@ export class InviteService {
     }
   }
 
+  async verifyToken(
+    token: string,
+    email: string
+  ): Promise<{ error: Error | null }> {
+    try {
+      const { data, error } = await supabase
+        .from("invitations")
+        .select("*")
+        .eq("email", email)
+        .eq("token", token)
+        .eq("status", "pending") // 👈 good to add if you track invite status
+        .single();
+
+      if (error || !data) {
+        throw new Error("Invalid or expired token");
+      }
+
+      return { error: null };
+    } catch (err) {
+      console.error("Error verifying token:", err);
+      throw err;
+    }
+  }
+
   async setPassword(
-    id: string,
+    token: string,
     email: string,
     name: string,
     password: string,
     role: string = "member"
   ) {
     try {
-      // Update password
-      const { error: passwordError } = await supabase.auth.updateUser({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
         password,
+        options: {
+          data: {
+            role,
+            name,
+          },
+        },
       });
 
-      if (passwordError) throw passwordError;
+      if (authError || !authData) throw authError;
 
       const { data: invitation, error: invitationError } = await supabase
         .from("invitations")
         .update({ status: "accepted" })
         .eq("email", email)
+        .eq("token", token)
         .select("workspace_id, invited_by")
         .single();
 
-      if (invitationError) throw invitationError;
+      if (invitationError || !invitation) throw invitationError;
 
-      await supabase.from("users").upsert({
-        id,
-        name,
-        email,
-        role,
-      });
+      const { data: userSelected, error: userError } = await supabase
+        .from("users")
+        .upsert({
+          id: authData?.user?.id,
+          name,
+          email,
+          role,
+        })
+        .select("*")
+        .single();
+      if (userError) throw userError;
       await supabase.from("workspace_members").insert({
         workspace_id: invitation?.workspace_id,
-        user_id: id,
+        user_id: authData?.user?.id,
         role,
         invited_by: invitation?.invited_by,
         status: "accepted",
       });
-
-      return { error: null };
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (user) {
+        return { ...user, ...userSelected };
+      }
+      if (error) throw error;
+      return { error };
     } catch (error) {
       console.error("Error setting password:", error);
-      return { error: error as Error };
+      throw error;
     }
   }
 }

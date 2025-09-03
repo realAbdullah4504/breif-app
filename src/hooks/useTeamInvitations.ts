@@ -28,26 +28,30 @@ export const useTeamInvitations = () => {
     },
   });
 
+  const verifyTokenMutation = useMutation({
+    mutationFn: async ({ token, email }: { token: string; email: string }) => {
+      return inviteService.verifyToken(token, email);
+    },
+  });
+
   const setPasswordMutation = useMutation({
     mutationFn: ({
+      token,
+      email,
       username,
       password,
     }: {
+      token: string;
+      email: string;
       username: string;
       password: string;
     }) => {
-      if (!currentUser?.email) {
-        return Promise.reject(new Error("No user email found"));
-      }
-      return inviteService.setPassword(
-        currentUser.id,
-        currentUser.email,
-        username,
-        password
-      );
+      return inviteService.setPassword(token, email, username, password);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspaces", currentUser?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["workspaces", currentUser?.id],
+      });
     },
     onError: (error) => {
       console.error("Error setting password:", error);
@@ -72,10 +76,16 @@ export const useTeamInvitations = () => {
     invitations: invitationsQuery?.data?.data || [],
     isLoading: invitationsQuery.isFetching,
     isError: invitationsQuery.isError,
+
     sendInvite: sendInviteMutation.mutate,
     isInviting: sendInviteMutation.isPending,
+
+    verifyToken: verifyTokenMutation.mutate,
+    isVerifyingToken: verifyTokenMutation.isPending,
+
     setPassword: setPasswordMutation.mutate,
     isSettingPassword: setPasswordMutation.isPending,
+
     deleteInvite: (id: string) => deleteInvite.mutate(id),
     isDeleting: deleteInvite.isPending,
   };
