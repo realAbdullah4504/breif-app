@@ -192,6 +192,11 @@ export class InviteService {
         email,
         password,
       });
+      await supabase
+        ?.from("invitations")
+        .update({ token: "" })
+        .eq("email", email)
+        .eq("token", token);
       if (user) {
         return { ...user, ...userSelected };
       }

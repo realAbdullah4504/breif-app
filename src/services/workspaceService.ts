@@ -7,11 +7,11 @@ export class WorkspaceService {
       .select("*,workspace_settings(name, id, admin_id)")
       .eq("user_id", user_id);
 
-      const workspaces=data?.map((workspace)=>({
-        name:workspace.workspace_settings.name,
-        id:workspace.workspace_settings.id,
-        admin_id:workspace.workspace_settings.admin_id
-    }))
+    const workspaces = data?.map((workspace) => ({
+      name: workspace.workspace_settings.name,
+      id: workspace.workspace_settings.id,
+      admin_id: workspace.workspace_settings.admin_id,
+    }));
     if (error) {
       console.error("Error fetching workspaces:", error);
     } else {
@@ -42,7 +42,11 @@ export class WorkspaceService {
       invited_by: invitation?.invited_by,
       status: "accepted",
     });
-    await supabase?.from("invitations").update({token:""}).eq("email",email).eq("token",token)
+    await supabase
+      ?.from("invitations")
+      .update({ token: "" })
+      .eq("email", email)
+      .eq("token", token);
     return { error: null };
   }
 }

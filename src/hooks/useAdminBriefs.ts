@@ -10,13 +10,13 @@ export const useAdminBriefs = (filters: FilterOptions) => {
   const { currentUser } = useAuth();
 
   const statsQuery = useSuspenseQuery({
-    queryKey: ["brief-stats", filters],
+    queryKey: ["brief-stats", filters,currentUser?.id],
     queryFn: () => briefService.getBriefStats(currentUser!.id, filters),
     // enabled: !!currentUser,
   });
 
   const briefsQuery = useSuspenseQuery({
-    queryKey: ["admin-briefs", filters],
+    queryKey: ["admin-briefs", filters,currentUser?.id],
     queryFn: () => briefService.getAllBriefs(currentUser!.id, filters),
     // enabled: !!currentUser,
   });
@@ -44,8 +44,8 @@ export const useSampleData = () => {
     mutationFn: () => briefService.deleteSampleData(currentUser!.id),
     onSuccess: () => {
       // Invalidate all related queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ["admin-briefs"] });
-      queryClient.invalidateQueries({ queryKey: ["brief-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-briefs",currentUser?.id] });
+      queryClient.invalidateQueries({ queryKey: ["brief-stats",currentUser?.id] });
     },
   });
 
@@ -77,8 +77,8 @@ export const useReviewBriefs = () => {
         receiver_id: variables.userId,
         message: `${currentUser?.name} has reviewed your brief`,
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-briefs"] });
-      queryClient.invalidateQueries({ queryKey: ["brief-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-briefs",currentUser?.id] });
+      queryClient.invalidateQueries({ queryKey: ["brief-stats",currentUser?.id] });
     },
   });
   return {

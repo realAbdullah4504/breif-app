@@ -5,15 +5,12 @@ import Button from "../../components/UI/Button";
 import { useTeamInvitations } from "../../hooks/useTeamInvitations";
 import { validatePassword } from "../../utils/passwordValidation";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { ExtendedUser } from "../../services/auth";
 
 export const SetPassword: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
-  const {setCurrentUser}=useAuth()
   const { setPassword, isSettingPassword, verifyToken, isVerifyingToken } =
     useTeamInvitations();
   const [formData, setFormData] = useState({
@@ -84,8 +81,7 @@ export const SetPassword: React.FC = () => {
         password: formData.password,
       },
       {
-        onSuccess: (user: ExtendedUser)=> {
-          setCurrentUser(user)
+        onSuccess: () => {
           // Redirect to onboarding instead of login
           navigate("/onboarding");
         },
@@ -246,7 +242,11 @@ export const SetPassword: React.FC = () => {
               </div>
             )}
 
-            <Button type="submit" fullWidth isLoading={isSettingPassword || isVerifyingToken}>
+            <Button
+              type="submit"
+              fullWidth
+              isLoading={isSettingPassword || isVerifyingToken}
+            >
               Set Password & Continue
             </Button>
           </form>

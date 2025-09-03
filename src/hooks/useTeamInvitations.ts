@@ -3,15 +3,15 @@ import { useAuth } from "../context/AuthContext";
 import { InviteService } from "../services/inviteService";
 import { queryClient } from "../lib/queryClient";
 import { useNavigate } from "react-router-dom";
+import { ExtendedUser } from "../services/auth";
 
 const inviteService = new InviteService();
 
 export const useTeamInvitations = () => {
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
+  const { currentUser, setCurrentUser } = useAuth();
 
   const invitationsQuery = useQuery({
-    queryKey: ["invitations"],
+    queryKey: ["invitations",currentUser?.id],
     queryFn: () =>
       currentUser
         ? inviteService.getInvitations(currentUser.id)
@@ -48,7 +48,8 @@ export const useTeamInvitations = () => {
     }) => {
       return inviteService.setPassword(token, email, username, password);
     },
-    onSuccess: () => {
+    onSuccess: (user: ExtendedUser) => {
+      setCurrentUser(user);
       queryClient.invalidateQueries({
         queryKey: ["workspaces", currentUser?.id],
       });
@@ -66,7 +67,7 @@ export const useTeamInvitations = () => {
       return inviteService.deleteInvitation(id, currentUser?.id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["invitations"] });
+      queryClient.invalidateQueries({ queryKey: ["invitations",currentUser?.id] });
     },
     onError: (error) => {
       console.error("Error deleting invite:", error);
