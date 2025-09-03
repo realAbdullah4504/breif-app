@@ -4,8 +4,7 @@ import { useAdminBriefs } from "../hooks/useAdminBriefs";
 import { createWorkspaceDeadline, getTimeUntilDeadline, DEFAULT_WORKSPACE_TIMEZONE } from "../utils/workspaceTimeUtils";
 import { Brief, FilterOptions, TeamMember } from "../types/briefTypes";
 import { WorkspaceSettings } from "../types/settingTypes";
-import { useAuth } from "./AuthContext";
-import { useWorkspaces } from "../hooks/useWorkspaces";
+import { useWorkspaceContext } from "./WorkspaceContext";
 
 // Define context type
 type DashboardContextType = {
@@ -34,7 +33,6 @@ type DashboardProviderProps = {
 };
 
 export const DashboardProvider = ({ children }: DashboardProviderProps) => {
-    const { currentUser } = useAuth();
     const [filters, setFilters] = useState<FilterOptions>({
         status: "all",
         review: "all",
@@ -42,9 +40,8 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
         customRange: "",
     });
 
-    const adminId = currentUser?.id || "";
-    const {workspaces}=useWorkspaces(adminId)
-    const workspaceId=workspaces?.find((workspace) => workspace.admin_id === adminId)?.id;
+    const { selectedWorkspaceId } = useWorkspaceContext();
+    const workspaceId = selectedWorkspaceId || "";
     const { settings } = useSettings(workspaceId);
     const {
         briefs,

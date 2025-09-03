@@ -14,8 +14,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { generateTimeOptions } from "../../utils/timeUtils";
 import { BriefQuestions, WorkspaceSettings } from "../../types/settingTypes";
-import { useAuth } from "../../context/AuthContext";
-import { useWorkspaces } from "../../hooks/useWorkspaces";
+import { useWorkspaceContext } from "../../context/WorkspaceContext";
 // Common timezones for selection
 const timezones = [
   { value: "America/New_York", label: "Eastern Time (ET)" },
@@ -33,10 +32,8 @@ const timezones = [
 ];
 
 const BriefSettings: React.FC = () => {
-  const { currentUser } = useAuth();
-  const adminId = currentUser?.id?.trim() || "";
-  const { workspaces } = useWorkspaces(adminId);
-  const workspaceId = workspaces?.find((workspace) => workspace.admin_id === adminId)?.id;
+  const { selectedWorkspaceId } = useWorkspaceContext();
+  const workspaceId = selectedWorkspaceId || "";
   const { settings, isLoading, error, updateSettings, isUpdating } =
     useSettings(workspaceId);
   const timeOptions = generateTimeOptions();

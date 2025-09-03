@@ -47,6 +47,10 @@ export class WorkspaceService {
       .update({ token: "" })
       .eq("email", email)
       .eq("token", token);
-    return { error: null };
+
+    return {
+      user: { ...user, workspaceId: invitation?.workspace_id },
+      error: null,
+    };
   }
 }

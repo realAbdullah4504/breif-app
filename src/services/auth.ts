@@ -11,9 +11,9 @@ export interface ExtendedUser extends User {
   role: string;
   name: string;
   avatar_url: string | null;
+  workspaceId: string;
   timezone: string;
 }
-
 
 export class AuthService {
   async signUp(
@@ -26,61 +26,69 @@ export class AuthService {
     try {
       // Use mock authentication if Supabase is not configured
       if (isMockMode) {
-        console.warn('Supabase not configured - using mock authentication for development');
-        console.warn('To use real authentication, please:');
-        console.warn('1. Set up a Supabase project');
-        console.warn('2. Update your .env file with correct VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-        console.warn('3. Start Supabase locally with: npx supabase start');
-        
+        console.warn(
+          "Supabase not configured - using mock authentication for development"
+        );
+        console.warn("To use real authentication, please:");
+        console.warn("1. Set up a Supabase project");
+        console.warn(
+          "2. Update your .env file with correct VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY"
+        );
+        console.warn("3. Start Supabase locally with: npx supabase start");
+
         const mockResult = await mockSignUp(email, password, name, role);
-        const extendedUser = { 
-          ...mockResult.user, 
-          role, 
+        const extendedUser = {
+          ...mockResult.user,
+          role,
           name,
           avatar_url: null,
-          timezone: "UTC" 
+          timezone: "UTC",
         } as ExtendedUser;
-        toast.success('Account created successfully! You can now sign in.');
+        toast.success("Account created successfully! You can now sign in.");
         return { user: extendedUser, error: null };
       }
 
       // Use the create-user edge function to handle user creation with proper permissions
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`;
+      const apiUrl = `${
+        import.meta.env.VITE_SUPABASE_URL
+      }/functions/v1/create-user`;
       const headers = {
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
       };
 
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: JSON.stringify({
           email,
           password,
           name,
           role,
-          organizationName
-        })
+          organizationName,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        const customError = new Error(errorData.error || 'Failed to create account') as AuthError;
+        const customError = new Error(
+          errorData.error || "Failed to create account"
+        ) as AuthError;
         return { user: null, error: customError };
       }
       const { profile } = await response.json();
-      
-      // Now sign in the user
-      const signInResult = await this.signIn(email, password);
-      if (signInResult.error) {
-        return signInResult;
-      }
+      const user = {
+        ...profile,
+        workspaceId: profile.workspace_id,
+      } as ExtendedUser;
 
-      toast.success('Account created successfully!');
-      return signInResult;
+      toast.success("Account created successfully!");
+      return { user, error: null };
     } catch (networkError) {
-      console.error('Network error during signup:', networkError);
-      const customError = new Error('Unable to connect to authentication service. Please check your internet connection and try again.') as AuthError;
+      console.error("Network error during signup:", networkError);
+      const customError = new Error(
+        "Unable to connect to authentication service. Please check your internet connection and try again."
+      ) as AuthError;
       return { user: null, error: customError };
     }
   }
@@ -89,21 +97,25 @@ export class AuthService {
     try {
       // Use mock authentication if Supabase is not configured
       if (isMockMode) {
-        console.warn('Supabase not configured - using mock authentication for development');
-        console.warn('To use real authentication, please:');
-        console.warn('1. Set up a Supabase project');
-        console.warn('2. Update your .env file with correct VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
-        console.warn('3. Start Supabase locally with: npx supabase start');
-        
-        const mockUser = localStorage.getItem('mockUser');
+        console.warn(
+          "Supabase not configured - using mock authentication for development"
+        );
+        console.warn("To use real authentication, please:");
+        console.warn("1. Set up a Supabase project");
+        console.warn(
+          "2. Update your .env file with correct VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY"
+        );
+        console.warn("3. Start Supabase locally with: npx supabase start");
+
+        const mockUser = localStorage.getItem("mockUser");
         if (mockUser) {
           const userData = JSON.parse(mockUser);
           if (userData.email === email) {
-            localStorage.setItem('userEmail', email);
+            localStorage.setItem("userEmail", email);
             return { user: userData as ExtendedUser, error: null };
           }
         }
-        throw new Error('Invalid email or password');
+        throw new Error("Invalid email or password");
       }
 
       const {
@@ -125,38 +137,40 @@ export class AuthService {
         .maybeSingle();
 
       if (!data) {
-        console.error('No user profile found in database for:', user?.email);
+        console.error("No user profile found in database for:", user?.email);
         // Create a basic profile for users who exist in auth but not in users table
         const basicProfile = {
           id: user?.id,
-          name: user?.email?.split('@')[0] || 'User',
+          name: user?.email?.split("@")[0] || "User",
           email: user?.email,
-          role: 'admin', // Default role for new signups
+          role: "admin", // Default role for new signups
           avatar_url: null,
         };
-        
+
         // Try to insert the basic profile
         try {
-          await supabase.from('users').insert(basicProfile);
-          console.log('Created basic user profile');
+          await supabase.from("users").insert(basicProfile);
+          console.log("Created basic user profile");
         } catch (insertError) {
-          console.error('Failed to create user profile:', insertError);
+          console.error("Failed to create user profile:", insertError);
         }
-        
+
         const userWithRole = { ...user, ...basicProfile } as ExtendedUser;
         return { user: userWithRole, error: null };
       }
 
-      const userWithRole = { 
-        ...user, 
-        role: data.role, 
-        name: data.name, 
-        avatar_url: data.avatar_url, 
+      const userWithRole = {
+        ...user,
+        role: data.role,
+        name: data.name,
+        avatar_url: data.avatar_url,
       } as ExtendedUser;
       return { user: userWithRole, error };
     } catch (networkError) {
-      console.error('Network error during signin:', networkError);
-      const customError = new Error('Unable to connect to authentication service. Please check your internet connection and try again.') as AuthError;
+      console.error("Network error during signin:", networkError);
+      const customError = new Error(
+        "Unable to connect to authentication service. Please check your internet connection and try again."
+      ) as AuthError;
       return { user: null, error: customError };
     }
   }
@@ -165,17 +179,19 @@ export class AuthService {
     try {
       // Handle mock authentication logout
       if (isMockMode) {
-        console.warn('Using mock authentication - signing out locally');
-        localStorage.removeItem('mockUser');
-        localStorage.removeItem('userEmail');
+        console.warn("Using mock authentication - signing out locally");
+        localStorage.removeItem("mockUser");
+        localStorage.removeItem("userEmail");
         return { error: null };
       }
 
       const { error } = await supabase.auth.signOut();
       return { error };
     } catch (networkError) {
-      console.error('Network error during signout:', networkError);
-      const customError = new Error('Unable to connect to authentication service.') as AuthError;
+      console.error("Network error during signout:", networkError);
+      const customError = new Error(
+        "Unable to connect to authentication service."
+      ) as AuthError;
       return { error: customError };
     }
   }
@@ -184,34 +200,38 @@ export class AuthService {
     try {
       // Handle mock password reset
       if (isMockMode) {
-        console.warn('Using mock authentication - password reset simulated');
-        toast.success('Password reset email sent! (Mock mode)');
+        console.warn("Using mock authentication - password reset simulated");
+        toast.success("Password reset email sent! (Mock mode)");
         return { error: null };
       }
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://my.brieflyapp.co/auth/set-password',
+        redirectTo: "https://my.brieflyapp.co/auth/set-password",
       });
       return { error };
     } catch (networkError) {
-      console.error('Network error during password reset:', networkError);
-      const customError = new Error('Unable to connect to authentication service.') as AuthError;
+      console.error("Network error during password reset:", networkError);
+      const customError = new Error(
+        "Unable to connect to authentication service."
+      ) as AuthError;
       return { error: customError };
     }
   }
 
   async getCurrentUser(): Promise<ExtendedUser | null> {
     try {
-    
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError) {
-        console.error('Session error:', sessionError);
+        console.error("Session error:", sessionError);
         // Clear invalid session data
         await supabase.auth.signOut();
         return null;
       }
-      
+
       if (!session?.user) {
         // No valid session, clear any stored data
         await supabase.auth.signOut();
@@ -228,9 +248,10 @@ export class AuthService {
         console.error("Error fetching user role:", roleError);
         // Get user metadata from auth session
         const userMetadata = session.user.user_metadata || {};
-        const role = userMetadata.role || 'member';
-        const name = userMetadata.name || session.user.email?.split('@')[0] || 'User';
-        
+        const role = userMetadata.role || "member";
+        const name =
+          userMetadata.name || session.user.email?.split("@")[0] || "User";
+
         const basicUser = {
           ...session.user,
           role,
@@ -247,7 +268,7 @@ export class AuthService {
         avatar_url: data.avatar_url,
       } as ExtendedUser;
     } catch (error) {
-      console.error('Error getting current user:', error);
+      console.error("Error getting current user:", error);
       // Clear any corrupted session on error
       if (supabase) {
         await supabase.auth.signOut();
@@ -262,8 +283,8 @@ export class AuthService {
     try {
       // Handle mock password update
       if (isMockMode) {
-        console.warn('Using mock authentication - password update simulated');
-        toast.success('Password updated successfully! (Mock mode)');
+        console.warn("Using mock authentication - password update simulated");
+        toast.success("Password updated successfully! (Mock mode)");
         return { error: null };
       }
 
@@ -272,8 +293,10 @@ export class AuthService {
       });
       return { error };
     } catch (networkError) {
-      console.error('Network error during password update:', networkError);
-      const customError = new Error('Unable to connect to authentication service.') as AuthError;
+      console.error("Network error during password update:", networkError);
+      const customError = new Error(
+        "Unable to connect to authentication service."
+      ) as AuthError;
       return { error: customError };
     }
   }

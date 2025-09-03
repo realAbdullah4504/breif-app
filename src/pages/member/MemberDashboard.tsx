@@ -18,12 +18,12 @@ import { useBrief } from "../../hooks/useBrief";
 import toast from "react-hot-toast";
 import { checkBriefSubmissionEligibility } from "../../utils/checkBriefSubmissionEligibility";
 import { motion } from "framer-motion";
-import { useWorkspaceSelection } from "../../context/WorkspaceSelectionContext";
+import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 const MemberDashboard: React.FC = () => {
   const { currentUser } = useAuth();
-  const { selectedWorkspace,isLoadingWorkspaces } = useWorkspaceSelection();
-  const workspaceId = selectedWorkspace || "";
+  const {selectedWorkspaceId}=useWorkspaceContext()
+  const workspaceId = selectedWorkspaceId || "";
   const { settings, isLoading: isLoadingSettings } = useSettings(workspaceId);
   const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief(workspaceId);
   const [submissionStatus, setSubmissionStatus] = useState<{
@@ -133,7 +133,7 @@ const MemberDashboard: React.FC = () => {
 
   const recentBriefs = briefs.slice(0, 3);
 
-  if (isLoadingSettings || isLoadingWorkspaces) {
+  if (isLoadingSettings) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">
@@ -143,7 +143,7 @@ const MemberDashboard: React.FC = () => {
     );
   }
 
-  if (!selectedWorkspace) {
+  if (!selectedWorkspaceId) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">

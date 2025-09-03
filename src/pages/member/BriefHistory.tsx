@@ -1,19 +1,22 @@
-import React from 'react';
-import { Clock, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import DashboardLayout from '../../components/Layout/DashboardLayout';
-import Card, { CardHeader, CardBody } from '../../components/UI/Card';
-import Badge from '../../components/UI/Badge';
-import { useBrief } from '../../hooks/useBrief';
-import { useSettings } from '../../hooks/useSettings';
-import { formatWorkspaceDate, formatWorkspaceTime, DEFAULT_WORKSPACE_TIMEZONE } from '../../utils/workspaceTimeUtils';
-import { useWorkspaceSelection } from '../../context/WorkspaceSelectionContext';
+import React from "react";
+import { Clock, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
+import DashboardLayout from "../../components/Layout/DashboardLayout";
+import Card, { CardHeader, CardBody } from "../../components/UI/Card";
+import Badge from "../../components/UI/Badge";
+import { useBrief } from "../../hooks/useBrief";
+import { useSettings } from "../../hooks/useSettings";
+import {
+  formatWorkspaceDate,
+  formatWorkspaceTime,
+  DEFAULT_WORKSPACE_TIMEZONE,
+} from "../../utils/workspaceTimeUtils";
+import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 const BriefHistory: React.FC = () => {
-  const {selectedWorkspace}=useWorkspaceSelection()
-  const workspaceId=selectedWorkspace
-  const { briefs, isLoading } = useBrief(workspaceId);
-  const { settings } = useSettings(workspaceId);
+  const { selectedWorkspaceId } = useWorkspaceContext();
+  const { briefs, isLoading } = useBrief(selectedWorkspaceId || "");
+  const { settings } = useSettings(selectedWorkspaceId || "");
   const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
 
   if (isLoading) {
@@ -31,7 +34,9 @@ const BriefHistory: React.FC = () => {
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Brief History</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              Brief History
+            </h1>
             <p className="mt-1 text-sm sm:text-base text-gray-500">
               View all your previous brief submissions
             </p>
@@ -49,7 +54,9 @@ const BriefHistory: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <h2 className="text-base sm:text-lg font-medium text-gray-900">All Submissions</h2>
+          <h2 className="text-base sm:text-lg font-medium text-gray-900">
+            All Submissions
+          </h2>
         </CardHeader>
         <CardBody className="p-0">
           <div className="divide-y divide-gray-200">
@@ -59,18 +66,25 @@ const BriefHistory: React.FC = () => {
                   <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0 mb-4">
                     <div>
                       <p className="text-base sm:text-lg font-medium text-gray-900">
-                        {formatWorkspaceDate(brief.submitted_at, workspaceTimezone)}
+                        {formatWorkspaceDate(
+                          brief.submitted_at,
+                          workspaceTimezone
+                        )}
                       </p>
                       <p className="mt-1 text-sm text-gray-500 flex items-center">
                         <Clock className="h-4 w-4 mr-1" />
-                        Submitted at {formatWorkspaceTime(brief.submitted_at, workspaceTimezone)}
+                        Submitted at{" "}
+                        {formatWorkspaceTime(
+                          brief.submitted_at,
+                          workspaceTimezone
+                        )}
                       </p>
                     </div>
                     <Badge variant="success">
-                      {brief.reviewed_at ? 'Reviewed' : 'Submitted'}
+                      {brief.reviewed_at ? "Reviewed" : "Submitted"}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-3 sm:space-y-4">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">
@@ -80,7 +94,7 @@ const BriefHistory: React.FC = () => {
                         {brief.accomplishments}
                       </div>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">
                         Blockers
@@ -89,7 +103,7 @@ const BriefHistory: React.FC = () => {
                         {brief.blockers}
                       </div>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">
                         Priorities
@@ -136,7 +150,9 @@ const BriefHistory: React.FC = () => {
               ))
             ) : (
               <div className="p-4 sm:p-6 text-center text-gray-500">
-                <span className="text-sm sm:text-base">No brief submissions found</span>
+                <span className="text-sm sm:text-base">
+                  No brief submissions found
+                </span>
               </div>
             )}
           </div>

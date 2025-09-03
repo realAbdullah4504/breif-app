@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 // Add error boundary for the entire app
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -37,7 +37,7 @@ import ErrorPage from "./pages/ErrorPage";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "react-hot-toast";
 import AcceptInvitation from "./pages/auth/AcceptInvitation";
-import { WorkspaceProvider } from "./context/WorkspaceSelectionContext";
+import { WorkspaceProvider } from "./context/WorkspaceContext";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{
@@ -152,11 +152,7 @@ const App: React.FC = () => {
                   {/* Public Routes */}
                   <Route
                     path="/"
-                    element={
-                      <ProtectedRoute
-                        element={<DashboardRedirect />}
-                      />
-                    }
+                    element={<ProtectedRoute element={<DashboardRedirect />} />}
                   />
                   <Route path="/login" element={<Login />} />
                   <Route path="/auth/register" element={<Signup />} />

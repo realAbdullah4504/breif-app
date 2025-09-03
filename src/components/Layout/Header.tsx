@@ -1,16 +1,10 @@
 import { format } from "date-fns";
-import { useAuth } from "../../context/AuthContext";
 import { useSettings } from "../../hooks/useSettings";
-import { useWorkspaces } from "../../hooks/useWorkspaces";
+import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 const Header = () => {
-  const { currentUser } = useAuth();
-  const adminId = currentUser?.id?.trim() || "";
-  const { workspaces } = useWorkspaces(adminId);
-  const workspaceId = workspaces?.find(
-    (workspace) => workspace.admin_id === adminId
-  )?.id;
-  const { settings } = useSettings(workspaceId);
+  const { selectedWorkspaceId } = useWorkspaceContext();
+  const { settings } = useSettings(selectedWorkspaceId || "");
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
 
   return (

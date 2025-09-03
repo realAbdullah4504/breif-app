@@ -2,16 +2,28 @@ import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Building2, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
-import { useWorkspaceSelection } from "../context/WorkspaceSelectionContext";
+import { useWorkspaceContext } from "../context/WorkspaceContext";
+import { useWorkspaces } from "../hooks/useWorkspaces";
+import { useAuth } from "../context/AuthContext";
 
 const WorkspaceSelect: React.FC = () => {
-  const { selectedWorkspace, setSelectedWorkspace, workspaces, isLoadingWorkspaces } = useWorkspaceSelection();
+  const { currentUser } = useAuth();
+  const { workspaces, isLoading: isLoadingWorkspaces } = useWorkspaces(
+    currentUser?.id || ""
+  );
+  const { selectedWorkspaceId, setWorkspaceId } = useWorkspaceContext();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
 
-  const selectedWorkspaceData = workspaces?.find((w) => w.id === selectedWorkspace);
+  const selectedWorkspaceData = workspaces?.find(
+    (w) => w.id === selectedWorkspaceId
+  );
 
   // Get initial for workspace avatar
   const getInitial = (name: string) => name.charAt(0).toUpperCase();
@@ -32,20 +44,23 @@ const WorkspaceSelect: React.FC = () => {
     // Update position on open and when scrolling/resizing
     if (isOpen) {
       updatePosition();
-      window.addEventListener('scroll', updatePosition, true);
-      window.addEventListener('resize', updatePosition);
+      window.addEventListener("scroll", updatePosition, true);
+      window.addEventListener("resize", updatePosition);
     }
 
     return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
     };
   }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -62,7 +77,7 @@ const WorkspaceSelect: React.FC = () => {
   };
 
   const handleWorkspaceChange = (workspaceId: string) => {
-    setSelectedWorkspace(workspaceId);
+    setWorkspaceId(workspaceId);
     setIsOpen(false);
   };
 
@@ -107,9 +122,15 @@ const WorkspaceSelect: React.FC = () => {
       >
         <div className="flex items-center space-x-2">
           <div className="h-7 w-7 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-xs font-semibold">
-            {selectedWorkspaceData ? getInitial(selectedWorkspaceData.name) : <Building2 className="h-4 w-4" />}
+            {selectedWorkspaceData ? (
+              getInitial(selectedWorkspaceData.name)
+            ) : (
+              <Building2 className="h-4 w-4" />
+            )}
           </div>
-          <span className="truncate max-w-[150px]">{selectedWorkspaceData?.name || "Select a workspace"}</span>
+          <span className="truncate max-w-[150px]">
+            {selectedWorkspaceData?.name || "Select a workspace"}
+          </span>
         </div>
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
@@ -132,7 +153,7 @@ const WorkspaceSelect: React.FC = () => {
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
-              position: 'fixed',
+              position: "fixed",
             }}
           >
             <div className="max-h-60 overflow-y-auto py-1">
@@ -142,21 +163,23 @@ const WorkspaceSelect: React.FC = () => {
                   onClick={() => handleWorkspaceChange(workspace.id)}
                   className={`
                     flex items-center space-x-2 px-3 py-2 text-sm cursor-pointer
-                    ${selectedWorkspace === workspace.id
-                      ? "bg-indigo-50 text-indigo-700 font-medium"
-                      : "text-gray-700 hover:bg-gray-50"
+                    ${
+                      selectedWorkspaceId === workspace.id
+                        ? "bg-indigo-50 text-indigo-700 font-medium"
+                        : "text-gray-700 hover:bg-gray-50"
                     }
                   `}
                   whileHover={{ backgroundColor: "rgba(243, 244, 246, 0.5)" }}
                   role="option"
-                  aria-selected={selectedWorkspace === workspace.id}
+                  aria-selected={selectedWorkspaceId === workspace.id}
                 >
                   <div
                     className={`
                       h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold
-                      ${selectedWorkspace === workspace.id
-                        ? "bg-indigo-100 text-indigo-700"
-                        : "bg-gray-100 text-gray-600"
+                      ${
+                        selectedWorkspaceId === workspace.id
+                          ? "bg-indigo-100 text-indigo-700"
+                          : "bg-gray-100 text-gray-600"
                       }
                     `}
                   >

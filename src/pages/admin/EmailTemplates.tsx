@@ -13,14 +13,11 @@ import { useSettings } from "../../hooks/useSettings";
 import { useEmail } from "../../hooks/useEmail";
 import toast from "react-hot-toast";
 import { generateTimeOptions } from "../../utils/timeUtils";
-import { useAuth } from "../../context/AuthContext";
-import { useWorkspaces } from "../../hooks/useWorkspaces";
+import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 const EmailTemplates: React.FC = () => {
-  const {currentUser}=useAuth()
-  const adminId=currentUser?.id?.trim() || ""
-  const {workspaces}=useWorkspaces(adminId)
-  const workspaceId=workspaces?.[0]?.id || ""
+  const { selectedWorkspaceId } = useWorkspaceContext();
+  const workspaceId = selectedWorkspaceId || "";
   const {
     settings,
     updateSettings,
@@ -86,7 +83,10 @@ const EmailTemplates: React.FC = () => {
             ?.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
             .replace("{{name}}", "Test User")
             .replace("{{deadline}}", "5:00 PM")
-            .replace("{{organizationName}}", settings?.name || "Your Organization") || // Convert Date to string
+            .replace(
+              "{{organizationName}}",
+              settings?.name || "Your Organization"
+            ) || // Convert Date to string
           "Please submit your brief.",
       },
       {
@@ -161,7 +161,8 @@ const EmailTemplates: React.FC = () => {
                         <code>{"{{deadline}}"}</code> - Submission deadline
                       </li>
                       <li>
-                        <code>{"{{organizationName}}"}</code> - Your organization name
+                        <code>{"{{organizationName}}"}</code> - Your
+                        organization name
                       </li>
                     </ul>
                   </div>
@@ -261,10 +262,10 @@ const EmailTemplates: React.FC = () => {
                       onChange={(e) => setAutoReminders(e.target.value)}
                     >
                       {timeOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -302,7 +303,10 @@ const EmailTemplates: React.FC = () => {
                 {body
                   .replace("{{name}}", "Test User")
                   .replace("{{deadline}}", "5:00 PM")
-                  .replace("{{organizationName}}", settings?.name || "Your Organization")}
+                  .replace(
+                    "{{organizationName}}",
+                    settings?.name || "Your Organization"
+                  )}
               </div>
             </div>
           </div>
