@@ -4,8 +4,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
-
-Deno.serve(async (req) => {
+Deno.serve(async (req)=>{
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -30,14 +29,10 @@ Deno.serve(async (req) => {
     const { data: authData, error: authUserError } = await supabase.auth.admin.listUsers();
     if (authUserError) throw authUserError;
     const authUser = authData.users.find((user)=>user.email === invitation.email);
-    // Delete from auth if user exists
-    if (authUser) {
-      const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(authUser.id);
-      if (deleteAuthError) throw deleteAuthError;
-    }
     // Delete invitation
     const { error: deleteError } = await supabase.from('invitations').delete().eq('id', invitationId);
     if (deleteError) throw deleteError;
+    const {} = await supabase.from('workspace_members').delete().eq('invited_by', adminId);
     return new Response(JSON.stringify({
       success: true,
       message: 'Member deleted successfully'
@@ -61,5 +56,4 @@ Deno.serve(async (req) => {
       status: error.status || 400
     });
   }
-}
-)
+});

@@ -1,18 +1,8 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { DateTime } from "npm:luxon@3";
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
-};
-Deno.serve(async (req)=>{
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders
-    });
-  }
+// supabase/functions/send-reminders/index.ts
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { DateTime } from "https://esm.sh/luxon";
+serve(async (req)=>{
   try {
     console.log("it is invoked");
     const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
@@ -23,11 +13,20 @@ Deno.serve(async (req)=>{
     console.log("now", now);
     const currentHour = now.hour;
     const currentMinute = now.minute;
+    const currentWeekday = now.weekday;
+    console.log("current week day", currentWeekday);
     const today = now.toISODate(); // Today's date in YYYY-MM-DD
     console.log("today", today);
     for (const workspace of workspaces){
+      console.log("day", currentWeekday, workspace.send_on_weekdays, workspace.send_on_weekdays.includes(currentWeekday));
       // Check if it's time to send reminders based on send_reminders_at
       const [reminderHours, reminderMinutes] = workspace.send_reminders_at.split(":").map(Number);
+      if (workspace.send_on_weekdays && workspace.send_on_weekdays.length > 0) {
+        if (!workspace.send_on_weekdays.includes(currentWeekday)) {
+          console.log(`Skipping workspace ${workspace.id} - today (${currentWeekday}) is not in allowed weekdays`);
+          continue;
+        }
+      }
       // Only proceed if current time is within 5 minutes of the configured reminder time
       if (Math.abs(currentHour - reminderHours) > 0 || Math.abs(currentMinute - reminderMinutes) > 5) {
         console.log("currentHour", currentHour, "reminderHours", reminderHours, "currentMinute", currentMinute, "reminderMinutes", reminderMinutes);
@@ -60,6 +59,13 @@ Deno.serve(async (req)=>{
           // Compare hours and minutes to see if brief was submitted before deadline
           return briefHours < deadlineHours || briefHours === deadlineHours && briefMinutes <= deadlineMinutes;
         });
+        function formatTo12Hour(timeString) {
+          const [hour, minute] = timeString.split(":").map(Number);
+          const ampm = hour >= 12 ? "PM" : "AM";
+          const hour12 = hour % 12 || 12; // Convert 0 → 12, 13 → 1, etc.
+          return `${hour12}:${String(minute).padStart(2, "0")} ${ampm}`;
+        }
+        const formattedDeadline = formatTo12Hour(workspace.submission_deadline);
         // If no briefs found, send a reminder
         if (todayBriefs.length === 0) {
           console.log("Sending reminder to member", member.email);
@@ -67,12 +73,8 @@ Deno.serve(async (req)=>{
             body: {
               to: member.email,
               subject: workspace.reminder_template.subject,
-              html: workspace.reminder_template.body.replace("{{name}}", member.name || member.email.split("@")[0]).replace("{{deadline}}", (()=>{
-                const [hours, minutes] = workspace.submission_deadline.split(':').map(Number);
-                const hour12 = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                return `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-              })()).replace("{{organizationName}}", workspace.name || "Your Organization").replace("{{dashboardUrl}}", "https://my.brieflyapp.co/dashboard").replace(/\n/g, "<br>")
+              html: workspace.reminder_template.body.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
+              .replace("{{name}}", member.name || member.email.split("@")[0]).replace("{{deadline}}", formattedDeadline).replace("{{dashboardUrl}}", `${Deno.env.get('SITE_URL')}/dashboard`)
             }
           });
         } else {
@@ -84,8 +86,7 @@ Deno.serve(async (req)=>{
       success: true
     }), {
       headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders
+        "Content-Type": "application/json"
       },
       status: 200
     });
@@ -94,8 +95,7 @@ Deno.serve(async (req)=>{
       error: error.message
     }), {
       headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders
+        "Content-Type": "application/json"
       },
       status: 400
     });
