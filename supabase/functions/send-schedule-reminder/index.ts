@@ -7,7 +7,7 @@ serve(async (req)=>{
     console.log("it is invoked");
     const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
     // Get all workspace settings with email reminders enabled
-    const { data: workspaces, error: settingsError } = await supabaseAdmin.from("workspace_settings").select("*, admin:admin_id(email)").eq("email_reminders", true);
+    const { data: workspaces, error: settingsError } = await supabaseAdmin.from("workspace_settings").select("*, admin:admin_id(email)");
     if (settingsError) throw settingsError;
     const now = DateTime.now().setZone("America/New_York");
     console.log("now", now);
@@ -37,7 +37,7 @@ serve(async (req)=>{
       // Get the submission deadline time for comparison
       const [deadlineHours, deadlineMinutes] = workspace.submission_deadline.split(":").map(Number);
       // Get users who are team members
-      const { data: teamMembers, error: membersError } = await supabaseAdmin.from("users").select("*, invited_by").eq("role", "member");
+      const { data: teamMembers, error: membersError } = await supabaseAdmin.from("workspace_members").select("*, invited_by").eq("workspace_id", workspace.id);
       if (membersError) throw membersError;
       // Filter team members by those invited by the workspace admin
       const relevantMembers = teamMembers.filter((member)=>member.invited_by === workspace.admin_id);
