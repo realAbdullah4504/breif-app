@@ -49,7 +49,7 @@ export class WorkspaceService {
       .eq("token", token);
 
     return {
-      user: { ...user, workspaceId: invitation?.workspace_id },
+      user,
       error: null,
     };
   }

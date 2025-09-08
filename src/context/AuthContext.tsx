@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { AuthService, ExtendedUser } from "../services/auth";
 import { toast } from "react-hot-toast";
-import { useWorkspaceContext } from "./WorkspaceContext";
 
 interface AuthContextType {
   currentUser: ExtendedUser | null;
@@ -35,7 +34,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [currentUser, setCurrentUser] = useState<ExtendedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { setWorkspaceId } = useWorkspaceContext();
 
   useEffect(() => {
     const initAuth = async () => {
@@ -73,12 +71,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       if (!user) {
         throw new Error("Login failed");
       }
-      setWorkspaceId(user.workspaceId);
       setCurrentUser(user);
       toast.success(`Welcome back, ${user.name}!`);
       return user;
     },
-    [setCurrentUser, setWorkspaceId]
+    [setCurrentUser]
   );
 
   const signUp = useCallback(
@@ -103,7 +100,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       if (!user) {
         throw new Error("Signup failed");
       }
-      setWorkspaceId(user.workspaceId);
       setCurrentUser(user);
 
       // Don't show success toast for members as they'll go through onboarding
@@ -113,18 +109,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       return user;
     },
-    [setCurrentUser, setWorkspaceId]
+    [setCurrentUser]
   );
 
   const logout = useCallback(async () => {
     const { error } = await authService.signOut();
-    setWorkspaceId(null);
     if (error) {
       throw error;
     }
     setCurrentUser(null);
+    localStorage.removeItem("selectedWorkspaceId");
     toast.success("You have been signed out successfully.");
-  }, [setCurrentUser, setWorkspaceId]);
+  }, [setCurrentUser]);
 
   const value = useMemo(
     () => ({

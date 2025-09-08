@@ -1,6 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { CheckCircle, Clock, FileText,Calendar, AlertCircle, Sparkles, Target, ArrowRight, Zap, History, Award, ChevronRight } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  FileText,
+  Calendar,
+  AlertCircle,
+  Sparkles,
+  Target,
+  ArrowRight,
+  Zap,
+  History,
+  Award,
+  ChevronRight,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import Confetti from "react-confetti";
 import DashboardLayout from "../../components/Layout/DashboardLayout";
@@ -22,10 +35,14 @@ import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 const MemberDashboard: React.FC = () => {
   const { currentUser } = useAuth();
-  const {selectedWorkspaceId}=useWorkspaceContext()
+  const { selectedWorkspaceId, workspaceLoading } = useWorkspaceContext();
   const workspaceId = selectedWorkspaceId || "";
   const { settings, isLoading: isLoadingSettings } = useSettings(workspaceId);
-  const { submitBrief, briefs, isSubmitting: isSubmittingBrief } = useBrief(workspaceId);
+  const {
+    submitBrief,
+    briefs,
+    isSubmitting: isSubmittingBrief,
+  } = useBrief(workspaceId);
   const [submissionStatus, setSubmissionStatus] = useState<{
     canSubmit: boolean;
     message: string;
@@ -55,19 +72,19 @@ const MemberDashboard: React.FC = () => {
       });
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
-  
+
   useEffect(() => {
     if (settings?.submission_deadline && briefs) {
       const status = checkBriefSubmissionEligibility(
         briefs,
         settings.submission_deadline,
-        settings.timezone,
+        settings.timezone
       );
       setSubmissionStatus(status);
-  
+
       if (!status.canSubmit && status.message.includes("already submitted")) {
         setIsSubmitted(true);
       } else {
@@ -100,7 +117,7 @@ const MemberDashboard: React.FC = () => {
 
     setIsSubmitted(true);
     setShowConfetti(true);
-    
+
     // Stop confetti after 4 seconds
     setTimeout(() => {
       setShowConfetti(false);
@@ -122,18 +139,20 @@ const MemberDashboard: React.FC = () => {
     if (!settings?.submission_deadline || !settings?.timezone) {
       return "5:00 PM";
     }
-    
+
     // Simply format the admin's deadline time without timezone conversion
-    const [hours, minutes] = settings.submission_deadline.split(':').map(Number);
+    const [hours, minutes] = settings.submission_deadline
+      .split(":")
+      .map(Number);
     const hour12 = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    
-    return `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    const ampm = hours >= 12 ? "PM" : "AM";
+
+    return `${hour12}:${minutes.toString().padStart(2, "0")} ${ampm}`;
   };
 
   const recentBriefs = briefs.slice(0, 3);
 
-  if (isLoadingSettings) {
+  if (isLoadingSettings || workspaceLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">
@@ -149,11 +168,16 @@ const MemberDashboard: React.FC = () => {
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
           <div className="bg-blue-50 p-6 rounded-xl max-w-md w-full">
             <AlertCircle className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">No Workspace Selected</h2>
-            <p className="text-gray-600 mb-6">You are not a part of any workspace. Please ask your admin to invite you to a workspace.</p>
-            <Button 
-              variant="primary" 
-              className="w-full" 
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              No Workspace Selected
+            </h2>
+            <p className="text-gray-600 mb-6">
+              You are not a part of any workspace. Please ask your admin to
+              invite you to a workspace.
+            </p>
+            <Button
+              variant="primary"
+              className="w-full"
               onClick={() => window.location.reload()}
             >
               Refresh Page
@@ -174,13 +198,20 @@ const MemberDashboard: React.FC = () => {
           recycle={false}
           numberOfPieces={200}
           gravity={0.3}
-          colors={['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899']}
+          colors={[
+            "#3b82f6",
+            "#8b5cf6",
+            "#10b981",
+            "#f59e0b",
+            "#ef4444",
+            "#ec4899",
+          ]}
           style={{
-            position: 'fixed',
+            position: "fixed",
             top: 0,
             left: 0,
             zIndex: 9999,
-            pointerEvents: 'none'
+            pointerEvents: "none",
           }}
         />
       )}
@@ -199,14 +230,14 @@ const MemberDashboard: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
-                Welcome back, {currentUser?.name?.split(' ')[0] || "there"}! 👋
+                Welcome back, {currentUser?.name?.split(" ")[0] || "there"}! 👋
               </h1>
               <p className="text-lg sm:text-xl text-gray-600 mt-2">
                 Ready to share your daily progress?
               </p>
             </div>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-start space-y-2 sm:space-y-0 sm:space-x-8 text-gray-500">
             <div className="flex items-center">
               <Calendar className="w-5 h-5 mr-2" />
@@ -214,21 +245,25 @@ const MemberDashboard: React.FC = () => {
             </div>
             <div className="flex items-center">
               <Clock className="w-5 h-5 mr-2" />
-              <span className="text-sm sm:text-base">Deadline: {getDeadlineDisplay()}</span>
+              <span className="text-sm sm:text-base">
+                Deadline: {getDeadlineDisplay()}
+              </span>
             </div>
           </div>
         </motion.div>
 
         {/* Status Alert */}
         {submissionStatus?.canSubmit && submissionStatus?.message && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-4xl mx-auto p-3 sm:p-4 bg-warning-50 border border-warning-200 rounded-2xl"
           >
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 text-warning-600 mr-3" />
-              <p className="text-warning-800 font-medium text-sm sm:text-base">{submissionStatus.message}</p>
+              <p className="text-warning-800 font-medium text-sm sm:text-base">
+                {submissionStatus.message}
+              </p>
             </div>
           </motion.div>
         )}
@@ -244,8 +279,12 @@ const MemberDashboard: React.FC = () => {
                       <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">Today's Brief</h2>
-                      <p className="text-white/90 text-sm sm:text-base lg:text-lg">Share your progress and priorities</p>
+                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">
+                        Today's Brief
+                      </h2>
+                      <p className="text-white/90 text-sm sm:text-base lg:text-lg">
+                        Share your progress and priorities
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -253,7 +292,7 @@ const MemberDashboard: React.FC = () => {
 
               <div className="p-4 sm:p-6 lg:p-8">
                 {isSubmitted ? (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="text-center py-12 sm:py-16 lg:py-20"
@@ -265,11 +304,13 @@ const MemberDashboard: React.FC = () => {
                       Brief Submitted Successfully! 🎉
                     </h3>
                     <p className="text-gray-600 mb-6 sm:mb-10 text-base sm:text-lg lg:text-xl max-w-md mx-auto leading-relaxed px-4">
-                      Thank you for sharing your progress. Your brief has been submitted and will be reviewed by your manager.
+                      Thank you for sharing your progress. Your brief has been
+                      submitted and will be reviewed by your manager.
                     </p>
                     <div className="bg-success-50 rounded-3xl p-4 sm:p-6 lg:p-8 max-w-lg mx-auto border border-success-200">
                       <p className="text-success-800 font-semibold text-base sm:text-lg">
-                        You can submit your next brief tomorrow. Keep up the great work! 🚀
+                        You can submit your next brief tomorrow. Keep up the
+                        great work! 🚀
                       </p>
                     </div>
                   </motion.div>
@@ -286,7 +327,10 @@ const MemberDashboard: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                  <form
+                    onSubmit={handleSubmit}
+                    className="space-y-6 sm:space-y-8"
+                  >
                     <div className="space-y-6 sm:space-y-8">
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -295,7 +339,10 @@ const MemberDashboard: React.FC = () => {
                       >
                         <TextArea
                           id="accomplishments"
-                          label={settings?.questions.accomplishments || "What did you accomplish today?"}
+                          label={
+                            settings?.questions.accomplishments ||
+                            "What did you accomplish today?"
+                          }
                           rows={5}
                           required
                           variant="monday"
@@ -313,7 +360,10 @@ const MemberDashboard: React.FC = () => {
                       >
                         <TextArea
                           id="blockers"
-                          label={settings?.questions.blockers || "Any blockers or challenges?"}
+                          label={
+                            settings?.questions.blockers ||
+                            "Any blockers or challenges?"
+                          }
                           rows={4}
                           variant="monday"
                           value={formData.blockers}
@@ -331,7 +381,10 @@ const MemberDashboard: React.FC = () => {
                       >
                         <TextArea
                           id="priorities"
-                          label={settings?.questions.priorities || "What are your priorities for tomorrow?"}
+                          label={
+                            settings?.questions.priorities ||
+                            "What are your priorities for tomorrow?"
+                          }
                           rows={4}
                           required
                           variant="monday"
@@ -397,13 +450,17 @@ const MemberDashboard: React.FC = () => {
                           variant="monday"
                           size="lg"
                           fullWidth
-                          disabled={isSubmittingBrief || !submissionStatus.canSubmit}
+                          disabled={
+                            isSubmittingBrief || !submissionStatus.canSubmit
+                          }
                           className="relative text-base sm:text-lg font-bold py-4 sm:py-5 bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-600 hover:from-primary-600 hover:via-secondary-600 hover:to-primary-700 border-0 shadow-monday hover:shadow-monday-hover transform hover:scale-[1.02] transition-all duration-300 group"
                         >
                           {isSubmittingBrief ? (
                             <div className="flex items-center justify-center">
                               <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>
-                              <span className="font-semibold">Submitting your brief...</span>
+                              <span className="font-semibold">
+                                Submitting your brief...
+                              </span>
                             </div>
                           ) : (
                             <div className="flex items-center justify-center">
@@ -411,7 +468,9 @@ const MemberDashboard: React.FC = () => {
                                 <FileText className="h-5 w-5 text-white" />
                               </div>
                               <span className="font-bold text-white">
-                                <span className="hidden sm:inline">Submit Today's Brief</span>
+                                <span className="hidden sm:inline">
+                                  Submit Today's Brief
+                                </span>
                                 <span className="sm:hidden">Submit Brief</span>
                               </span>
                               <div className="flex items-center bg-white/20 rounded-xl px-3 py-1 ml-3 group-hover:bg-white/30 group-hover:translate-x-1 transition-all duration-200">
@@ -465,9 +524,17 @@ const MemberDashboard: React.FC = () => {
                         >
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-medium text-gray-900">
-                              {format(new Date(brief.submitted_at), 'MMM d, yyyy')}
+                              {format(
+                                new Date(brief.submitted_at),
+                                "MMM d, yyyy"
+                              )}
                             </span>
-                            <Badge variant={brief.reviewed_at ? "success" : "monday-blue"} className="text-xs">
+                            <Badge
+                              variant={
+                                brief.reviewed_at ? "success" : "monday-blue"
+                              }
+                              className="text-xs"
+                            >
                               {brief.reviewed_at ? "Reviewed" : "Under Review"}
                             </Badge>
                           </div>
@@ -480,13 +547,19 @@ const MemberDashboard: React.FC = () => {
                   ) : (
                     <div className="text-center py-8">
                       <FileText className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500 text-sm sm:text-base">No briefs submitted yet</p>
+                      <p className="text-gray-500 text-sm sm:text-base">
+                        No briefs submitted yet
+                      </p>
                     </div>
                   )}
                 </CardBody>
                 <CardFooter>
                   <Link to="/brief-history" className="w-full">
-                    <Button variant="outline" fullWidth className="flex items-center justify-center">
+                    <Button
+                      variant="outline"
+                      fullWidth
+                      className="flex items-center justify-center"
+                    >
                       <History className="h-4 w-4 mr-2" />
                       <span className="hidden sm:inline">View All History</span>
                       <span className="sm:hidden">History</span>
@@ -524,19 +597,22 @@ const MemberDashboard: React.FC = () => {
                     <div className="flex items-start">
                       <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                       <p className="text-sm text-gray-700">
-                        <strong>Be specific:</strong> Include concrete achievements
+                        <strong>Be specific:</strong> Include concrete
+                        achievements
                       </p>
                     </div>
                     <div className="flex items-start">
                       <div className="w-2 h-2 bg-secondary-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                       <p className="text-sm text-gray-700">
-                        <strong>Highlight blockers:</strong> Mention challenges early
+                        <strong>Highlight blockers:</strong> Mention challenges
+                        early
                       </p>
                     </div>
                     <div className="flex items-start">
                       <div className="w-2 h-2 bg-success-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                       <p className="text-sm text-gray-700">
-                        <strong>Plan ahead:</strong> Clear priorities help alignment
+                        <strong>Plan ahead:</strong> Clear priorities help
+                        alignment
                       </p>
                     </div>
                   </div>

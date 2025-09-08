@@ -198,7 +198,7 @@ export class InviteService {
         .eq("email", email)
         .eq("token", token);
       if (user) {
-        return { ...user, ...userSelected,workspaceId:invitation?.workspace_id };
+        return { ...user, ...userSelected };
       }
       if (error) throw error;
       return { error };

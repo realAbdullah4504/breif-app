@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Users,
@@ -12,9 +12,7 @@ import {
   FileText,
   Sliders,
   ChevronDown,
-  ChevronUp,
   Bell,
-  Search,
   Network,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -354,7 +352,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </button>
 
                 {/* Workspace */}
-                {!isAdmin && (
+                {
                   <button
                     data-tour="workspace"
                     onClick={() =>
@@ -364,7 +362,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   >
                     <Network className="h-5 w-5 text-gray-500 hover:text-gray-700" />
                   </button>
-                )}
+                }
 
                 {/* Profile */}
                 <button

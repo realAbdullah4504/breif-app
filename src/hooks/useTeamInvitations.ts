@@ -10,7 +10,6 @@ const inviteService = new InviteService();
 
 export const useTeamInvitations = () => {
   const { currentUser, setCurrentUser } = useAuth();
-  const {setWorkspaceId} = useWorkspaceContext();
   const invitationsQuery = useQuery({
     queryKey: ["invitations",currentUser?.id],
     queryFn: () =>
@@ -51,7 +50,6 @@ export const useTeamInvitations = () => {
     },
     onSuccess: (user: ExtendedUser) => {
       setCurrentUser(user);
-      setWorkspaceId(user.workspaceId);
       queryClient.invalidateQueries({
         queryKey: ["workspaces", currentUser?.id],
       });

@@ -11,7 +11,6 @@ export interface ExtendedUser extends User {
   role: string;
   name: string;
   avatar_url: string | null;
-  workspaceId: string;
   timezone: string;
 }
 
@@ -77,10 +76,7 @@ export class AuthService {
         return { user: null, error: customError };
       }
       const { profile } = await response.json();
-      const user = {
-        ...profile,
-        workspaceId: profile.workspace_id,
-      } as ExtendedUser;
+      const user = profile as ExtendedUser;
 
       toast.success("Account created successfully!");
       return { user, error: null };
@@ -112,7 +108,10 @@ export class AuthService {
           const userData = JSON.parse(mockUser);
           if (userData.email === email) {
             localStorage.setItem("userEmail", email);
-            return { user: userData as ExtendedUser, error: null };
+            return {
+              user: userData as ExtendedUser,
+              error: null,
+            };
           }
         }
         throw new Error("Invalid email or password");
@@ -164,16 +163,11 @@ export class AuthService {
         return { user: userWithRole, error: null };
       }
 
-      const workspaceId =
-        workspaceData && workspaceData.length > 0
-          ? workspaceData[0].workspace_id
-          : "";
       const userWithRole = {
         ...user,
         role: data.role,
         name: data.name,
         avatar_url: data.avatar_url,
-        workspaceId: workspaceId,
       } as ExtendedUser;
       return { user: userWithRole, error };
     } catch (networkError) {
@@ -181,7 +175,7 @@ export class AuthService {
       const customError = new Error(
         "Unable to connect to authentication service. Please check your internet connection and try again."
       ) as AuthError;
-      return { user: null, error: customError };
+      return { user: null,   error: customError };
     }
   }
 

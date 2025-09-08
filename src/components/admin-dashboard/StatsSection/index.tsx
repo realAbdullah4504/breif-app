@@ -7,23 +7,40 @@ import {
   formatWorkspaceTime,
   getWorkspaceTimezoneAbbr,
   DEFAULT_WORKSPACE_TIMEZONE,
+  getTimeUntilDeadline,
+  createWorkspaceDeadline,
 } from "../../../utils/workspaceTimeUtils";
 import Button from "../../UI/Button";
 import { useEmail } from "../../../hooks/useEmail";
 import toast from "react-hot-toast";
 import { useDashboardContext } from "../../../context/DashboardContext";
-import { useSampleData } from "../../../hooks/useAdminBriefs";
+import { useAdminBriefs, useSampleData } from "../../../hooks/useAdminBriefs";
+import { useWorkspaceContext } from "../../../context/WorkspaceContext";
+import { useSettings } from "../../../hooks/useSettings";
 
 const StatsSection = () => {
-  const { settings, teamMembers, briefs, stats } = useDashboardContext();
-  const {
-    totalBriefs,
-    submittedBriefs,
-    submissionRate,
-    pendingBriefs,
-    deadline,
-    timeUntilDeadline,
-  } = stats;
+  const { filters } = useDashboardContext();
+  const { selectedWorkspaceId } = useWorkspaceContext();
+  const workspaceId = selectedWorkspaceId || "";
+  const { settings } = useSettings(workspaceId);
+  const { briefs, teamMembers, stats } = useAdminBriefs(filters);
+
+  const totalBriefs = stats?.totalMembers || 0;
+  const submittedBriefs = stats?.submittedCount || 0;
+  const pendingBriefs = totalBriefs - submittedBriefs;
+  const submissionRate =
+    totalBriefs > 0 ? (submittedBriefs / totalBriefs) * 100 : 0;
+
+  const workspaceTimezone = settings?.timezone || DEFAULT_WORKSPACE_TIMEZONE;
+  const deadline = settings?.submission_deadline
+    ? createWorkspaceDeadline(settings.submission_deadline, workspaceTimezone)
+    : new Date();
+
+  const timeUntilDeadline =
+    settings?.submission_deadline && settings?.timezone
+      ? getTimeUntilDeadline(settings.submission_deadline, workspaceTimezone)
+      : "No deadline set";
+
   const { sendEmail, isLoading: isSendingEmail } = useEmail();
   const { deleteSampleData, isDeletingSampleData } = useSampleData();
 
