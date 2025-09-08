@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { BriefService } from "../services/briefService";
 import { useAuth } from "../context/AuthContext";
 import { FilterOptions } from "../types/briefTypes";
@@ -10,13 +15,13 @@ export const useAdminBriefs = (filters: FilterOptions) => {
   const { currentUser } = useAuth();
 
   const statsQuery = useSuspenseQuery({
-    queryKey: ["brief-stats", filters,currentUser?.id],
+    queryKey: ["brief-stats", filters, currentUser?.id],
     queryFn: () => briefService.getBriefStats(currentUser!.id, filters),
     // enabled: !!currentUser,
   });
 
   const briefsQuery = useSuspenseQuery({
-    queryKey: ["admin-briefs", filters,currentUser?.id],
+    queryKey: ["admin-briefs", filters, currentUser?.id],
     queryFn: () => briefService.getAllBriefs(currentUser!.id, filters),
     // enabled: !!currentUser,
   });
@@ -44,8 +49,12 @@ export const useSampleData = () => {
     mutationFn: () => briefService.deleteSampleData(currentUser!.id),
     onSuccess: () => {
       // Invalidate all related queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ["admin-briefs",currentUser?.id] });
-      queryClient.invalidateQueries({ queryKey: ["brief-stats",currentUser?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-briefs", currentUser?.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["brief-stats", currentUser?.id],
+      });
     },
   });
 
@@ -55,7 +64,7 @@ export const useSampleData = () => {
   };
 };
 
-export const useReviewBriefs = () => {
+export const useReviewBriefs = (filters: FilterOptions) => {
   const queryClient = useQueryClient();
   const { createNotification } = useNotificationSender();
   const { currentUser } = useAuth();
@@ -77,8 +86,12 @@ export const useReviewBriefs = () => {
         receiver_id: variables.userId,
         message: `${currentUser?.name} has reviewed your brief`,
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-briefs",currentUser?.id] });
-      queryClient.invalidateQueries({ queryKey: ["brief-stats",currentUser?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-briefs", filters, currentUser?.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["brief-stats", filters, currentUser?.id],
+      });
     },
   });
   return {
