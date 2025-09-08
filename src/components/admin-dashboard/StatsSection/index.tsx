@@ -110,7 +110,7 @@ const StatsSection = () => {
                 })()
               )
               .replace(
-                "{{organizationName}}",
+                "{{workspaceName}}",
                 settings?.name || "Your Organization"
               )
               .replace("{{dashboardUrl}}", "https://my.brieflyapp.co/dashboard")

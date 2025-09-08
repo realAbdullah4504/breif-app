@@ -53,7 +53,7 @@ const ReminderButton = ({ member, teamMembers, settings }: ReminderButtonProps) 
                     settings?.reminder_template?.body
                         .replace("{{name}}", member.users.name)
                         .replace("{{deadline}}", formatDeadlineForEmail())
-                        .replace("{{organizationName}}", settings?.name || "Your Organization")
+                        .replace("{{workspaceName}}", settings?.name || "Your Organization")
                         .replace("{{dashboardUrl}}", "https://my.brieflyapp.co/dashboard")
                         .replace(/\n/g, "<br>") ||
                     "Please submit your brief.",

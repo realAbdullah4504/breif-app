@@ -37,7 +37,7 @@ serve(async (req)=>{
       // Get the submission deadline time for comparison
       const [deadlineHours, deadlineMinutes] = workspace.submission_deadline.split(":").map(Number);
       // Get users who are team members
-      const { data: teamMembers, error: membersError } = await supabaseAdmin.from("workspace_members").select("*, invited_by").eq("workspace_id", workspace.id);
+      const { data: teamMembers, error: membersError } = await supabaseAdmin.from("workspace_members").select("*,users:user_id (email,name), invited_by").eq("workspace_id", workspace.id);
       if (membersError) throw membersError;
       // Filter team members by those invited by the workspace admin
       const relevantMembers = teamMembers.filter((member)=>member.invited_by === workspace.admin_id);
@@ -46,7 +46,7 @@ serve(async (req)=>{
         const startOfTodayInEST = now.startOf("day");
         const startOfTodayInUTC = startOfTodayInEST.toUTC().toISO();
         console.log("startOfTodayInUTC", startOfTodayInUTC);
-        const { data: todayBriefs, error: briefsError } = await supabaseAdmin.from("briefs").select("submitted_at").eq("user_id", member.id).gte("submitted_at", startOfTodayInUTC);
+        const { data: todayBriefs, error: briefsError } = await supabaseAdmin.from("briefs").select("submitted_at").eq("user_id", member.user_id).eq("workspace_id", workspace.id).gte("submitted_at", startOfTodayInUTC);
         if (briefsError) {
           console.error("Error checking briefs:", briefsError);
           continue;
@@ -68,13 +68,13 @@ serve(async (req)=>{
         const formattedDeadline = formatTo12Hour(workspace.submission_deadline);
         // If no briefs found, send a reminder
         if (todayBriefs.length === 0) {
-          console.log("Sending reminder to member", member.email);
+          console.log("Sending reminder to member", member.users.email);
           await supabaseAdmin.functions.invoke("send-email", {
             body: {
-              to: member.email,
-              subject: workspace.reminder_template.subject,
-              html: workspace.reminder_template.body.replace(/\n/g, "<br>") // Convert newlines to HTML line breaks
-              .replace("{{name}}", member.name || member.email.split("@")[0]).replace("{{deadline}}", formattedDeadline).replace("{{dashboardUrl}}", `${Deno.env.get('SITE_URL')}/dashboard`)
+              to: member.users.email,
+              subject: workspace.reminder_template.subject.replace("{{workspaceName}}", workspace.name),
+              html: workspace.reminder_template.body.replace(/\n/g, "<br>") // Convert newlines to <br>
+              .replace("{{name}}", member.users.name || member.users.email.split("@")[0]).replace("{{deadline}}", formattedDeadline).replace("{{dashboardUrl}}", `${Deno.env.get("SITE_URL")}/dashboard`).replace("{{workspaceName}}", workspace.name)
             }
           });
         } else {
