@@ -35,7 +35,7 @@ import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 const MemberDashboard: React.FC = () => {
   const { currentUser } = useAuth();
-  const { selectedWorkspaceId, workspaceLoading } = useWorkspaceContext();
+  const { selectedWorkspaceId } = useWorkspaceContext();
   const workspaceId = selectedWorkspaceId || "";
   const { settings, isLoading: isLoadingSettings } = useSettings(workspaceId);
   const {
@@ -152,7 +152,7 @@ const MemberDashboard: React.FC = () => {
 
   const recentBriefs = briefs.slice(0, 3);
 
-  if (isLoadingSettings || workspaceLoading) {
+  if (isLoadingSettings) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">

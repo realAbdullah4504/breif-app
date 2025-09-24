@@ -3,17 +3,13 @@ import {
   useContext,
   useState,
   ReactNode,
-  useEffect,
   useCallback,
   useMemo,
 } from "react";
-import { useAuth } from "./AuthContext";
-import { useWorkspaces } from "../hooks/useWorkspaces";
-
 interface WorkspaceContextType {
   selectedWorkspaceId: string | null;
   setWorkspaceId: (workspaceId: string | null) => void;
-  workspaceLoading: boolean;
+  setInitialWorkspaceId: (workspaces: any) => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -24,20 +20,14 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
 export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { currentUser } = useAuth();
-  const { workspaces, isLoading } = useWorkspaces(currentUser?.id || "");
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
     null
   );
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize workspace
-  useEffect(() => {
-    if (isLoading) return;
-
+  const setInitialWorkspaceId = useCallback((workspaces: any) => {
     const stored = localStorage.getItem("selectedWorkspaceId");
     const hasWorkspace = workspaces?.some(
-      (workspace) => workspace.id === stored
+      (workspace: any) => workspace.id === stored
     );
 
     if (stored && hasWorkspace) {
@@ -49,9 +39,7 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({
     } else {
       setSelectedWorkspaceId(null);
     }
-
-    setIsInitialized(true);
-  }, [workspaces, isLoading]);
+  }, []);
 
   const setWorkspaceId = useCallback((workspaceId: string | null) => {
     setSelectedWorkspaceId(workspaceId);
@@ -66,9 +54,9 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({
     () => ({
       selectedWorkspaceId,
       setWorkspaceId,
-      workspaceLoading: !isInitialized || isLoading,
+      setInitialWorkspaceId,
     }),
-    [selectedWorkspaceId, setWorkspaceId, isInitialized, isLoading]
+    [selectedWorkspaceId, setWorkspaceId, setInitialWorkspaceId]
   );
 
   return (

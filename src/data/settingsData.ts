@@ -13,6 +13,6 @@ export const defaultSettings:Partial<WorkspaceSettings> = {
   email_reminders: true,
   reminder_template: {
     subject: "Reminder: Submit your daily brief!",
-    body: `Hi {{name}},\n\nThis is a friendly reminder to submit your daily brief for today. The deadline is {{deadline}}.\n\nIt only takes a minute!\n\n<a href="{{dashboardUrl}}" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #d946ef); color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; margin: 16px 0;">📝 Submit Your Brief</a>\n\nBest regards,\nThe Briefly Team\n\n---\nPowered by Briefly • https://my.brieflyapp.co`,
+    body: `Hi {{name}},\n\nThis is a friendly reminder to submit your daily brief for today. The deadline is {{deadline}}.\n\nIt only takes a minute!\n\n<a href="{{dashboardUrl}}" style="display: inline-block; background: linear-gradient(135deg, #6366f1, #d946ef); color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; margin: 16px 0;">📝 Submit Your Brief</a>\n\nBest regards,\nThe Briefly Team\n\n---\nPowered by Briefly • https://my.brieflyapp.co\nNeed help? Contact us at contact@brieflyapp.co`,
   },
 };

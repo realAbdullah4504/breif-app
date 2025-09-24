@@ -354,7 +354,7 @@ const Settings: React.FC = () => {
                           <div className="mt-2 text-sm text-red-700">
                             <p>
                               Once you delete your account, there is no going back. This action cannot be undone.
-                              All your data, including briefs and settings, will be permanently deleted.
+                              All your data, including briefs and settings, will be permanently deleted. If you need help, contact us at contact@brieflyapp.co.
                             </p>
                           </div>
                           

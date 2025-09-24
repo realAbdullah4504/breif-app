@@ -8,7 +8,7 @@ const Header = () => {
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
 
   return (
-    <div className="mb-6" data-tour="welcome">
+    <div className="mb-6">
       <h1 className="text-2xl font-bold text-gray-900">
         {settings?.name || "Organization"}'s Briefing Room
       </h1>

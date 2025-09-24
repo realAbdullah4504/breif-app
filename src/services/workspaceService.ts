@@ -44,7 +44,7 @@ export class WorkspaceService {
     });
     await supabase
       ?.from("invitations")
-      .update({ token: "" })
+      .update({ token: null })
       .eq("email", email)
       .eq("token", token);
 

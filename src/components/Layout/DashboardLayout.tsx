@@ -22,6 +22,9 @@ import Notifications from "../Notifications";
 import { useNotifications } from "../../hooks/useNotifications";
 import ErrorBoundary from "../ErrorBoundary";
 import WorkspaceSelect from "../WorkspaceSelect";
+import { useWorkspaces } from "../../hooks/useWorkspaces";
+import { useEffect } from "react";
+import { useWorkspaceContext } from "../../context/WorkspaceContext";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -29,6 +32,8 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { currentUser, logout } = useAuth();
+  const { workspaces, isLoading: isLoadingWorkspaces } = useWorkspaces(currentUser?.id || "");
+  const { setInitialWorkspaceId } = useWorkspaceContext();
   const { unreadCount } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,6 +42,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (isLoadingWorkspaces) return;
+    setInitialWorkspaceId(workspaces);
+  }, [workspaces, isLoadingWorkspaces, setInitialWorkspaceId]);
 
   const handleLogout = () => {
     logout();
@@ -96,6 +106,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     },
   ].filter((item) => item.show);
 
+  if(isLoadingWorkspaces){
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
   return (
     <ErrorBoundary
       fallback={
@@ -258,13 +275,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   >
                     <Link
                       to={item.href}
-                      data-tour={
-                        item.name === "Team"
-                          ? "team-nav"
-                          : item.name === "Brief Settings"
-                          ? "settings-nav"
-                          : undefined
-                      }
                       className={`group flex items-center px-2 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 relative ${
                         item.current
                           ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm border border-blue-200"
@@ -337,7 +347,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <div className="flex items-center space-x-2 sm:space-x-3 relative">
                 {/* Notifications */}
                 <button
-                  data-tour="notifications"
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
                   className="relative p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                 >
@@ -354,7 +363,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 {/* Workspace */}
                 {
                   <button
-                    data-tour="workspace"
                     onClick={() =>
                       setWorkspaceDropdownOpen(!workspaceDropdownOpen)
                     }
@@ -366,7 +374,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
                 {/* Profile */}
                 <button
-                  data-tour="profile"
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
                 >

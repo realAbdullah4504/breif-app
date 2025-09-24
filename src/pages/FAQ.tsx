@@ -134,6 +134,15 @@ const FAQ: React.FC = () => {
             ))}
           </div>
         </CardBody>
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-25">
+          <p 
+            className="text-center text-xs text-gray-500"
+            dangerouslySetInnerHTML={{
+              __html: `Powered by <strong style="color: #6366f1;">Briefly</strong> • <a href="https://my.brieflyapp.co" style="color: #6366f1; text-decoration: none;">my.brieflyapp.co</a><br />
+              Need help? Contact us at <a href="mailto:contact@brieflyapp.co" style="color: #6366f1; text-decoration: none;">contact@brieflyapp.co</a>`
+            }}
+          />
+        </div>
       </Card>
     </DashboardLayout>
   );

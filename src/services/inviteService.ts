@@ -7,7 +7,7 @@ export class InviteService {
     email: string,
     role: string = "member",
     adminId: string
-  ): Promise<{ error: Error | null }> {
+  ): Promise<{ data: any; error: Error | null }> {
     const { data, error } = await supabase.functions.invoke("send-invitation", {
       body: { email, role, adminId },
     });
@@ -20,7 +20,7 @@ export class InviteService {
       throw error;
     }
 
-    return { error: null };
+    return { data: data.invitation, error: null };
   }
   async getInvitations(id: string): Promise<{
     data: InvitationWithUser[];
@@ -85,7 +85,7 @@ export class InviteService {
   async deleteInvitation(
     invitationId: string,
     adminId: string
-  ): Promise<{ error: Error | null }> {
+  ): Promise<{ data: any; error: Error | null }> {
     try {
       const { data, error } = await supabase.functions.invoke(
         "delete-invitation",
@@ -100,10 +100,11 @@ export class InviteService {
 
       if (error) throw error;
 
-      return { error: null };
+      return { data: data.invitation, error: null };
     } catch (error) {
       console.error("Error deleting invitation:", error);
       return {
+        data: null,
         error:
           error instanceof Error
             ? error
@@ -115,7 +116,7 @@ export class InviteService {
   async verifyToken(
     token: string,
     email: string
-  ): Promise<{ error: Error | null }> {
+  ): Promise<{ error: Error | null; status: "existing_user" | "no_user" }> {
     try {
       const { data, error } = await supabase
         .from("invitations")
@@ -128,8 +129,16 @@ export class InviteService {
       if (error || !data) {
         throw new Error("Invalid or expired token");
       }
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
 
-      return { error: null };
+      if (existingUser) {
+        return { status: "existing_user", error: null };
+      }
+      return { status: "no_user", error: null };
     } catch (err) {
       console.error("Error verifying token:", err);
       throw err;
@@ -194,7 +203,7 @@ export class InviteService {
       });
       await supabase
         ?.from("invitations")
-        .update({ token: "" })
+        .update({ token: null })
         .eq("email", email)
         .eq("token", token);
       if (user) {

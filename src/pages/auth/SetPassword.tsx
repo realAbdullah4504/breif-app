@@ -1,45 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, AlertTriangle, CheckCircle, User } from "lucide-react";
 import Button from "../../components/UI/Button";
 import { useTeamInvitations } from "../../hooks/useTeamInvitations";
 import { validatePassword } from "../../utils/passwordValidation";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export const SetPassword: React.FC = () => {
+export const SetPassword: React.FC<{ token: string | null; email: string | null }> = ({
+  token,
+  email,
+}) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
-  const email = searchParams.get("email");
-  const { setPassword, isSettingPassword, verifyToken, isVerifyingToken } =
-    useTeamInvitations();
+  const { setPassword, isSettingPassword } = useTeamInvitations();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     confirmPassword: "",
   });
-
-  const [isValidToken, setIsValidToken] = useState<boolean>(true);
-
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    if (token && email) {
-      verifyToken(
-        { token, email },
-        {
-          onSuccess: (error) => {
-            console.log("error", error);
-            setIsValidToken(true);
-          },
-          onError: () => {
-            setIsValidToken(false);
-          },
-        }
-      );
-    }
-  }, [token, email]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -96,21 +75,6 @@ export const SetPassword: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-  if (!isValidToken || !token || !email) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
-          <h2 className="mt-4 text-lg font-semibold text-gray-900">
-            Invalid Invitation Link
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            This link appears to be invalid or has expired.
-          </p>
-        </div>
       </div>
     );
   }
@@ -245,7 +209,7 @@ export const SetPassword: React.FC = () => {
             <Button
               type="submit"
               fullWidth
-              isLoading={isSettingPassword || isVerifyingToken}
+              isLoading={isSettingPassword}
             >
               Set Password & Continue
             </Button>

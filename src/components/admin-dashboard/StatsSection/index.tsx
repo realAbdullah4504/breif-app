@@ -17,6 +17,7 @@ import { useDashboardContext } from "../../../context/DashboardContext";
 import { useAdminBriefs, useSampleData } from "../../../hooks/useAdminBriefs";
 import { useWorkspaceContext } from "../../../context/WorkspaceContext";
 import { useSettings } from "../../../hooks/useSettings";
+import { useAuth } from "../../../context/AuthContext";
 
 const StatsSection = () => {
   const { filters } = useDashboardContext();
@@ -24,6 +25,7 @@ const StatsSection = () => {
   const workspaceId = selectedWorkspaceId || "";
   const { settings } = useSettings(workspaceId);
   const { briefs, teamMembers, stats } = useAdminBriefs(filters);
+  const { currentUser } = useAuth();
 
   const totalBriefs = stats?.totalMembers || 0;
   const submittedBriefs = stats?.submittedCount || 0;
@@ -45,7 +47,9 @@ const StatsSection = () => {
   const { deleteSampleData, isDeletingSampleData } = useSampleData();
 
   // Check if we're showing sample data
-  const isShowingSampleData = teamMembers?.some((member) =>
+  const sampleDataKey = `sample_data_deleted_${currentUser?.id}`;
+  const sampleDataDeleted = localStorage.getItem(sampleDataKey) === 'true';
+  const isShowingSampleData = !sampleDataDeleted && teamMembers?.some((member) =>
     member?.user_id?.startsWith("demo-")
   );
 

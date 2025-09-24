@@ -29,6 +29,7 @@ import { Flame } from "lucide-react";
 import { useWorkspaceContext } from "../../../context/WorkspaceContext";
 import { useSettings } from "../../../hooks/useSettings";
 import { useAdminBriefs } from "../../../hooks/useAdminBriefs";
+import { useAuth } from "../../../context/AuthContext";
 
 type MemberSectionProps = {
   viewMode: string;
@@ -41,6 +42,7 @@ const MemberSection = ({ viewMode }: MemberSectionProps) => {
   const { settings } = useSettings(workspaceId);
   const { briefs, teamMembers, filteredTeamMembers } = useAdminBriefs(filters);
 
+  const { currentUser } = useAuth();
   const { data: userStreaks } = useAllUserStreaks();
   const [selectedBrief, setSelectedBrief] = useState<BriefWithUser | null>(
     null
@@ -51,6 +53,11 @@ const MemberSection = ({ viewMode }: MemberSectionProps) => {
     setSelectedBrief(brief);
     setIsModalOpen(true);
   };
+
+  // Check if sample data has been deleted for this admin
+  const sampleDataKey = `sample_data_deleted_${currentUser?.id}`;
+  const sampleDataDeleted = localStorage.getItem(sampleDataKey) === 'true';
+  const shouldShowSampleData = !sampleDataDeleted && (!teamMembers?.length || teamMembers?.every(m => m.user_id?.startsWith('demo-')));
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -76,7 +83,7 @@ const MemberSection = ({ viewMode }: MemberSectionProps) => {
         </div>
       </div>
 
-      {!teamMembers?.length ? (
+      {!teamMembers?.length && !shouldShowSampleData ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8 lg:p-12">
           <EmptyState
             title="No Team Members"

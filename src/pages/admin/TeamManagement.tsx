@@ -7,7 +7,6 @@ import Button from "../../components/UI/Button";
 import Input from "../../components/UI/Input";
 import Badge from "../../components/UI/Badge";
 import { useTeamInvitations } from "../../hooks/useTeamInvitations";
-import { queryClient } from "../../lib/queryClient";
 import DeleteMember from "../../components/TeamManagement/DeleteMember";
 
 const TeamManagement: React.FC = () => {
@@ -45,7 +44,6 @@ const TeamManagement: React.FC = () => {
         setError(error?.message || "Failed to send invite");
       },
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["invitations"] });
         setEmail("");
       },
     });
@@ -192,7 +190,7 @@ const TeamManagement: React.FC = () => {
                   />
                 </div>
 
-                <Button type="submit" fullWidth isLoading={isInviting}>
+                <Button type="submit" fullWidth>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Send Invitation
                 </Button>
@@ -233,7 +231,7 @@ const TeamManagement: React.FC = () => {
                               )}
                             </p>
                           </div>
-                          <DeleteMember invitationId={invitation?.id}/>
+                          <DeleteMember invitationId={invitation?.id} isInviting={isInviting}/>
                         </div>
                         <div className="mt-2">
                           <Badge

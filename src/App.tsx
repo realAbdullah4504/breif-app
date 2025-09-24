@@ -17,7 +17,6 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-import { SetPassword } from "./pages/auth/SetPassword";
 import Onboarding from "./pages/auth/Onboarding";
 
 // Admin Pages
@@ -161,7 +160,6 @@ const App: React.FC = () => {
                     path="/auth/update-password"
                     element={<ResetPassword />}
                   />
-                  <Route path="/auth/set-password" element={<SetPassword />} />
                   <Route
                     path="/auth/accept-invite"
                     element={<AcceptInvitation />}

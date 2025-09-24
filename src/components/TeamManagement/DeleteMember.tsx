@@ -2,9 +2,16 @@ import React from "react";
 import { useTeamInvitations } from "../../hooks/useTeamInvitations";
 import { Trash2 } from "lucide-react";
 
-const DeleteMember = ({ invitationId }: { invitationId: string }) => {
+const DeleteMember = ({
+  invitationId,
+  isInviting,
+}: {
+  invitationId: string;
+  isInviting: boolean;
+}) => {
   const { deleteInvite, isDeleting } = useTeamInvitations();
   const handleDeleteInvitation = (id: string) => {
+    if (isInviting) return;
     deleteInvite(id);
   };
   return (
@@ -13,7 +20,7 @@ const DeleteMember = ({ invitationId }: { invitationId: string }) => {
         type="button"
         className="text-gray-400 hover:text-red-500"
         onClick={() => handleDeleteInvitation(invitationId)}
-        disabled={isDeleting}
+        disabled={isDeleting || isInviting}
       >
         {isDeleting ? (
           <div className="animate-spin h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full" />

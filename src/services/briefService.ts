@@ -4,6 +4,7 @@ import { getFilteredMembers } from "../utils/filters";
 import { sendEmail } from "./emailService";
 import { format } from "date-fns";
 import { RecognitionService } from "./recognitionService";
+import { mockDemoBriefs } from "../data/mockData";
 
 const recognitionService = new RecognitionService();
 
@@ -238,7 +239,8 @@ export class BriefService {
               </p>
               <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
                 <p style="color: #94a3b8; margin: 0; font-size: 11px;">
-                  Powered by <strong style="color: #6366f1;">Briefly</strong> • <a href="https://my.brieflyapp.co" style="color: #6366f1; text-decoration: none;">my.brieflyapp.co</a>
+                  Powered by <strong style="color: #6366f1;">Briefly</strong> • <a href="https://my.brieflyapp.co" style="color: #6366f1; text-decoration: none;">my.brieflyapp.co</a><br>
+                  Need help? Contact us at <a href="mailto:contact@brieflyapp.co" style="color: #6366f1; text-decoration: none;">contact@brieflyapp.co</a>
                 </p>
               </div>
             </div>
@@ -280,6 +282,10 @@ export class BriefService {
   }
   async getAllBriefs(adminId: string, filters: FilterOptions) {
     try {
+      // Check if sample data should be shown for this admin
+      const sampleDataKey = `sample_data_deleted_${adminId}`;
+      const sampleDataDeleted = localStorage.getItem(sampleDataKey) === 'true';
+
       // Get admin's workspace_id
       const { data: workspaceData, error: workspaceError } = await supabase
         .from("workspace_settings")
@@ -360,6 +366,33 @@ export class BriefService {
         filters.status,
         filters.review
       );
+
+      // If no real team members and sample data hasn't been deleted, show sample data
+      if (!sampleDataDeleted && (!teamMembers || teamMembers.length === 0)) {
+        return {
+          teamMembers: mockDemoBriefs.map(brief => ({
+            id: brief.users.id,
+            role: 'member',
+            invited_by: adminId,
+            status: 'active',
+            workspace_id: workspaceData.id,
+            user_id: brief.user_id,
+            users: brief.users
+          })),
+          filteredTeamMembers: mockDemoBriefs.map(brief => ({
+            id: brief.users.id,
+            role: 'member',
+            invited_by: adminId,
+            status: 'active',
+            workspace_id: workspaceData.id,
+            user_id: brief.user_id,
+            users: brief.users
+          })),
+          data: mockDemoBriefs,
+          error: null,
+        };
+      }
+
       return {
         teamMembers,
         filteredTeamMembers,
@@ -398,6 +431,10 @@ export class BriefService {
   }
   async getBriefStats(adminId: string, filters: FilterOptions) {
     try {
+      // Check if sample data should be shown for this admin
+      const sampleDataKey = `sample_data_deleted_${adminId}`;
+      const sampleDataDeleted = localStorage.getItem(sampleDataKey) === 'true';
+
       // Get admin's workspace_id
       const { data: workspaceData, error: workspaceError } = await supabase
         .from("workspace_settings")
@@ -462,6 +499,18 @@ export class BriefService {
         submitted?.filter((brief) => brief?.workspace_id === workspaceData.id)
           .length || 0;
 
+      // If no real team members and sample data hasn't been deleted, show sample stats
+      if (!sampleDataDeleted && teamMembers[0].count === 0) {
+        return {
+          data: {
+            totalMembers: 3, // Number of demo team members
+            submittedCount: 3, // All demo briefs are submitted
+            pendingCount: 0,
+          },
+          error: null,
+        };
+      }
+
       return {
         data: {
           totalMembers: teamMembers[0].count,
@@ -481,9 +530,9 @@ export class BriefService {
 
   async deleteSampleData(adminId: string): Promise<{ error: Error | null }> {
     try {
-      // Mark sample data as deleted in localStorage
-      const { markSampleDataAsDeleted } = await import("../data/mockData");
-      markSampleDataAsDeleted(adminId);
+      // Mark sample data as deleted in localStorage with admin-specific key
+      const sampleDataKey = `sample_data_deleted_${adminId}`;
+      localStorage.setItem(sampleDataKey, 'true');
       return { error: null };
     } catch (error) {
       console.error("Error deleting sample data:", error);
